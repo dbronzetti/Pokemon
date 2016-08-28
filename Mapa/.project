@@ -3,6 +3,7 @@
 	<name>Mapa</name>
 	<comment></comment>
 	<projects>
+		<project>so-commons</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

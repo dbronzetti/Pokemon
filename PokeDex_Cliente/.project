@@ -3,6 +3,7 @@
 	<name>PokeDex_Cliente</name>
 	<comment></comment>
 	<projects>
+		<project>so-commons</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
