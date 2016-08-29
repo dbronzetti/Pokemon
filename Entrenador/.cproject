@@ -28,15 +28,18 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.968772090" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.502360734" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.436728992" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CompuMundoHiperMegaRed-commons}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/so-commons}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1719917818" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.727869349" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.paths.1749230367" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CompuMundoHiperMegaRed-commons/Debug}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/so-commons/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.867461121" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CompuMundoHiperMegaRed-commons"/>
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="so-commons"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.976520939" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
@@ -47,6 +50,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.1956223719" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.exe.debug.1931861701" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.exe.debug">
 								<option id="gnu.both.asm.option.include.paths.243734274" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CompuMundoHiperMegaRed-commons}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/so-commons}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.591620600" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
@@ -64,6 +68,13 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/so-commons"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/so-commons/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="so-commons" srcPrefixMapping="" srcRootPath=""/>
+					</externalSetting>
+				</externalSettings>
+				<externalSettings containerId="CompuMundoHiperMegaRed-commons;" factoryId="org.eclipse.cdt.core.cfg.export.settings.sipplier">
+					<externalSetting>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/CompuMundoHiperMegaRed-commons"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/CompuMundoHiperMegaRed-commons/Debug"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="CompuMundoHiperMegaRed-commons" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>
