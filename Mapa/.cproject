@@ -39,8 +39,9 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/so-commons/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.2080098385" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="CompuMundoHiperMegaRed-commons"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="so-commons"/>
+									<listOptionValue builtIn="false" value="CompuMundoHiperMegaRed-commons"/>
+									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="so-commons"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.2091685125" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
