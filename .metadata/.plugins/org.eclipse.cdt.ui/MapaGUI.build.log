@@ -1,6 +1,6 @@
-12:40:47 **** Incremental Build of configuration Debug for project MapaGUI ****
+14:02:42 **** Incremental Build of configuration Debug for project MapaGUI ****
 make all 
 make: No se hace nada para «all».
 
-12:40:47 Build Finished (took 144ms)
+14:02:42 Build Finished (took 93ms)
 
