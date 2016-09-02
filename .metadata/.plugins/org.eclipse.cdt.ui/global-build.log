@@ -1,0 +1,22 @@
+12:40:37 **** Build of configuration Debug for project MapaGUI ****
+make all 
+Building file: ../src/MapaGUI.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/MapaGUI.d" -MT"src/MapaGUI.d" -o "src/MapaGUI.o" "../src/MapaGUI.c"
+../src/MapaGUI.c:12:1: warning: return type defaults to ‘int’ [-Wreturn-type]
+ main()
+ ^
+../src/MapaGUI.c: In function ‘main’:
+../src/MapaGUI.c:17:1: warning: control reaches end of non-void function [-Wreturn-type]
+ }
+ ^
+Finished building: ../src/MapaGUI.c
+ 
+Building target: MapaGUI
+Invoking: GCC C Linker
+gcc  -o "MapaGUI"  ./src/MapaGUI.o   
+Finished building target: MapaGUI
+ 
+12:40:47 **** Incremental Build of configuration Debug for project MapaGUI ****
+make all 
+make: No se hace nada para «all».
