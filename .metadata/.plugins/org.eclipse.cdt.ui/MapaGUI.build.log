@@ -1,6 +1,25 @@
-14:02:42 **** Incremental Build of configuration Debug for project MapaGUI ****
+14:13:04 **** Build of configuration Debug for project MapaGUI ****
 make all 
-make: No se hace nada para «all».
+Building file: ../src/MapaGUI.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/MapaGUI.d" -MT"src/MapaGUI.d" -o "src/MapaGUI.o" "../src/MapaGUI.c"
+Finished building: ../src/MapaGUI.c
+ 
+Building file: ../src/nivel.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/nivel.d" -MT"src/nivel.d" -o "src/nivel.o" "../src/nivel.c"
+Finished building: ../src/nivel.c
+ 
+Building file: ../src/tad_items.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/tad_items.d" -MT"src/tad_items.d" -o "src/tad_items.o" "../src/tad_items.c"
+Finished building: ../src/tad_items.c
+ 
+Building target: MapaGUI
+Invoking: GCC C Linker
+gcc  -o "MapaGUI"  ./src/MapaGUI.o ./src/nivel.o ./src/tad_items.o   -lcurses -lcommons
+Finished building target: MapaGUI
+ 
 
-14:02:42 Build Finished (took 93ms)
+14:13:05 Build Finished (took 472ms)
 

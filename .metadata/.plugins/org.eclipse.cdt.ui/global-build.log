@@ -1,4 +1,4 @@
-14:02:36 **** Build of configuration Debug for project MapaGUI ****
+14:13:04 **** Build of configuration Debug for project MapaGUI ****
 make all 
 Building file: ../src/MapaGUI.c
 Invoking: GCC C Compiler
@@ -17,9 +17,6 @@ Finished building: ../src/tad_items.c
  
 Building target: MapaGUI
 Invoking: GCC C Linker
-gcc  -o "MapaGUI"  ./src/MapaGUI.o ./src/nivel.o ./src/tad_items.o   -lnivel-gui -lcurses -lcommons
+gcc  -o "MapaGUI"  ./src/MapaGUI.o ./src/nivel.o ./src/tad_items.o   -lcurses -lcommons
 Finished building target: MapaGUI
  
-14:02:42 **** Incremental Build of configuration Debug for project MapaGUI ****
-make all 
-make: No se hace nada para «all».
