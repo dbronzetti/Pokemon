@@ -11,6 +11,8 @@ int asd;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
+	char *entrenador = string_new();
+	char *pokedex = string_new();
 
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -19,6 +21,16 @@ int main(int argc, char **argv) {
 	//get parameter
 	int i;
 	for (i = 0; i < argc; i++) {
+		//chekea el nick del entrenador
+		if (strcmp(argv[i], "-e") == 0) {
+			entrenador = argv[i + 1];
+			printf("Nombre del entrenador: '%s'\n", entrenador);
+		}
+		//chekea la carpeta del pokedex
+		if (strcmp(argv[i], "-p") == 0) {
+			pokedex = argv[i + 1];
+			printf("Directorio Pokedex: '%s'\n", pokedex);
+		}
 		//check log file parameter
 		if (strcmp(argv[i], "-l") == 0) {
 			logFile = argv[i + 1];
@@ -26,7 +38,14 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	char* rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
+			pokedex, entrenador);
+
+	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
+			rutaMetadata);
+
 	logEntrenador = log_create(logFile, "ENTRENADOR", 0, LOG_LEVEL_TRACE);
+	crearArchivoMetadata(rutaMetadata);
 
 	exitCode = connectTo(MAPA, &socketMapa);
 	if (exitCode == EXIT_SUCCESS) {
@@ -129,3 +148,52 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 
 	return exitcode;
 }
+
+void crearArchivoMetadata(char *rutaMetadata) {
+	t_config* metadata;
+	int i = 0;
+	metadataEntrenador.obj = queue_create();
+
+	metadata = config_create(rutaMetadata);
+	metadataEntrenador.nombre = config_get_string_value(metadata, "nombre");
+	printf("Nombre: %s\n", metadataEntrenador.nombre);
+	metadataEntrenador.simbolo = config_get_string_value(metadata, "simbolo");
+	printf("Simbolo: %s\n", metadataEntrenador.simbolo);
+	metadataEntrenador.hojaDeViaje = config_get_array_value(metadata,
+			"hojaDeViaje");
+	printf("Mapas a recorrer: ");
+	imprimirArray(metadataEntrenador.hojaDeViaje);
+	while (metadataEntrenador.hojaDeViaje[i] != NULL) {
+		char* obj = string_from_format("obj[%s]",
+				metadataEntrenador.hojaDeViaje[i]);
+		queue_push(&metadataEntrenador.obj,
+				config_get_array_value(metadata, obj));
+		printf("Dentro del mapa %s debe atrapar: ",
+				metadataEntrenador.hojaDeViaje[i]);
+		imprimirArray(config_get_array_value(metadata, obj));
+		i++;
+	}
+	metadataEntrenador.vidas = config_get_int_value(metadata, "vidas");
+	printf("Cantidad de vidas: %d\n", metadataEntrenador.vidas);
+	metadataEntrenador.reintentos = config_get_int_value(metadata, "reintentos");
+	printf("Cantidad de reintentos: %d\n", metadataEntrenador.reintentos);
+
+}
+
+void imprimirArray(char** array) {
+	int i = 0;
+	while (array[i] != NULL) {
+		if (i == 0) {
+			printf("[%s", array[i]);
+			printf(", ");
+		} else if (i == (strlen((char*) array) / sizeof(char*)) - 1) {
+			printf("%s]", array[i]);
+		} else {
+			printf("%s", array[i]);
+			printf(", ");
+		}
+		i++;
+	}
+	printf(" \n");
+}
+
