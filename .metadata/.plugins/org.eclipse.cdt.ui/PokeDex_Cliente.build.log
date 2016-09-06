@@ -1,0 +1,15 @@
+21:12:44 **** Build of configuration Debug for project PokeDex_Cliente ****
+make all 
+Building file: ../src/PokeDex_Cliente.c
+Invoking: GCC C Compiler
+gcc -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons" -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/PokeDex_Cliente.d" -MT"src/PokeDex_Cliente.d" -o "src/PokeDex_Cliente.o" "../src/PokeDex_Cliente.c"
+Finished building: ../src/PokeDex_Cliente.c
+ 
+Building target: PokeDex_Cliente
+Invoking: GCC C Linker
+gcc -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug" -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons/Debug" -o "PokeDex_Cliente"  ./src/PokeDex_Cliente.o   -lCompuMundoHiperMegaRed-commons -lso-commons
+Finished building target: PokeDex_Cliente
+ 
+
+21:12:44 Build Finished (took 244ms)
+

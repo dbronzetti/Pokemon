@@ -1,0 +1,16 @@
+/*
+ * osadaMain.c
+ *
+ *  Created on: 5/9/2016
+ *      Author: utnso
+ */
+#include <stdint.h>
+#include "osada.h"
+#include <stdlib.h>
+
+int main(void) {
+	osada_file * osada = malloc(sizeof(osada_file));
+	struct osada_file_state Cd2;
+	osada->state = estado->REGULAR;
+	printf("%s",osada->state);
+}
