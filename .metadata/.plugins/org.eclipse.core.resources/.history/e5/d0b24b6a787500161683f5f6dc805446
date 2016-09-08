@@ -1,0 +1,32 @@
+/*
+ * osadaMain.c
+ *
+ *  Created on: 5/9/2016
+ *      Author: utnso
+ */
+#include <stdint.h>
+#include "osada.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+int main(void) {
+	///home/utnso/osada-utils/unArchivo
+	//osada_file * osada = malloc(sizeof(osada_file));
+	//osada_file_state *b;
+    FILE *file = fopen("home/utnso/osada-utils/unArchivo", "r");
+    printf("entro");
+	//osada->state = "TESt";
+    while(!feof(file))
+    {
+    	osada_file ip;
+        int ret = fscanf(file,"%*[ \t\n]%i",&ip.file_size);
+        printf("1 : %i\n", ip.file_size );
+        if (ret !=5)
+        {
+            //skip this record
+            continue;
+        }
+        //process record ip
+    }
+
+}

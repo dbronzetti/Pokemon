@@ -1,29 +1,19 @@
-00:35:07 **** Build of configuration Debug for project nivel ****
+01:21:53 **** Incremental Build of configuration Debug for project cmhmr-osada ****
 make all 
-Building file: ../nivel.c
+Building file: ../osadaMain.c
 Invoking: GCC C Compiler
-gcc -O0 -g3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP -MF"nivel.d" -MT"nivel.d" -o "nivel.o" "../nivel.c"
-Finished building: ../nivel.c
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"osadaMain.d" -MT"osadaMain.d" -o "osadaMain.o" "../osadaMain.c"
+../osadaMain.c: In function ‘main’:
+../osadaMain.c:22:6: warning: "/*" within comment [-Wcomment]
+      /*
+ ^
+Finished building: ../osadaMain.c
  
-Building file: ../tad_items.c
-Invoking: GCC C Compiler
-gcc -O0 -g3 -Wall -c -fmessage-length=0 -fPIC -MMD -MP -MF"tad_items.d" -MT"tad_items.d" -o "tad_items.o" "../tad_items.c"
-Finished building: ../tad_items.c
- 
-Building target: libnivel.so
+Building target: cmhmr-osada
 Invoking: GCC C Linker
-gcc -shared -o "libnivel.so"  ./nivel.o ./tad_items.o   
-Finished building target: libnivel.so
+gcc  -o "cmhmr-osada"  ./osadaMain.o   
+Finished building target: cmhmr-osada
  
-00:35:08 **** Build of configuration Debug for project MapaGUI ****
+01:21:54 **** Incremental Build of configuration Debug for project cmhmr-osada ****
 make all 
-Building file: ../src/MapaGUI.c
-Invoking: GCC C Compiler
-gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/MapaGUI.d" -MT"src/MapaGUI.d" -o "src/MapaGUI.o" "../src/MapaGUI.c"
-Finished building: ../src/MapaGUI.c
- 
-Building target: MapaGUI
-Invoking: GCC C Linker
-gcc -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/nivel/Debug" -o "MapaGUI"  ./src/MapaGUI.o   -lnivel -lcurses -lcommons
-Finished building target: MapaGUI
- 
+make: No se hace nada para «all».

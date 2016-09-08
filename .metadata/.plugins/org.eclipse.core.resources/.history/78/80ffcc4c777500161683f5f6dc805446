@@ -1,0 +1,18 @@
+/*
+ * osadaMain.c
+ *
+ *  Created on: 5/9/2016
+ *      Author: utnso
+ */
+#include <stdint.h>
+#include "osada.h"
+#include <stdlib.h>
+
+int main(void) {
+	///home/utnso/osada-utils/unArchivo
+	//osada_file * osada = malloc(sizeof(osada_file));
+	//osada_file_state *b;
+    FILE *file = fopen("home/utnso/osada-utils/unArchivo", "rb");
+	//osada->state = "TESt";
+	printf("%s",osada->state);
+}
