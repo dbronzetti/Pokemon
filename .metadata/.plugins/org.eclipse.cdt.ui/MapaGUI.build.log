@@ -1,6 +1,15 @@
-21:12:41 **** Incremental Build of configuration Debug for project MapaGUI ****
+00:35:08 **** Build of configuration Debug for project MapaGUI ****
 make all 
-make: No se hace nada para «all».
+Building file: ../src/MapaGUI.c
+Invoking: GCC C Compiler
+gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/MapaGUI.d" -MT"src/MapaGUI.d" -o "src/MapaGUI.o" "../src/MapaGUI.c"
+Finished building: ../src/MapaGUI.c
+ 
+Building target: MapaGUI
+Invoking: GCC C Linker
+gcc -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/nivel/Debug" -o "MapaGUI"  ./src/MapaGUI.o   -lnivel -lcurses -lcommons
+Finished building target: MapaGUI
+ 
 
-21:12:41 Build Finished (took 78ms)
+00:35:08 Build Finished (took 433ms)
 

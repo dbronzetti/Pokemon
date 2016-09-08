@@ -1,22 +1,6 @@
-21:12:45 **** Build of configuration Debug for project Mapa ****
+23:32:36 **** Incremental Build of configuration Debug for project Mapa ****
 make all 
-Building file: ../src/Mapa.c
-Invoking: GCC C Compiler
-gcc -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons" -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/Mapa.d" -MT"src/Mapa.d" -o "src/Mapa.o" "../src/Mapa.c"
-In file included from /home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/sockets.h:16:0,
-                 from ../src/Mapa.h:14,
-                 from ../src/Mapa.c:7:
-../src/Mapa.c: In function ‘main’:
-../src/Mapa.c:13:40: warning: left-hand operand of comma expression has no effect [-Wunused-value]
-  assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
-                                        ^
-Finished building: ../src/Mapa.c
- 
-Building target: Mapa
-Invoking: GCC C Linker
-gcc -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug" -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons/Debug" -o "Mapa"  ./src/Mapa.o   -lCompuMundoHiperMegaRed-commons -lpthread -lso-commons
-Finished building target: Mapa
- 
+make: No se hace nada para «all».
 
-21:12:45 Build Finished (took 288ms)
+23:32:37 Build Finished (took 85ms)
 

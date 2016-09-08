@@ -1,35 +1,6 @@
-21:12:45 **** Build of configuration Debug for project Entrenador ****
+23:32:37 **** Incremental Build of configuration Debug for project Entrenador ****
 make all 
-Building file: ../src/Entrenador.c
-Invoking: GCC C Compiler
-gcc -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons" -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/Entrenador.d" -MT"src/Entrenador.d" -o "src/Entrenador.o" "../src/Entrenador.c"
-In file included from /home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/sockets.h:16:0,
-                 from ../src/Entrenador.h:13,
-                 from ../src/Entrenador.c:7:
-../src/Entrenador.c: In function ‘main’:
-../src/Entrenador.c:19:40: warning: left-hand operand of comma expression has no effect [-Wunused-value]
-  assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
-                                        ^
-../src/Entrenador.c:55:4: warning: format ‘%d’ expects argument of type ‘int *’, but argument 2 has type ‘int’ [-Wformat=]
-    scanf("%d", asd);
-    ^
-../src/Entrenador.c: In function ‘crearArchivoMetadata’:
-../src/Entrenador.c:170:5: warning: passing argument 1 of ‘queue_push’ from incompatible pointer type [enabled by default]
-     config_get_array_value(metadata, obj));
-     ^
-In file included from /home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/metadata.h:13:0,
-                 from ../src/Entrenador.h:16,
-                 from ../src/Entrenador.c:7:
-/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons/commons/collections/queue.h:30:7: note: expected ‘struct t_queue *’ but argument is of type ‘struct t_queue **’
-  void queue_push(t_queue *, void *element);
-       ^
-Finished building: ../src/Entrenador.c
- 
-Building target: Entrenador
-Invoking: GCC C Linker
-gcc -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug" -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons/Debug" -o "Entrenador"  ./src/Entrenador.o   -lCompuMundoHiperMegaRed-commons -lso-commons
-Finished building target: Entrenador
- 
+make: No se hace nada para «all».
 
-21:12:45 Build Finished (took 454ms)
+23:32:37 Build Finished (took 78ms)
 

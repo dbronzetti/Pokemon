@@ -1,21 +1,6 @@
-21:12:40 **** Build of configuration Debug for project CompuMundoHiperMegaRed-commons ****
+23:32:35 **** Incremental Build of configuration Debug for project CompuMundoHiperMegaRed-commons ****
 make all 
-Building file: ../sockets.c
-Invoking: GCC C Compiler
-gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"sockets.d" -MT"sockets.d" -o "sockets.o" "../sockets.c"
-In file included from ../sockets.h:16:0,
-                 from ../sockets.c:7:
-../sockets.c: In function ‘openServerConnection’:
-../sockets.c:14:51: warning: left-hand operand of comma expression has no effect [-Wunused-value]
-  assert(("ERROR - Server port is the DEFAULT (=0)", newSocketServerPort != 0)); // FAILS if the Server port is equal to default value (0)
-                                                   ^
-Finished building: ../sockets.c
- 
-Building target: libCompuMundoHiperMegaRed-commons.so
-Invoking: GCC C Linker
-gcc -shared -o "libCompuMundoHiperMegaRed-commons.so"  ./sockets.o   
-Finished building target: libCompuMundoHiperMegaRed-commons.so
- 
+make: No se hace nada para «all».
 
-21:12:41 Build Finished (took 340ms)
+23:32:35 Build Finished (took 69ms)
 

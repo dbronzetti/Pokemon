@@ -1,15 +1,6 @@
-21:12:44 **** Build of configuration Debug for project PokeDex_Servidor ****
+23:32:36 **** Incremental Build of configuration Debug for project PokeDex_Servidor ****
 make all 
-Building file: ../src/PokeDex_Servidor.c
-Invoking: GCC C Compiler
-gcc -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons" -I"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/PokeDex_Servidor.d" -MT"src/PokeDex_Servidor.d" -o "src/PokeDex_Servidor.o" "../src/PokeDex_Servidor.c"
-Finished building: ../src/PokeDex_Servidor.c
- 
-Building target: PokeDex_Servidor
-Invoking: GCC C Linker
-gcc -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug" -L"/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/so-commons/Debug" -o "PokeDex_Servidor"  ./src/PokeDex_Servidor.o   -lCompuMundoHiperMegaRed-commons -lso-commons
-Finished building target: PokeDex_Servidor
- 
+make: No se hace nada para «all».
 
-21:12:44 Build Finished (took 239ms)
+23:32:36 Build Finished (took 83ms)
 
