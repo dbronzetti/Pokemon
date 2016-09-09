@@ -47,6 +47,8 @@ void inicializarOSADA();
 
 osada_header *leerArchivoParaHeader(char *ruta);
 
+
+
 unsigned char devolverMagicNumbre(osada_header *osadaHeader);
 
 uint8_t devolverVersion(osada_header *osadaHeader);

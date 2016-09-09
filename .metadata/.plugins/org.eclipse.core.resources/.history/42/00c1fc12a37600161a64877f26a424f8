@@ -43,15 +43,35 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 
 #pragma pack(pop)
 
-void inicializarOSADA();
+void inicializarOSADA(){
 
-osada_header *leerArchivoParaHeader(char *ruta);
+}
 
-unsigned char devolverMagicNumbre(osada_header *osadaHeader);
 
-uint8_t devolverVersion(osada_header *osadaHeader);
+osada_header *leerArchivoParaHeader(char *ruta){
+	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
+	FILE * archivo= fopen(ruta, "rb");
 
-int devolverFSBloques(osada_header *osadaHeader);
+	if (archivo != NULL) {
+		fread(osadaHeaderFile, sizeof(osada_header), 1, archivo);
+		fclose(archivo);
+	}
+	return osadaHeaderFile;
+}
+
+
+
+unsigned char devolverMagicNumbre(osada_header *osadaHeader){
+	return osadaHeader->magic_number[7];
+}
+
+uint8_t devolverVersion(osada_header *osadaHeader){
+	return osadaHeader->version;
+}
+
+int devolverFSBloques(osada_header *osadaHeader){
+	return osadaHeader->fs_blocks;
+}
 
 uint32_t devolverBitMapBlocks(osada_header *osadaHeader);
 

@@ -43,24 +43,53 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 
 #pragma pack(pop)
 
-void inicializarOSADA();
+void inicializarOSADA(){
 
-osada_header *leerArchivoParaHeader(char *ruta);
-
-unsigned char devolverMagicNumbre(osada_header *osadaHeader);
-
-uint8_t devolverVersion(osada_header *osadaHeader);
-
-int devolverFSBloques(osada_header *osadaHeader);
-
-uint32_t devolverBitMapBlocks(osada_header *osadaHeader);
-
-uint32_t devolverAllocations_table_offset(osada_header *osadaHeader);
-
-uint32_t devolverDataBlocks(osada_header *osadaHeader);
+}
 
 
-unsigned char devolverPadding(osada_header *osadaHeader);
+osada_header *leerArchivoParaHeader(char *ruta){
+	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
+	FILE * archivo= fopen(ruta, "rb");
+
+	if (archivo != NULL) {
+		fread(osadaHeaderFile, sizeof(osada_header), 1, archivo);
+		fclose(archivo);
+	}
+	return osadaHeaderFile;
+}
+
+
+
+unsigned char devolverMagicNumbre(osada_header *osadaHeader){
+	return osadaHeader->magic_number[7];
+}
+
+uint8_t devolverVersion(osada_header *osadaHeader){
+	return osadaHeader->version;
+}
+
+int devolverFSBloques(osada_header *osadaHeader){
+	return osadaHeader->fs_blocks;
+}
+
+uint32_t devolverBitMapBlocks(osada_header *osadaHeader){
+	return osadaHeader->bitmap_blocks; // bitmap size in blocks
+}
+
+uint32_t devolverAllocations_table_offset(osada_header *osadaHeader){
+	return  osadaHeader->allocations_table_offset; // allocations table's first block number
+
+}
+
+uint32_t devolverDataBlocks(osada_header *osadaHeader){
+	return osadaHeader->data_blocks; // amount of data blocks
+}
+
+
+unsigned char devolverPadding(osada_header *osadaHeader){
+	return	osadaHeader->padding[40]; // useless bytes just to complete the block size
+}
 
 
 

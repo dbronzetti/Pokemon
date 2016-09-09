@@ -43,9 +43,14 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 
 #pragma pack(pop)
 
-void inicializarOSADA();
+void inicializarOSADA(){
+
+}
+
 
 osada_header *leerArchivoParaHeader(char *ruta);
+
+
 
 unsigned char devolverMagicNumbre(osada_header *osadaHeader);
 
