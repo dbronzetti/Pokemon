@@ -1,0 +1,26 @@
+/*
+ * osada.c
+ *
+ *  Created on: 9/9/2016
+ *      Author: utnso
+ */
+#include <stdint.h>
+#include "osada.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+osada_file *leerArchivo(){
+	osada_file *osadaFile = malloc(sizeof(osada_file));
+	FILE * file= fopen("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco.bin", "rb");
+
+	if (file != NULL) {
+		fread(osadaFile, sizeof(osada_file), 1, file);
+		fclose(file);
+	}
+	return osadaFile;
+}
+
+int devolverTamanioDelBloque(){
+	osadaFile->file_size
+	return 0;
+}

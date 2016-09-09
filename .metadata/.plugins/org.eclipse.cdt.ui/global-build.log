@@ -1,19 +1,71 @@
-01:21:53 **** Incremental Build of configuration Debug for project cmhmr-osada ****
+12:03:41 **** Incremental Build of configuration Debug for project cmhmr-osada ****
 make all 
 Building file: ../osadaMain.c
 Invoking: GCC C Compiler
 gcc -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"osadaMain.d" -MT"osadaMain.d" -o "osadaMain.o" "../osadaMain.c"
 ../osadaMain.c: In function ‘main’:
-../osadaMain.c:22:6: warning: "/*" within comment [-Wcomment]
-      /*
- ^
+../osadaMain.c:18:2: warning: implicit declaration of function ‘leerArchivoParaOsadaFile’ [-Wimplicit-function-declaration]
+  osada_file *osadaFile = leerArchivoParaOsadaFile(ruta);
+  ^
+../osadaMain.c:18:26: warning: initialization makes pointer from integer without a cast [enabled by default]
+  osada_file *osadaFile = leerArchivoParaOsadaFile(ruta);
+                          ^
+../osadaMain.c:19:2: warning: implicit declaration of function ‘leerArchivoParaHeader’ [-Wimplicit-function-declaration]
+  osada_header *osadaHeader = leerArchivoParaHeader(ruta);
+  ^
+../osadaMain.c:19:30: warning: initialization makes pointer from integer without a cast [enabled by default]
+  osada_header *osadaHeader = leerArchivoParaHeader(ruta);
+                              ^
+../osadaMain.c:21:2: warning: implicit declaration of function ‘devolverTamanio’ [-Wimplicit-function-declaration]
+  printf("Tamanio: %i\n", devolverTamanio(osadaFile));
+  ^
+../osadaMain.c:22:2: warning: implicit declaration of function ‘devolverNombreDelArchivo’ [-Wimplicit-function-declaration]
+  printf("Nombre: %d\n", (unsigned char)devolverNombreDelArchivo(osadaFile));
+  ^
+../osadaMain.c:23:2: warning: implicit declaration of function ‘devolverDirectorioPadre’ [-Wimplicit-function-declaration]
+  printf("Directorio Padre: %i\n", devolverDirectorioPadre(osadaFile));
+  ^
+../osadaMain.c:24:2: warning: implicit declaration of function ‘devolverUltimaMod’ [-Wimplicit-function-declaration]
+  printf("Ultima Mod: %d\n", devolverUltimaMod(osadaFile));
+  ^
+../osadaMain.c:25:2: warning: implicit declaration of function ‘devolverPrimerBloque’ [-Wimplicit-function-declaration]
+  printf("Primer Bloque: %i\n", devolverPrimerBloque(osadaFile));
+  ^
+../osadaMain.c:28:2: warning: implicit declaration of function ‘devolverMagicNumbre’ [-Wimplicit-function-declaration]
+  printf("magic_number: %i\n", devolverMagicNumbre(osadaHeader));
+  ^
+../osadaMain.c:29:2: warning: implicit declaration of function ‘devolverVersion’ [-Wimplicit-function-declaration]
+  printf("version: %i\n", devolverVersion(osadaHeader));
+  ^
+../osadaMain.c:30:2: warning: implicit declaration of function ‘devolverFSBloques’ [-Wimplicit-function-declaration]
+  printf("fs_blocks: %i\n", devolverFSBloques(osadaHeader));
+  ^
+../osadaMain.c:31:2: warning: implicit declaration of function ‘devolverBitMapBlocks’ [-Wimplicit-function-declaration]
+  printf("bitmap_blocks: %i\n", devolverBitMapBlocks(osadaHeader));
+  ^
+../osadaMain.c:32:2: warning: implicit declaration of function ‘devolverAllocations_table_offset’ [-Wimplicit-function-declaration]
+  printf("allocations_table_offset: %i\n", devolverAllocations_table_offset(osadaHeader));
+  ^
+../osadaMain.c:34:2: warning: implicit declaration of function ‘devolverDataBlocks’ [-Wimplicit-function-declaration]
+  printf("data_blocks: %i\n", devolverDataBlocks(osadaHeader));
+  ^
+../osadaMain.c:35:2: warning: implicit declaration of function ‘devolverPadding’ [-Wimplicit-function-declaration]
+  printf("padding: %i\n", devolverPadding(osadaHeader));
+  ^
+../osadaMain.c:41:2: warning: implicit declaration of function ‘free’ [-Wimplicit-function-declaration]
+  free(osadaFile);
+  ^
+../osadaMain.c:41:2: warning: incompatible implicit declaration of built-in function ‘free’ [enabled by default]
 Finished building: ../osadaMain.c
  
 Building target: cmhmr-osada
 Invoking: GCC C Linker
-gcc  -o "cmhmr-osada"  ./osadaMain.o   
+gcc  -o "cmhmr-osada"  ./osada.o ./osadaMain.o   
 Finished building target: cmhmr-osada
  
-01:21:54 **** Incremental Build of configuration Debug for project cmhmr-osada ****
+12:03:43 **** Incremental Build of configuration Debug for project cmhmr-osada ****
+make all 
+make: No se hace nada para «all».
+12:03:44 **** Incremental Build of configuration Debug for project cmhmr-osada ****
 make all 
 make: No se hace nada para «all».

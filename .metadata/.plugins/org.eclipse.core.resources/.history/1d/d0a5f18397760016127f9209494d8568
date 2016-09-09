@@ -1,0 +1,34 @@
+/*
+ * osadaMain.c
+ *
+ *  Created on: 5/9/2016
+ *      Author: utnso
+ */
+#include <stdint.h>
+#include "osada.h"
+#include <stdlib.h>
+#include <stdio.h>
+/*
+ Antes hay que hacer esto
+ truncate --size 100M disco.bin
+ ./osada-format disco.bin
+*/
+  osada_file *leerArchivo(){
+	osada_file *osadaFile = malloc(sizeof(osada_file));
+	FILE * file= fopen("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco.bin", "rb");
+
+	if (file != NULL) {
+		fread(osadaFile, sizeof(osada_file), 1, file);
+		fclose(file);
+	}
+	return osadaFile;
+}
+
+int main(void) {
+	osada_file osadaFile = leerArchivo();
+	printf("%i\n",osadaFile->file_size);
+
+
+	return 0;
+
+}

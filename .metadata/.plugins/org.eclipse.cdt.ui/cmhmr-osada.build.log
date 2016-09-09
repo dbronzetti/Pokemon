@@ -1,6 +1,6 @@
-01:21:54 **** Incremental Build of configuration Debug for project cmhmr-osada ****
+12:03:44 **** Incremental Build of configuration Debug for project cmhmr-osada ****
 make all 
 make: No se hace nada para «all».
 
-01:21:54 Build Finished (took 102ms)
+12:03:44 Build Finished (took 103ms)
 
