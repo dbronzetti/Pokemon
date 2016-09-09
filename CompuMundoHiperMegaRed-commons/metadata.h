@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "commons/collections/queue.h"
+#include "commons/config.h"
 
 /*Atencion!: Cada vez que se desencola un elemento de la hojaDeViaje se debe desencolar su objetivo */
 typedef struct {
@@ -25,13 +26,14 @@ typedef struct {
 typedef struct {
 	int tiempoChequeoDeadlock;
 	int batalla;
-	char** algoritmo;
+	char* algoritmo;
 	int quantum;
 	int retardo;
 	char* ip;
 	int puerto;
 } t_metadataMapa;
 
-
+//Funciones
+void crearArchivoMetadataDelMapa(char* rutaMetadataMapa, t_metadataMapa* metadataMapa);
 
 #endif /* METADATA_H_ */

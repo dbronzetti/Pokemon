@@ -41,16 +41,28 @@ int main(int argc, char **argv) {
 	char* rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
 			pokedex, entrenador);
 
+
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
 			rutaMetadata);
 
 	logEntrenador = log_create(logFile, "ENTRENADOR", 0, LOG_LEVEL_TRACE);
+
+	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
 	crearArchivoMetadata(rutaMetadata);
+
+	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+	char* mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
+
+	char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata.dat",pokedex, mapaActual);
+
+	crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa);
 
 	exitCode = connectTo(MAPA, &socketMapa);
 	if (exitCode == EXIT_SUCCESS) {
 		log_info(logEntrenador, "ENTRENADOR connected to MAPA successfully\n");
-		puts("Se ha conectado correctamente");
+		printf("Se ha conectado correctamente al mapa: %s", mapaActual);
 		while (1)
 			scanf("%d", asd);
 	} else {
@@ -64,13 +76,13 @@ int main(int argc, char **argv) {
 
 int connectTo(enum_processes processToConnect, int *socketClient) {
 	int exitcode = EXIT_FAILURE; //DEFAULT VALUE
-	int port = 0;
+	int port;
 	char *ip = string_new();
 
 	switch (processToConnect) {
 	case MAPA: {
-		string_append(&ip, "127.0.0.1"); //Esto obvio que despues lo va a levantar de la pokedex pero lo hice estatico para probar
-		port = 5000;
+		string_append(&ip, metadataMapa.ip);
+		port = metadataMapa.puerto;
 		break;
 	}
 	default: {
@@ -157,6 +169,7 @@ void crearArchivoMetadata(char *rutaMetadata) {
 	char** hojaDeViaje; //Creo un array auxiliar para poder encolar los objetivos de cada mapa sin desapilar la hojaDeViaje
 
 	metadata = config_create(rutaMetadata);
+
 	metadataEntrenador.nombre = config_get_string_value(metadata, "nombre");
 	printf("Nombre: %s\n", metadataEntrenador.nombre);
 

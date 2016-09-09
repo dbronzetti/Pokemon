@@ -20,6 +20,7 @@ t_log* logEntrenador;
 
 //Metadata
 t_metadataEntrenador metadataEntrenador;
+t_metadataMapa metadataMapa;
 
 //Funciones
 void crearArchivoMetadata(char *rutaMetadata);

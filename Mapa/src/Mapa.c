@@ -8,6 +8,9 @@
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
+	char *mapa = string_new();
+	;
+	char *pokedex = string_new();
 	pthread_t serverThread;
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
@@ -15,6 +18,16 @@ int main(int argc, char **argv) {
 	//get parameter
 	int i;
 	for (i = 0; i < argc; i++) {
+		//chekea el nick del mapa
+		if (strcmp(argv[i], "-m") == 0) {
+			mapa = argv[i + 1];
+			printf("Nombre del mapa: '%s'\n", mapa);
+		}
+		//chekea la carpeta del pokedex
+		if (strcmp(argv[i], "-p") == 0) {
+			pokedex = argv[i + 1];
+			printf("Directorio Pokedex: '%s'\n", pokedex);
+		}
 		//check log file parameter
 		if (strcmp(argv[i], "-l") == 0) {
 			logFile = argv[i + 1];
@@ -22,7 +35,24 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	char* rutaMetadata = string_from_format("%s/Mapas/%s/metadata.dat",
+			pokedex, mapa);
+
+	printf("Directorio de la metadata del mapa '%s': '%s'\n", mapa,
+			rutaMetadata);
+
 	logMapa = log_create(logFile, "ENTRENADOR", 0, LOG_LEVEL_TRACE);
+
+	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa);
+	printf("Tiempo de checkeo de deadlock: %d\n", metadataMapa.tiempoChequeoDeadlock);
+	printf("Batalla: %d\n", metadataMapa.batalla);
+	printf("Algoritmo: %s\n", metadataMapa.algoritmo);
+	printf("Quantum: %d\n", metadataMapa.quantum);
+	printf("Retardo: %d\n", metadataMapa.retardo);
+	printf("IP: %s\n", metadataMapa.ip);
+	printf("Puerto: %d\n", metadataMapa.puerto);
+	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
 	puts("Bienvenido al mapa");
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
@@ -37,7 +67,7 @@ void startServerProg() {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	int socketServer;
 
-	exitCode = openServerConnection(5000, &socketServer);
+	exitCode = openServerConnection(metadataMapa.puerto, &socketServer);
 	log_info(logMapa, "SocketServer: %d", socketServer);
 
 	//If exitCode == 0 the server connection is opened and listening

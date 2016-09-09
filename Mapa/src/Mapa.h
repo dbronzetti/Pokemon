@@ -13,8 +13,11 @@
 #include <stdlib.h>
 #include "sockets.h"
 #include "commons/log.h"
+#include "metadata.h"
 
 t_log* logMapa;
+t_metadataMapa metadataMapa;
+
 
 // Estructuras
 typedef struct {
