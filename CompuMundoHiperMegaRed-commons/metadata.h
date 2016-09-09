@@ -12,11 +12,12 @@
 #include <stdlib.h>
 #include "commons/collections/queue.h"
 
+/*Atencion!: Cada vez que se desencola un elemento de la hojaDeViaje se debe desencolar su objetivo */
 typedef struct {
 	char* nombre;
 	char* simbolo;
-	char** hojaDeViaje;
-	t_queue* obj;
+	t_queue* hojaDeViaje; //Una cola en la que cada elemento es el nombre de un mapa, ejemplo de elementos: "Pueblo Paleta", "Ciudad Verde"
+	t_queue* obj; //Una cola en la que cada elementos son los pokemones que debe capturar del mapa, ejemplo de elementos: "A, B , C", "F , H , J"
 	int vidas;
 	int reintentos;
 } t_metadataEntrenador;

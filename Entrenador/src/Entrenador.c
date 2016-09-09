@@ -152,29 +152,41 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 void crearArchivoMetadata(char *rutaMetadata) {
 	t_config* metadata;
 	int i = 0;
+	metadataEntrenador.hojaDeViaje = queue_create();
 	metadataEntrenador.obj = queue_create();
+	char** hojaDeViaje; //Creo un array auxiliar para poder encolar los objetivos de cada mapa sin desapilar la hojaDeViaje
 
 	metadata = config_create(rutaMetadata);
 	metadataEntrenador.nombre = config_get_string_value(metadata, "nombre");
 	printf("Nombre: %s\n", metadataEntrenador.nombre);
+
 	metadataEntrenador.simbolo = config_get_string_value(metadata, "simbolo");
 	printf("Simbolo: %s\n", metadataEntrenador.simbolo);
-	metadataEntrenador.hojaDeViaje = config_get_array_value(metadata,
+
+	hojaDeViaje = config_get_array_value(metadata,
 			"hojaDeViaje");
+	while (hojaDeViaje[i] != NULL) {
+		queue_push(metadataEntrenador.hojaDeViaje, hojaDeViaje[i]);
+		i++;
+	}
 	printf("Mapas a recorrer: ");
-	imprimirArray(metadataEntrenador.hojaDeViaje);
-	while (metadataEntrenador.hojaDeViaje[i] != NULL) {
+	imprimirArray(hojaDeViaje);
+
+	i = 0;
+	while (hojaDeViaje[i] != NULL) {
 		char* obj = string_from_format("obj[%s]",
-				metadataEntrenador.hojaDeViaje[i]);
-		queue_push(&metadataEntrenador.obj,
+				hojaDeViaje[i]);
+		queue_push(metadataEntrenador.obj,
 				config_get_array_value(metadata, obj));
 		printf("Dentro del mapa %s debe atrapar: ",
-				metadataEntrenador.hojaDeViaje[i]);
+				hojaDeViaje[i]);
 		imprimirArray(config_get_array_value(metadata, obj));
 		i++;
 	}
+
 	metadataEntrenador.vidas = config_get_int_value(metadata, "vidas");
 	printf("Cantidad de vidas: %d\n", metadataEntrenador.vidas);
+
 	metadataEntrenador.reintentos = config_get_int_value(metadata, "reintentos");
 	printf("Cantidad de reintentos: %d\n", metadataEntrenador.reintentos);
 
