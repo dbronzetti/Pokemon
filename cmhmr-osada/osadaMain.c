@@ -8,30 +8,23 @@
 #include "osada.h"
 #include <stdlib.h>
 #include <stdio.h>
-
+/*
+Antes hay que hacer esto
+ truncate --size 100M disco.bin
+ ./osada-format disco.bin
+*/
+  
+void leerArchivo2(){
+	osada_file *object2=malloc(sizeof( osada_file));
+	FILE * file= fopen("disco.bin", "rb");
+	if (file != NULL) {
+		fread(object2, sizeof(osada_file), 1, file);
+		fclose(file);
+	}
+	printf("%i\n",object2->file_size);
+}
 int main(void) {
-    FILE *file = fopen("home/utnso/osada-utils/unArchivo", "r");
-    osada_file *p = malloc(sizeof (osada_file));
-    printf("entro");
-    //fscanf(file, "%s", buff);
-    //printf("1 : %s\n", buff );
-    fread(p, sizeof (osada_file), 1, file);
-    /*
-    while(!feof(file))
-    {
-    	/*
-    	osada_file ip;
-        int ret = fscanf(file,"%*[ \t\n]%i",&ip.file_size);
-        printf("1 : %i\n", ip.file_size );
-        if (ret !=5)
-        {
-            //skip this record
-            continue;
-        }
-        //process record ip
-         */
-
-    //}
+   leerArchivo2();
 
 	return 0;
 
