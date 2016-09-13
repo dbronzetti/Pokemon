@@ -34,3 +34,5 @@
 
 #Metadata eclipse
 *.metadata/
+
+RemoteSystemsTempFiles/
