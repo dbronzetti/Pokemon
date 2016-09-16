@@ -86,6 +86,7 @@ int main(void) {
 
 	int k=0;
 	/*
+	 *ESTA BIEN QUE SEA UN ARRAY DE 2048 POSICIONES, SABIENDO QUE HICE UN FREAD DE 1024 DE BLOQUES DE OSADA_FILE?
  	for (k=0; k<2048; k++){
 		printf("**********************************************\n");
 		printf("state_%i: %s\n",k, osadaFile[k].state);
@@ -100,6 +101,12 @@ int main(void) {
 	printf("Longitud del archivo despues de tabla de achivos: %i\n",len);
 
 	/**********TABLA DE ASGINACION**********/
+	/*
+	 * saco la cantidad de bloques que existe
+	 * en el fread leo el entero de la cantidad de bloques
+	 *
+	 *
+	 * */
 	int numeroBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 /64;
 	int *arrayTabla=malloc(1000);
 	printf("numeroBloques : %i\n", numeroBloques);
@@ -112,6 +119,10 @@ int main(void) {
 	printf("Longitud del archivo despues de tabla de achivos: %i\n",len);
 
 	/**********Bloques de datos**********/
+	/*
+	 * los bloques de datos son de 64? el header ya te da la cantidad bloques, esta bien el fread?
+	 *
+	 * */
 	fseek(archivo,0, SEEK_CUR);
 	bytesLeidos=fread(bitArray, OSADA_BLOCK_SIZE, osadaHeaderFile->data_blocks, archivo);
 	len = ftell(archivo);
