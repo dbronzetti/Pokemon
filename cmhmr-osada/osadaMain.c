@@ -9,23 +9,29 @@
 #include <commons/bitarray.h>
 #include <stdio.h>
 
+
 /*
  	 	 	 	 Antes hay que hacer esto:
  	 	 	 	 truncate --size 100M disco.bin
+ 	 	 	 	 truncate --size 50k disco.bin
  	 	 	 	 ./osada-format disco.bin
 */
 int main(void) {
-	char *ruta = "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco-chico.bin";
+	char *ruta = "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco.bin";
 	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
 	FILE * archivo= fopen(ruta, "rb");
 	t_bitarray *bitarray;
 	char *bitArray="0";
 	char lala[200];
 
+	int len = ftell(archivo);
+
 	if (archivo != NULL) {
 		fread(osadaHeaderFile, sizeof(osada_header), 1, archivo);
 		//fclose(archivo);
 	}
+	len = ftell(archivo);
+
 
 	printf("magic_number: %i\n", osadaHeaderFile->magic_number);
 	printf("version: %i\n", osadaHeaderFile->version);
@@ -36,13 +42,34 @@ int main(void) {
 	printf("padding: %i\n", osadaHeaderFile->padding);
 
 	/**************************************/
-	//bitarray = bitarray_create(data, sizeof(data));
 
-	fseek(archivo, sizeof(osada_header)+1, SEEK_CUR);
-	bitArray = malloc(osadaHeaderFile->bitmap_blocks*64);
-	fread(bitArray, osadaHeaderFile->bitmap_blocks*64, 1, archivo);
-	bitarray = bitarray_create(bitArray, osadaHeaderFile->bitmap_blocks*64);
-	printf("que onda: %i",bitarray_test_bit(bitarray, 1025));
+
+	printf("Longitud del archivo 0: %i\n",len);
+
+	fseek(archivo, 0, SEEK_CUR);
+
+	bitArray = malloc(1000);//para 100k
+	int bytesLeidos=fread(bitArray, OSADA_BLOCK_SIZE, osadaHeaderFile->bitmap_blocks, archivo);
+	int sizeOFDelBitMap = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+
+	//bitarray = bitarray_create(bitArray, 192);//para 100k
+	bitarray = bitarray_create(bitArray, sizeOFDelBitMap);//para 150k
+	int i = 0;
+	int cantiUno  = 0;
+	int cantiCero = 0;
+	for (i=0; i<osadaHeaderFile->fs_blocks; i++){//para 150k
+
+		if(bitarray_test_bit(bitarray, i) == 0){
+			cantiCero++;
+		}
+		if(bitarray_test_bit(bitarray, i) == 1){
+			cantiUno++;
+		}
+
+	}
+	printf("cantiUno: %i\n",cantiUno);
+	printf("cantiCero: %i\n",cantiCero);
+
 
 	/**************************************/
 
