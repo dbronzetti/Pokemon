@@ -15,6 +15,8 @@
  	 	 	 	 truncate --size 100M disco.bin
  	 	 	 	 truncate --size 50k disco.bin
  	 	 	 	 ./osada-format disco.bin
+
+ 	 	 	 	 //bless disco.bin
 */
 int main(void) {
 	char *ruta = "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco.bin";
@@ -46,6 +48,7 @@ int main(void) {
 
 	printf("Longitud del archivo 0: %i\n",len);
 
+	/*****************BIT MAP*********************/
 	fseek(archivo, 0, SEEK_CUR);
 
 	bitArray = malloc(1000);//para 100k
@@ -70,26 +73,20 @@ int main(void) {
 	printf("cantiUno: %i\n",cantiUno);
 	printf("cantiCero: %i\n",cantiCero);
 
-
 	/**************************************/
 
+	len = ftell(archivo);
+	printf("Longitud del archivo despuesdelBitmap: %i\n",len);
 
-/*
- * https://github.com/sisoputnfrba/foro/issues/445
-	Segun lo que entendia el header era lo primero que tenia el archivo, use esto, y me trajo bien todo con la estructura que esperaba
-
-	    fread(header,sizeof(osada_header),1,file);
-
-	y para leer la tabla de archivos tenes que pasar el bitmap, una vez que leiste el header, tu puntero en el FILE queda al final del header (principio de bitmap). El tamaño del bitmap lo tenes en el header(pero en bloques).
-*/
-
-	//TENGO Q LEER EL BITMAP!!!!
-	/*
+	/**********Tabla de Archivos**********/
 	osada_file osadaFile[2048];
-	fseek(archivo, osadaHeaderFile->bitmap_blocks*64, SEEK_CUR);
-	fread(osadaFile, sizeof(osada_file), 2048, archivo);
+	fseek(archivo, 0, SEEK_CUR);
+
+	bytesLeidos = fread(osadaFile, sizeof(osada_file), 1024, archivo);
+
 	int k=0;
-	for (k=0; k<2048; k++){
+	/*
+ 	for (k=0; k<2048; k++){
 		printf("**********************************************\n");
 		printf("state_%i: %s\n",k, osadaFile[k].state);
 		printf("parent_directory_%i: %i\n",k, osadaFile[k].parent_directory);
@@ -98,8 +95,28 @@ int main(void) {
 		printf("fname_%i: %s\n",k, osadaFile[k].lastmod);
 		printf("file_size_%i: %i\n",k, osadaFile[k].first_block);
 	}
-	*/
-	return 0;
+	 */
+	len = ftell(archivo);
+	printf("Longitud del archivo despues de tabla de achivos: %i\n",len);
 
+	/**********TABLA DE ASGINACION**********/
+	int numeroBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 /64;
+	int *arrayTabla=malloc(1000);
+	printf("numeroBloques : %i\n", numeroBloques);
+	fseek(archivo,0, SEEK_CUR);
+	bytesLeidos = fread(arrayTabla, sizeof(int), numeroBloques, archivo);
+	len = ftell(archivo);
+	for (k=0; k<numeroBloques; k++){
+		//printf("Array tabla asignada: %i\n",arrayTabla[0]);
+	}
+	printf("Longitud del archivo despues de tabla de achivos: %i\n",len);
+
+	/**********Bloques de datos**********/
+	fseek(archivo,0, SEEK_CUR);
+	bytesLeidos=fread(bitArray, OSADA_BLOCK_SIZE, osadaHeaderFile->data_blocks, archivo);
+	len = ftell(archivo);
+
+	printf("Longitud del archivo despues de tabla de achivos: %i\n",len);
+	return 0;
 
 }
