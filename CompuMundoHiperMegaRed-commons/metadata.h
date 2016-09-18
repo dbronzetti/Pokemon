@@ -24,6 +24,13 @@ typedef struct {
 } t_metadataEntrenador;
 
 typedef struct {
+	char* tipo;
+	int pos_x;
+	int pos_y;
+	char* id;
+} t_metadataPokenest;
+
+typedef struct {
 	int tiempoChequeoDeadlock;
 	int batalla;
 	char* algoritmo;
@@ -32,6 +39,7 @@ typedef struct {
 	char* ip;
 	int puerto;
 } t_metadataMapa;
+
 
 //Funciones
 void crearArchivoMetadataDelMapa(char* rutaMetadataMapa, t_metadataMapa* metadataMapa);

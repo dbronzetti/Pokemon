@@ -9,9 +9,10 @@
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *mapa = string_new();
-	;
 	char *pokedex = string_new();
 	pthread_t serverThread;
+
+	listaDePokenest = list_create();
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -35,8 +36,11 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	char* rutaMetadata = string_from_format("%s/Mapas/%s/metadata.dat",
-			pokedex, mapa);
+	char* rutaMetadata = string_from_format("%s/Mapas/%s/metadata.dat", pokedex,
+			mapa);
+
+	char* rutaPokenest = string_from_format("%s/Mapas/%s/Pokenest/", pokedex,
+			mapa);
 
 	printf("Directorio de la metadata del mapa '%s': '%s'\n", mapa,
 			rutaMetadata);
@@ -45,7 +49,8 @@ int main(int argc, char **argv) {
 
 	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa);
-	printf("Tiempo de checkeo de deadlock: %d\n", metadataMapa.tiempoChequeoDeadlock);
+	printf("Tiempo de checkeo de deadlock: %d\n",
+			metadataMapa.tiempoChequeoDeadlock);
 	printf("Batalla: %d\n", metadataMapa.batalla);
 	printf("Algoritmo: %s\n", metadataMapa.algoritmo);
 	printf("Quantum: %d\n", metadataMapa.quantum);
@@ -53,6 +58,8 @@ int main(int argc, char **argv) {
 	printf("IP: %s\n", metadataMapa.ip);
 	printf("Puerto: %d\n", metadataMapa.puerto);
 	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+	recorrerdirDePokenest(rutaPokenest);
 
 	puts("Bienvenido al mapa");
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
@@ -208,3 +215,114 @@ void handShake(void *parameter) {
 	free(messageRcv);
 }
 
+int recorrerdirDePokenest(char* rutaDirPokenest) {
+
+	int i;
+
+	if ((dipPokenest = opendir(rutaDirPokenest)) == NULL) {
+		log_error(logMapa, "Error al abrir el directorio donde se encuentran las pokenests.");
+		return -1;
+	}
+
+	while ((ditPokenest = readdir(dipPokenest)) != NULL) {
+		i++;
+
+		if ((strcmp(ditPokenest->d_name, ".") != 0)
+				&& (strcmp(ditPokenest->d_name, "..") != 0)) {
+
+			char* rutaPokemon = string_from_format("%s%s", rutaDirPokenest,
+					ditPokenest->d_name);
+			recorrerCadaPokenest(rutaPokemon);
+
+		}
+
+	}
+
+	if (closedir(dipPokenest) == -1) {
+		log_error(logMapa, "Error al cerrar el directorio donde se encuentran las pokenest.");
+		return -1;
+	}
+
+	return 0;
+
+}
+
+int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
+
+	int i;
+	int b = 0;
+
+	t_pokenest* pokenest = malloc(sizeof(t_pokenest));
+	pokenest->pokemon = malloc((sizeof(int)));
+
+	if ((dipPokemones = opendir(rutaDeUnaPokenest)) == NULL) {
+		log_error(logMapa, "Error al abrir el directorio %s", rutaDeUnaPokenest);
+		return -1;
+	}
+
+	while ((ditPokemones = readdir(dipPokemones)) != NULL) {
+		i++;
+
+		if ((strcmp(ditPokemones->d_name, ".") != 0)
+				&& (strcmp(ditPokemones->d_name, "..") != 0)) {
+			if ((strcmp(ditPokemones->d_name, "metadata.dat") == 0)) {
+
+				char* rutaMetadataPokenest = string_from_format(
+						"%s/metadata.dat", rutaDeUnaPokenest);
+				pokenest->metadata = crearArchivoMetadataPokenest(rutaMetadataPokenest);
+
+			}
+
+			else{
+
+				char* rutaDelPokemon = string_from_format("%s/%s",rutaDeUnaPokenest, ditPokemones->d_name);
+
+				pokenest->pokemon[b] = levantarNivelDelPokemon(rutaDelPokemon);
+
+				b++;
+
+			}
+
+		}
+
+	}
+
+	if (closedir(dipPokemones) == -1) {
+		log_error(logMapa, "Error al cerrar el directorio %s", rutaDeUnaPokenest);
+		return -1;
+	}
+
+	list_add(listaDePokenest, pokenest);
+
+	return 0;
+
+}
+
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest) {
+	t_config* metadata;
+	metadata = config_create(rutaMetadataPokenest);
+	t_metadataPokenest metadataPokenest;
+
+	metadataPokenest.tipo = config_get_string_value(metadata, "Tipo");
+	metadataPokenest.id = config_get_string_value(metadata, "Identificador");
+
+	char* posicionSinParsear = config_get_string_value(metadata, "Posicion");
+
+	char** posicionYaParseadas = string_split(posicionSinParsear, ";");
+
+	metadataPokenest.pos_x = atoi(posicionYaParseadas[0]);
+	metadataPokenest.pos_y = atoi(posicionYaParseadas[1]);
+
+	free(metadata);
+
+	return metadataPokenest;
+}
+
+int levantarNivelDelPokemon(char* rutaDelPokemon){
+
+	t_config* metadata;
+	metadata = config_create(rutaDelPokemon);
+	return config_get_int_value(metadata, "Nivel");
+
+	free(metadata);
+}

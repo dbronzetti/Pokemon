@@ -14,10 +14,19 @@
 #include "sockets.h"
 #include "commons/log.h"
 #include "metadata.h"
+#include <stdlib.h>
+#include <curses.h>
+#include <commons/collections/list.h>
+#include <dirent.h>
+#include <errno.h>
 
 t_log* logMapa;
 t_metadataMapa metadataMapa;
-
+DIR *dipPokenest;
+struct dirent *ditPokenest;
+DIR *dipPokemones;
+struct dirent *ditPokemones;
+t_list* listaDePokenest;
 
 // Estructuras
 typedef struct {
@@ -25,10 +34,20 @@ typedef struct {
 	int socketClient;
 } t_serverData;
 
+typedef struct {
+	int* pokemon;
+	t_metadataPokenest metadata;
+} t_pokenest;
 
 // Funciones de conexion
 void startServerProg();
 void newClients(void *parameter);
 void handShake(void *parameter);
+
+// Funciones
+int recorrerdirDePokenest(char* rutaDirPokenest); //Se encarga de recorrer las carpetas que esta dentro de la pokenest (pikachu,bulbasaur,charmander,etc...)
+int recorrerCadaPokenest(char* rutaDeUnaPokenest); //Se encarga de recorrer lo que esta ADENTRO de las carpetas pokenest (pikachu001,pikachu002,metadata.dat,etc..)
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
+int levantarNivelDelPokemon(char* rutaDelPokemon);
 
 #endif /* MAPA_H_ */
