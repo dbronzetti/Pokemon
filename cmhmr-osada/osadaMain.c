@@ -19,7 +19,7 @@
  	 	 	 	 //bless disco.bin
 */
 int main(void) {
-	char *ruta = "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco.bin";
+	char *ruta = "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco-chico.bin";
 	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
 	FILE * archivo= fopen(ruta, "rb");
 	t_bitarray *bitarray;
@@ -49,22 +49,28 @@ int main(void) {
 	printf("Longitud del archivo 0: %i\n",len);
 
 	/*****************BIT MAP*********************/
-	fseek(archivo, 0, SEEK_CUR);
+	fseek(archivo, 0, sizeof(osada_header));
 
 	bitArray = malloc(1000);//para 100k
-	int bytesLeidos=fread(bitArray, OSADA_BLOCK_SIZE, osadaHeaderFile->bitmap_blocks, archivo);
+	int bytesLeidos = 0;
+	bytesLeidos=fread(bitArray, OSADA_BLOCK_SIZE, osadaHeaderFile->bitmap_blocks, archivo);
 	int sizeOFDelBitMap = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
 
 	//bitarray = bitarray_create(bitArray, 192);//para 100k
+
+	//REPRESENTA EL MAPA DEL BITMAP
 	bitarray = bitarray_create(bitArray, sizeOFDelBitMap);//para 150k
 	int i = 0;
 	int cantiUno  = 0;
 	int cantiCero = 0;
+
+	//LUIS: UN BIT REPRESENTA UN BLOQUE.
 	for (i=0; i<osadaHeaderFile->fs_blocks; i++){//para 150k
 
 		if(bitarray_test_bit(bitarray, i) == 0){
 			cantiCero++;
 		}
+
 		if(bitarray_test_bit(bitarray, i) == 1){
 			cantiUno++;
 		}
