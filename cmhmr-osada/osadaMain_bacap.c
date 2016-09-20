@@ -12,9 +12,10 @@
 
 /*
  	 	 	 	 Antes hay que hacer esto:
- 	 	 	 	 truncate --size 100M disco.bin
- 	 	 	 	 truncate --size 50k disco.bin
- 	 	 	 	 ./osada-format disco.bin
+ 	 	 	 	 truncate --size 100M disco-grande.bin
+ 	 	 	 	 truncate --size 150k disco-mediano.bin
+ 	 	 	 	  truncate --size 100k disco-chico.bin
+ 	 	 	 	 ./osada-format disco-chico.bin
 
  	 	 	 	 //bless disco.bin
 */
