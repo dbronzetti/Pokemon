@@ -15,13 +15,13 @@
 int main(int argc, char *argv[]){
 
 	caddr_t mmap_ptr;
-	char *ruta = "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco.bin";
+	char *ruta = "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/disco-chico.bin";
 	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
 	unsigned char *osada;
 	t_bitarray *bitMap;
 	unsigned char *unBitMapSinFormato;
 
-	int fid	= open(ruta ,O_RDWR,(mode_t)0755);
+	int fid	= open(ruta ,O_RDWR,(mode_t)0777);
 	int pagesize = getpagesize();
 	printf("pagesize: %i\n", pagesize);
 	printf("sizeof(osada_header): %i\n",  sizeof(osada_header));
@@ -43,6 +43,9 @@ int main(int argc, char *argv[]){
 	printf("allocations_table_offset: %i\n", osadaHeaderFile->allocations_table_offset);
 	printf("data_blocks: %i\n", osadaHeaderFile->data_blocks);
 	printf("padding: %s\n",   osadaHeaderFile->padding);
+
+	osadaHeaderFile->version = 2;
+	printf("version: %i\n", osadaHeaderFile->version);
 
 	/*BIT MAP*/
 
@@ -70,13 +73,15 @@ int main(int argc, char *argv[]){
 	printf("cantiUno: %i\n",cantiUno);
 	printf("cantiCero: %i\n",cantiCero);
 	/*TABLA DE ARCHIVO*/
-	osada_file *tablaDeArchivo= malloc(1024*sizeof(osada_file));
+	osada_file *tablaDeArchivo = malloc(1024*sizeof(osada_file));
 	int k=0;
 	printf("Test: %i\n", 1024*sizeof(osada_file));
 
 	memcpy(tablaDeArchivo, &osada[64 + sizeOFDelBitMap], 1024*sizeof(osada_file));
 	printf("Test: %i\n", 1);
  	for (k=0; k<=2048; k++){
+ 		//(tablaDeArchivo[k].state) = DIRECTORY;
+ 		//tablaDeArchivo[k].parent_directory = 6;
 		printf("%i**********************************************\n",k);
 		printf("state_%i: %s\n",k, &(tablaDeArchivo[k]).state);
 		printf("parent_directory_%i: %i\n",k, tablaDeArchivo[k].parent_directory);
@@ -84,12 +89,14 @@ int main(int argc, char *argv[]){
 		printf("file_size_%i: %i\n",k, tablaDeArchivo[k].file_size);
 		printf("fname_%i: %s\n",k, &tablaDeArchivo[k].lastmod);
 		printf("file_size_%i: %i\n",k, tablaDeArchivo[k].first_block);
+		//msync(osada, pagesize, MS_SYNC);
 	}
 
 	/*CERRAR TODO*/
-	int status = munmap(osadaHeaderFile, pagesize);
-	int statusCerrar = close(fid);
+	int status = munmap(tablaDeArchivo, pagesize);
 
+	int statusCerrar = close(fid);
+	free(tablaDeArchivo);
 	return 0;
 }
 
