@@ -41,8 +41,9 @@ typedef struct {
 
 // Funciones de conexion
 void startServerProg();
-void newClients(void *parameter);
+void newClients(int *socketServer, fd_set *master, int *fdmax);
 void handShake(void *parameter);
+void processMessageReceived (void *parameter);
 
 // Funciones
 int recorrerdirDePokenest(char* rutaDirPokenest); //Se encarga de recorrer las carpetas que esta dentro de la pokenest (pikachu,bulbasaur,charmander,etc...)

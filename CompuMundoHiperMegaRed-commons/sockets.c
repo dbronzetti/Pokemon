@@ -35,8 +35,6 @@ int openServerConnection(int newSocketServerPort, int *socketServer){
 		return exitcode;
 	}
 
-	listen(*socketServer, SOMAXCONN); //SOMAXCONN = Constant with the maximum connections allowed by the SO
-
 	return exitcode;
 }
 
