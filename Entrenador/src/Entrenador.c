@@ -38,8 +38,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	char* rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
-			pokedex, entrenador);
+	char* rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",pokedex, entrenador);
 
 
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,

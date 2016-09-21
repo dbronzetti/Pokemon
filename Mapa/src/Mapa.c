@@ -36,21 +36,17 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	char* rutaMetadata = string_from_format("%s/Mapas/%s/metadata.dat", pokedex,
-			mapa);
+	char* rutaMetadata = string_from_format("%s/Mapas/%s/metadata.dat", pokedex, mapa);
 
-	char* rutaPokenest = string_from_format("%s/Mapas/%s/Pokenest/", pokedex,
-			mapa);
+	char* rutaPokenest = string_from_format("%s/Mapas/%s/Pokenest/", pokedex, mapa);
 
-	printf("Directorio de la metadata del mapa '%s': '%s'\n", mapa,
-			rutaMetadata);
+	printf("Directorio de la metadata del mapa '%s': '%s'\n", mapa,	rutaMetadata);
 
-	logMapa = log_create(logFile, "ENTRENADOR", 0, LOG_LEVEL_TRACE);
+	logMapa = log_create(logFile, "MAPA", 0, LOG_LEVEL_TRACE);
 
 	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa);
-	printf("Tiempo de checkeo de deadlock: %d\n",
-			metadataMapa.tiempoChequeoDeadlock);
+	printf("Tiempo de checkeo de deadlock: %d\n",metadataMapa.tiempoChequeoDeadlock);
 	printf("Batalla: %d\n", metadataMapa.batalla);
 	printf("Algoritmo: %s\n", metadataMapa.algoritmo);
 	printf("Quantum: %d\n", metadataMapa.quantum);
@@ -72,7 +68,13 @@ int main(int argc, char **argv) {
 
 void startServerProg() {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
-	int socketServer;
+	int socketServer;// listening socket descriptor
+	fd_set master; // master file descriptor list
+	fd_set read_fds;// temp file descriptor list for select()
+	int fdmax;// maximum file descriptor number
+
+	FD_ZERO(&master);    // clear the master and temp sets
+	FD_ZERO(&read_fds);
 
 	exitCode = openServerConnection(metadataMapa.puerto, &socketServer);
 	log_info(logMapa, "SocketServer: %d", socketServer);
@@ -88,19 +90,81 @@ void startServerProg() {
 			return;
 		}
 
+		// add the listener to the master set
+		FD_SET(socketServer, &master);
+
+		// keep track of the biggest file descriptor
+		fdmax = socketServer; // so far, it's this one
+
 		while (1) {
-			newClients((void*) &socketServer);
+
+			read_fds = master; // copy it
+			if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1) {
+				perror("select");
+				exit(4);
+			}
+
+			int i;
+
+			// run through the existing connections looking for data to read
+			for(i = 0; i <= fdmax; i++) {
+				if (FD_ISSET(i, &read_fds)) { // we got one!!
+					if (i == socketServer) {
+						// handle new connections
+						newClients(&socketServer, &master, &fdmax);
+
+					} else {
+						// handle data from a client
+						//Receive message size
+						int messageSize = 0;
+
+						//Get Payload size
+						int receivedBytes = receiveMessage(&i, &messageSize, sizeof(messageSize));
+
+						if (receivedBytes <= 0) {
+							// got error or connection closed by client
+							if (receivedBytes == 0) {
+								// connection closed
+								log_error(logMapa,"The client hung up or went down while! - Please check the client '%d'!", i);
+							} else {
+								perror("recv");
+							}
+							close(i); // bye!
+							FD_CLR(i, &master); // remove from master set
+
+						} else {
+							// we got some data from a client
+
+							//Create thread attribute detached
+							pthread_attr_t processMessageThreadAttr;
+							pthread_attr_init(&processMessageThreadAttr);
+							pthread_attr_setdetachstate(&processMessageThreadAttr, PTHREAD_CREATE_DETACHED);
+
+							//Create thread for checking new connections in server socket
+							pthread_t processMessageThread;
+							t_serverData *serverData = malloc(sizeof(t_serverData));
+							memcpy(&serverData->socketServer, &socketServer ,sizeof(serverData->socketServer));
+							memcpy(&serverData->socketClient, &i ,sizeof(serverData->socketClient));
+
+							pthread_create(&processMessageThread, &processMessageThreadAttr, (void*) processMessageReceived, serverData);
+
+							//Destroy thread attribute
+							pthread_attr_destroy(&processMessageThreadAttr);
+
+						}
+					} // END handle data from client
+				} // END got new incoming connection
+			} // END looping through file descriptors
 		}
 	}
 
 }
 
-void newClients(void *parameter) {
+void newClients(int *socketServer, fd_set *master, int *fdmax) {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 
 	t_serverData *serverData = malloc(sizeof(t_serverData));
-	memcpy(&serverData->socketServer, parameter,
-			sizeof(serverData->socketServer));
+	memcpy(&serverData->socketServer, socketServer,sizeof(serverData->socketServer));
 
 	// disparar un thread para acceptar cada cliente nuevo (debido a que el accept es bloqueante) y para hacer el handshake
 	/**************************************/
@@ -117,18 +181,22 @@ void newClients(void *parameter) {
 	//			pthread_attr_destroy(&acceptClientThreadAttr);
 	/************************************/
 
-	exitCode = acceptClientConnection(&serverData->socketServer,
-			&serverData->socketClient);
+	exitCode = acceptClientConnection(&serverData->socketServer,&serverData->socketClient);
 
 	if (exitCode == EXIT_FAILURE) {
-		log_warning(logMapa,
-				"There was detected an attempt of wrong connection");
+		log_warning(logMapa,"There was detected an attempt of wrong connection");
 		close(serverData->socketClient);
 		free(serverData);
 	} else {
 
-		log_info(logMapa, "The was received a connection in socket: %d.",
-				serverData->socketClient);
+		log_info(logMapa, "The was received a connection in socket: %d.", serverData->socketClient);
+
+		FD_SET(serverData->socketClient, master); // add to master set
+
+		if (serverData->socketClient > *fdmax) {    // keep track of the max
+			*fdmax = serverData->socketClient;
+		}
+
 		//Create thread attribute detached
 		pthread_attr_t handShakeThreadAttr;
 		pthread_attr_init(&handShakeThreadAttr);
@@ -137,13 +205,12 @@ void newClients(void *parameter) {
 
 		//Create thread for checking new connections in server socket
 		pthread_t handShakeThread;
-		pthread_create(&handShakeThread, &handShakeThreadAttr,
-				(void*) handShake, serverData);
+		pthread_create(&handShakeThread, &handShakeThreadAttr,(void*) handShake, serverData);
 
 		//Destroy thread attribute
 		pthread_attr_destroy(&handShakeThreadAttr);
 
-	}		// END handshakes
+	}// END handshakes
 
 }
 
@@ -155,18 +222,15 @@ void handShake(void *parameter) {
 	//Receive message size
 	int messageSize = 0;
 	char *messageRcv = malloc(sizeof(messageSize));
-	int receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,
-			sizeof(messageSize));
+	int receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,sizeof(messageSize));
 
 	//Receive message using the size read before
 	memcpy(&messageSize, messageRcv, sizeof(int));
 	messageRcv = realloc(messageRcv, messageSize);
-	receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,
-			messageSize);
+	receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,messageSize);
 
 	//starting handshake with client connected
-	t_MessageGenericHandshake *message = malloc(
-			sizeof(t_MessageGenericHandshake));
+	t_MessageGenericHandshake *message = malloc(sizeof(t_MessageGenericHandshake));
 	deserializeHandShake(message, messageRcv);
 
 	//Now it's checked that the client is not down
@@ -178,41 +242,92 @@ void handShake(void *parameter) {
 		free(serverData);
 	} else {
 		switch ((int) message->process) {
+			case ENTRENADOR: {
+				log_info(logMapa, "Message from '%s': %s",getProcessString(message->process), message->message);
+				puts("Ha ingresado un nuevo ENTRENADOR");
+				exitCode = sendClientAcceptation(&serverData->socketClient);
 
-		case ENTRENADOR: {
-			log_info(logMapa, "Message from '%s': %s",
-					getProcessString(message->process), message->message);
-			puts("Ha ingresado un nuevo entrenador");
-			exitCode = sendClientAcceptation(&serverData->socketClient);
-
-			if (exitCode == EXIT_SUCCESS) {
-
-				//Create thread attribute detached
-				pthread_attr_t processMessageThreadAttr;
-				pthread_attr_init(&processMessageThreadAttr);
-				pthread_attr_setdetachstate(&processMessageThreadAttr,
-				PTHREAD_CREATE_DETACHED);
-
-				//Destroy thread attribute
-				pthread_attr_destroy(&processMessageThreadAttr);
+				if (exitCode == EXIT_SUCCESS) {
+					log_info(logMapa, "The client '%d' has received SUCCESSFULLY the handshake message",serverData->socketClient);
+				}
+				break;
 			}
+			case POKEDEX_CLIENTE: {
+				log_info(logMapa, "Message from '%s': %s",	getProcessString(message->process), message->message);
+				puts("Ha ingresado un nuevo POKEDEX_CLIENTE");
+				exitCode = sendClientAcceptation(&serverData->socketClient);
 
-			break;
-		}
-		default: {
-			log_error(logMapa,
-					"Process not allowed to connect - Invalid process '%s' tried to connect to MAPA",
-					getProcessString(message->process));
-			close(serverData->socketClient);
-			free(serverData);
-			break;
-		}
+				if (exitCode == EXIT_SUCCESS) {
+					log_info(logMapa, "The client '%d' has received SUCCESSFULLY the handshake message",serverData->socketClient);
+				}
+				break;
+			}
+			default: {
+				log_error(logMapa, "Process not allowed to connect - Invalid process '%s' tried to connect to MAPA",	getProcessString(message->process));
+				close(serverData->socketClient);
+				free(serverData);
+				break;
+			}
 		}
 	}
 
 	free(message->message);
 	free(message);
 	free(messageRcv);
+}
+
+void processMessageReceived (void *parameter){
+
+	t_serverData *serverData = (t_serverData*) parameter;
+
+	while(1){
+		//Receive message size
+		int messageSize = 0;
+
+		//Get Payload size
+		int receivedBytes = receiveMessage(&serverData->socketClient, &messageSize, sizeof(messageSize));
+
+		if ( receivedBytes > 0 ){
+
+			//Receive process from which the message is going to be interpreted
+			enum_processes fromProcess;
+			receivedBytes = receiveMessage(&serverData->socketClient, &fromProcess, sizeof(fromProcess));
+
+			log_info(logMapa, "\n\nMessage size received from process '%s' in socket cliente '%d': %d\n",getProcessString(fromProcess), serverData->socketClient, messageSize);
+
+			switch (fromProcess){
+			case ENTRENADOR:{
+				log_info(logMapa, "Processing ENTRENADOR message received");
+				//processEntrenadorMessages
+				break;
+			}
+			case POKEDEX_CLIENTE:{
+				log_info(logMapa, "Processing POKEDEX_CLIENTE message received");
+				//processPOKEDEXClienteMessages
+				break;
+			}
+			default:{
+				log_error(logMapa,"Process not allowed to connect - Invalid process '%s' send a message to MAPA", getProcessString(fromProcess));
+				close(serverData->socketClient);
+				free(serverData);
+				break;
+			}
+			}
+
+		}else if (receivedBytes == 0 ){
+			//The client is down when bytes received are 0
+			log_error(logMapa,"The client went down while receiving! - Please check the client '%d' is down!", serverData->socketClient);
+			close(serverData->socketClient);
+			free(serverData);
+			break;
+		}else{
+			log_error(logMapa, "Error - No able to received - Error receiving from socket '%d', with error: %d",serverData->socketClient,errno);
+			close(serverData->socketClient);
+			free(serverData);
+			break;
+		}
+	}
+
 }
 
 int recorrerdirDePokenest(char* rutaDirPokenest) {
