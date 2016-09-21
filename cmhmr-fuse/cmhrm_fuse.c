@@ -114,22 +114,6 @@ int hello_read(const char *path, char *buf, size_t size, off_t offset, struct fu
 	return size;
 }
 
-static struct fuse_operations hello_oper = {
-		.getattr = hello_getattr,
-		.readdir = hello_readdir,
-		.open = hello_open,
-		.read = hello_read,
-};
 
-struct fuse_opt fuse_options[] = {
-		// Este es un parametro definido por nosotros
-		CUSTOM_FUSE_OPT_KEY("--welcome-msg %s", welcome_msg, 0),
 
-		// Estos son parametros por defecto que ya tiene FUSE
-		FUSE_OPT_KEY("-V", KEY_VERSION),
-		FUSE_OPT_KEY("--version", KEY_VERSION),
-		FUSE_OPT_KEY("-h", KEY_HELP),
-		FUSE_OPT_KEY("--help", KEY_HELP),
-		FUSE_OPT_END,
-};
 

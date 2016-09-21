@@ -131,7 +131,7 @@ int hello_read(const char *path, char *buf, size_t size, off_t offset, struct fu
  * Como se observa la estructura contiene punteros a funciones.
  */
 
-static struct fuse_operations hello_oper;
+
 
 
 /** keys for FUSE_OPT_ options */
@@ -145,9 +145,6 @@ enum {
  * Esta estructura es utilizada para decirle a la biblioteca de FUSE que
  * parametro puede recibir y donde tiene que guardar el valor de estos
  */
-struct fuse_opt fuse_options[];
-
-
 
 
 

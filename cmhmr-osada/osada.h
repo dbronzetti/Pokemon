@@ -1,4 +1,10 @@
 #include <stdint.h>
+#include <commons/bitarray.h>
+#include <stdio.h>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
 
 #ifndef __OSADA_H__
 #define __OSADA_H__

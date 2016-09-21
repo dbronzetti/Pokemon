@@ -1,0 +1,51 @@
+/*
+ * cmhmr_fuse_main.c
+ *
+ *  Created on: 13/9/2016
+ *      Author: utnso
+ */
+#include "cmhmr_fuse.h"
+
+/*
+static struct fuse_operations hello_oper = {
+		.getattr = hello_getattr,
+		.readdir = hello_readdir,
+		.open = hello_open,
+		.read = hello_read,
+};
+
+struct fuse_opt fuse_options[] = {
+		// Este es un parametro definido por nosotros
+		CUSTOM_FUSE_OPT_KEY("--welcome-msg %s", welcome_msg, 0),
+
+		// Estos son parametros por defecto que ya tiene FUSE
+		FUSE_OPT_KEY("-V", KEY_VERSION),
+		FUSE_OPT_KEY("--version", KEY_VERSION),
+		FUSE_OPT_KEY("-h", KEY_HELP),
+		FUSE_OPT_KEY("--help", KEY_HELP),
+		FUSE_OPT_END,
+};
+*/
+
+// Dentro de los argumentos que recibe nuestro programa obligatoriamente
+// debe estar el path al directorio donde vamos a montar nuestro FS
+//int main(int argc, char *argv[]) {
+/*
+int crearFuse(int argc, char *argv[]) {
+	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
+
+	memset(&runtime_options, 0, sizeof(struct t_runtime_options));
+
+	if (fuse_opt_parse(&args, &runtime_options, fuse_options, NULL) == -1){
+		perror("Invalid arguments!");
+		return EXIT_FAILURE;
+	}
+
+	if( runtime_options.welcome_msg != NULL ){
+		printf("%s\n", runtime_options.welcome_msg);
+	}
+
+	 return fuse_main(argc, argv, &hello_oper, NULL);
+
+}
+*/
