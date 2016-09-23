@@ -55,38 +55,14 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 
 #endif __OSADA_H__
 
-void inicializarOSADA();
+unsigned char *inicializarOSADA();
+osada_header *obtenerHeader(unsigned char *osada);
 
-osada_header *leerArchivoParaHeader(char *ruta);
+void obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile);
+void obtenerTablaDeArchivos(unsigned char *osada);
+void obtenerTablaDeAsignacion(unsigned char *osada);
+void obtenerBloqueDeDatos(unsigned char *osada);
 
-unsigned char devolverMagicNumbre(osada_header *osadaHeader);
-
-uint8_t devolverVersion(osada_header *osadaHeader);
-
-int devolverFSBloques(osada_header *osadaHeader);
-
-uint32_t devolverBitMapBlocks(osada_header *osadaHeader);
-
-uint32_t devolverAllocations_table_offset(osada_header *osadaHeader);
-
-uint32_t devolverDataBlocks(osada_header *osadaHeader);
-
-
-unsigned char devolverPadding(osada_header *osadaHeader);
-
-
-
-/*FILE SYSTEM */
-osada_file *leerArchivoParaOsadaFile(char *ruta);
-
-int devolverTamanio(osada_file *osadaFile);
-
-osada_file_state devolverEstado(osada_file *osadaFile);
-
-unsigned char devolverNombreDelArchivo(osada_file *osadaFile);
-
-uint16_t devolverDirectorioPadre(osada_file *osadaFile);
-
-uint32_t devolverUltimaMod(osada_file *osadaFile);
-
-osada_block_pointer devolverPrimerBloque(osada_file *osadaFile);
+/*MOCK*/
+void mockInicializarOSADA();
+void mockCrearDirectorios();

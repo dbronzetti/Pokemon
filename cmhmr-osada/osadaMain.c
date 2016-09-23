@@ -8,7 +8,12 @@
 
 
 int main(int argc, char *argv[]){
-	inicializarOSADA();
+
+	unsigned char *osada = inicializarOSADA(argv[1]);
+	osada_header *osadaHeaderFile = obtenerHeader(osada);
+	obtenerBitmap(osada, osadaHeaderFile);
+	//mockInicializarOSADA();
+	//free(osada);
 	return 0;
 }
 
