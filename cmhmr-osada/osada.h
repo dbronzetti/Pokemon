@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 
 #ifndef __OSADA_H__
 #define __OSADA_H__

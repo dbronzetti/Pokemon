@@ -6,6 +6,7 @@
  */
 
 #include "osada.h"
+#include <errno.h>
 
 
 void inicializarOSADA(){
@@ -17,9 +18,16 @@ void inicializarOSADA(){
 	t_bitarray *bitMap;
 	unsigned char *unBitMapSinFormato;
 
+	struct stat buf;
+
+
 	int fid	= open(ruta ,O_RDWR,(mode_t)0777);
 	int pagesize = getpagesize();
-	printf("pagesize: %i\n", pagesize);
+
+	fstat(fid, &buf);
+	int size = buf.st_size;
+
+	printf("El Archivo pesa: %i\n", size);
 	printf("sizeof(osada_header): %i\n",  sizeof(osada_header));
 
 	if(fid<0){
@@ -27,7 +35,8 @@ void inicializarOSADA(){
 		error("Failed to open mmap file, QUIT!");
 	}
 
-	osada = mmap(NULL, pagesize, PROT_READ|PROT_WRITE,MAP_SHARED, fid, 0);
+	osada = mmap(0, size, PROT_READ|PROT_WRITE,MAP_SHARED, fid, 0);
+	printf("ERROR: %s\n", strerror(errno));
 	printf("error bit 1: %i\n", osada);
 	/* Offset in page frame */
 	memcpy(osadaHeaderFile, osada, 64);
@@ -40,8 +49,9 @@ void inicializarOSADA(){
 	printf("data_blocks: %i\n", osadaHeaderFile->data_blocks);
 	printf("padding: %s\n",   osadaHeaderFile->padding);
 
-	osadaHeaderFile->version = 2;
+	//osadaHeaderFile->version = 6;
 	printf("version: %i\n", osadaHeaderFile->version);
+	memcpy(osada, osadaHeaderFile, 64);
 
 	/*BIT MAP*/
 
@@ -74,23 +84,26 @@ void inicializarOSADA(){
 	printf("Test: %i\n", 1024*sizeof(osada_file));
 
 	memcpy(tablaDeArchivo, &osada[64 + sizeOFDelBitMap], 1024*sizeof(osada_file));
-	printf("Test: %i\n", 1);
+	printf("Test: %i\n", sizeof(tablaDeArchivo));
  	for (k=0; k<=2048; k++){
  		//(tablaDeArchivo[k].state) = DIRECTORY;
  		//tablaDeArchivo[k].parent_directory = 6;
-		printf("%i**********************************************\n",k);
-		printf("state_%i: %s\n",k, &(tablaDeArchivo[k]).state);
-		printf("parent_directory_%i: %i\n",k, tablaDeArchivo[k].parent_directory);
-		printf("fname_%i: %s\n",k, &tablaDeArchivo[k].fname);
+
+ 		printf("%i**********************************************\n",k);
+		//printf("state_%i: %s\n",k, &(tablaDeArchivo[k]).state);
+				printf("parent_directory_%i: %i\n",k, tablaDeArchivo[k].parent_directory);
+				/*printf("fname_%i: %s\n",k, &tablaDeArchivo[k].fname);
 		printf("file_size_%i: %i\n",k, tablaDeArchivo[k].file_size);
 		printf("fname_%i: %s\n",k, &tablaDeArchivo[k].lastmod);
 		printf("file_size_%i: %i\n",k, tablaDeArchivo[k].first_block);
+*/
 		//msync(osada, pagesize, MS_SYNC);
 	}
+//	memcpy(&osada[64 + sizeOFDelBitMap], tablaDeArchivo, 1024*sizeof(osada_file));
 
 	/*CERRAR TODO*/
-	int status = munmap(tablaDeArchivo, pagesize);
-
+	int status = munmap(osada, size);
+	printf("Estado del munmap: %i", status);
 	int statusCerrar = close(fid);
 	free(tablaDeArchivo);
 }

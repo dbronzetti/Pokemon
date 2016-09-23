@@ -80,8 +80,10 @@
 
 	}
 
+/*
     int main(void)
     {
     	crearServidor();
         return EXIT_SUCCESS;
     }
+*/

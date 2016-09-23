@@ -6,10 +6,10 @@
  */
 #include "osada.h"
 
-/*
-int main(int argc, char *argv[]){
 
+int main(int argc, char *argv[]){
+	inicializarOSADA();
 	return 0;
 }
-*/
+
 
