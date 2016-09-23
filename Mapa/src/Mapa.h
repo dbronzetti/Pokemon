@@ -19,6 +19,9 @@
 #include <commons/collections/list.h>
 #include <dirent.h>
 #include <errno.h>
+#include <tad_items.h>
+#include <nivel.h>
+#include <curses.h>
 
 t_log* logMapa;
 t_metadataMapa metadataMapa;
@@ -50,5 +53,6 @@ int recorrerdirDePokenest(char* rutaDirPokenest); //Se encarga de recorrer las c
 int recorrerCadaPokenest(char* rutaDeUnaPokenest); //Se encarga de recorrer lo que esta ADENTRO de las carpetas pokenest (pikachu001,pikachu002,metadata.dat,etc..)
 t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
 int levantarNivelDelPokemon(char* rutaDelPokemon);
+void dibujarMapa();
 
 #endif /* MAPA_H_ */

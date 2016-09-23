@@ -58,6 +58,12 @@ int main(int argc, char **argv) {
 	recorrerdirDePokenest(rutaPokenest);
 
 	puts("Bienvenido al mapa");
+
+	sleep(2);
+	system("clear"); //Espera 2 segundos y borra todo
+
+	dibujarMapa();
+
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 
 	pthread_join(serverThread, NULL);
@@ -407,6 +413,7 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 		return -1;
 	}
 
+	pokenest->pokemon[b] = -1; //Esto avisa que el array ya termino
 	list_add(listaDePokenest, pokenest);
 
 	return 0;
@@ -440,4 +447,31 @@ int levantarNivelDelPokemon(char* rutaDelPokemon){
 	return config_get_int_value(metadata, "Nivel");
 
 	free(metadata);
+}
+
+void dibujarMapa(){
+
+	t_list* items = list_create();
+	int rows, cols;
+
+	nivel_gui_inicializar();
+
+	int ultimoElemento = list_size(listaDePokenest);
+	int i = 0;
+
+    nivel_gui_get_area_nivel(&rows, &cols);
+
+    for (i=0 ; i<ultimoElemento; i++)
+    {
+    	t_pokenest* pokenest = list_get(listaDePokenest,i);
+    	int cantidadDePokemones = 0;
+    	while (pokenest->pokemon[cantidadDePokemones]!= -1)
+    		cantidadDePokemones++;
+	    CrearCaja(items, pokenest->metadata.id[0] , pokenest->metadata.pos_x, pokenest->metadata.pos_y, cantidadDePokemones);
+    }
+
+	nivel_gui_dibujar(items, "TEST");
+
+
+
 }

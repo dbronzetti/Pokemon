@@ -5,6 +5,7 @@
 	<projects>
 		<project>so-commons</project>
 		<project>CompuMundoHiperMegaRed-commons</project>
+		<project>nivel</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
