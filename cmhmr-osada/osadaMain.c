@@ -5,10 +5,14 @@
  *      Author: utnso
  */
 #include "osada.h"
+#include "mockOsada.h"
 
 
 int main(int argc, char *argv[]){
-	unsigned char *osada = inicializarOSADA(argv[1]);
+	int archivoID = obtenerIDDelArchivo(argv[1]);
+	int tamanio = obtenerTamanioDelArchivo(archivoID);
+
+	unsigned char *osada = inicializarOSADA(archivoID, tamanio);
 
 	osada_header *osadaHeaderFile = obtenerHeader(osada);
 	t_bitarray *bitMap = obtenerBitmap(osada, osadaHeaderFile);
@@ -16,11 +20,15 @@ int main(int argc, char *argv[]){
 	int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
 	char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
-	//mockInicializarOSADA();
+	//mockCrearDirectorios(osada, osadaHeaderFile, tamanio);
+
 	free(bitMap);
 	free(osadaHeaderFile);
 	free(tablaDeArchivo);
-	//free(osada);
+
+	//free(tablaDeAsignacion);//Error in `./cmhmr-osada': double free or corruption (out): 0x097611b0
+	//free(bloqueDeDatos);//Error in `./cmhmr-osada': double free or corruption (out): 0x097611b0
+
 	return 0;
 }
 
