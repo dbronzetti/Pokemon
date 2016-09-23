@@ -57,11 +57,10 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 
 unsigned char *inicializarOSADA();
 osada_header *obtenerHeader(unsigned char *osada);
-
-void obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile);
-void obtenerTablaDeArchivos(unsigned char *osada);
-void obtenerTablaDeAsignacion(unsigned char *osada);
-void obtenerBloqueDeDatos(unsigned char *osada);
+t_bitarray *obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile);
+osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHeaderFile);
+int *obtenerTablaDeAsignacion(unsigned char *osada, osada_header *osadaHeaderFile);
+char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile);
 
 /*MOCK*/
 void mockInicializarOSADA();

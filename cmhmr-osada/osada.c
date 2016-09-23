@@ -8,38 +8,112 @@
 #include "osada.h"
 #include <errno.h>
 
-void obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile){
+char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
+	printf("!aca\n");
+	int tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
+	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	int tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
+	int tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
+	printf("!aca\n");
+	int desde = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
 
-		//REPRESENTA EL MAPA DEL BITMAP
-		t_bitarray *bitMap;
-		unsigned char *unBitMapSinFormato;
-		int sizeOFDelBitMap = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
-		unBitMapSinFormato = malloc(sizeOFDelBitMap);
-		memcpy(unBitMapSinFormato, &osada[64], sizeOFDelBitMap);
-		bitMap = bitarray_create(unBitMapSinFormato, sizeOFDelBitMap);//para 150k
-		int i = 0;
-		int cantiUno  = 0;
-		int cantiCero = 0;
+	int tamanioQueOcupaElBloqueDeDatos = OSADA_BLOCK_SIZE* osadaHeaderFile->data_blocks;
+	unsigned char *bloqueDeDatos = malloc(sizeof(char) * osadaHeaderFile->data_blocks);
+	//¿CUANTOS BLOQUE DE ADTOS TENGO QUE LEER?
+	//¿NO TENGO QUE HACER 64 del puntero del bloque * cantidadDeBloques?
 
-		for (i=0; i<osadaHeaderFile->fs_blocks; i++){//para 150k
+	//memcpy(bloqueDeDatos, &osada[desde], tamanioQueOcupaElBloqueDeDatos );
+	return bloqueDeDatos;
+}
 
-			if(bitarray_test_bit(bitMap, i) == 0){
-				cantiCero++;
-			}
+void mostarAsignacion(int asignado){
+	printf("Array tabla asignada: %i\n",asignado);
+}
 
-			if(bitarray_test_bit(bitMap, i) == 1){
-				cantiUno++;
-			}
+void mostrarTodosLosAsignados(int *arrayTabla, int numeroBloques){
+	int pos = 0;
 
+	for (pos; pos < numeroBloques; pos++){
+		mostarAsignacion(arrayTabla[pos]);
+	}
+}
+
+int *obtenerTablaDeAsignacion(unsigned char *osada, osada_header *osadaHeaderFile){
+	int numeroBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 /64;
+	int tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
+
+	int *arrayTabla = malloc(sizeof(int) * numeroBloques);
+	int tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
+	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	int tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
+	int desde = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos;
+
+	memcpy(arrayTabla, &osada[desde], tamanioQueOcupaLaTablaDeAsignacion );
+	//mostrarTodosLosAsignados(arrayTabla, numeroBloques);
+	return arrayTabla;
+}
+
+void mostrarTablaDeArchivos(osada_file tablaDeArchivo,int pos){
+	printf("Empieza: %i****************\n",pos);
+	printf("state_%i: %c\n",pos, tablaDeArchivo.state);
+	printf("parent_directory_%i: %i\n",pos, tablaDeArchivo.parent_directory);
+	printf("fname_%i: %s\n",pos, &tablaDeArchivo.fname);
+	printf("file_size_%i: %i\n",pos, tablaDeArchivo.file_size);
+	printf("fname_%i: %s\n",pos, &tablaDeArchivo.lastmod);
+	printf("file_size_%i: %i\n",pos, tablaDeArchivo.first_block);
+	printf("Termina: %i****************\n",pos);
+}
+
+osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHeaderFile){
+	osada_file *tablaDeArchivo = malloc(2048*sizeof(osada_file));
+	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	int pos=0;
+	int tamanioQueOcupaLaTablaDeArchivos = 2048*sizeof(osada_file);
+	int desde = OSADA_BLOCK_SIZE + tamanioDelBitMapa;
+
+	//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
+	memcpy(tablaDeArchivo, &osada[desde], tamanioQueOcupaLaTablaDeArchivos);
+ 	for (pos=0; pos <= 2047; pos++){
+		//mostrarTablaDeArchivos(tablaDeArchivo[pos],pos);
+	}
+
+ 	return tablaDeArchivo;
+}
+
+t_bitarray *obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile){
+	t_bitarray *bitMap;
+	unsigned char *unBitMapSinFormato;
+	int tamanioQueOcupaElBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	int i = 0;
+	int bloquesOcupados  = 0;
+	int bloquesLibres = 0;
+	int desde = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
+
+	unBitMapSinFormato = malloc(tamanioQueOcupaElBitMapa );
+	memcpy(unBitMapSinFormato, &osada[desde], tamanioQueOcupaElBitMapa );
+	bitMap = bitarray_create(unBitMapSinFormato, tamanioQueOcupaElBitMapa );//para 150k
+
+	for (i=0; i < osadaHeaderFile->fs_blocks; i++){//para 150k
+
+		if(bitarray_test_bit(bitMap, i) == 0){
+			bloquesLibres++;
 		}
-		printf("cantiUno: %i\n",cantiUno);
-		printf("cantiCero: %i\n",cantiCero);
+
+		if(bitarray_test_bit(bitMap, i) == 1){
+			bloquesOcupados++;
+		}
+
+	}
+	printf("Bloques Ocupados: %i\n",bloquesOcupados);
+	printf("Bloques Libres: %i\n",bloquesLibres);
+
+	return bitMap;
 
 }
 
 osada_header *obtenerHeader(unsigned char *osada){
 	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
-	memcpy(osadaHeaderFile, osada, 64);
+	memcpy(osadaHeaderFile, osada, OSADA_BLOCK_SIZE);
 
 	printf("magic_number 2: %s\n",  osadaHeaderFile->magic_number);
 	printf("version: %i\n", osadaHeaderFile->version);
