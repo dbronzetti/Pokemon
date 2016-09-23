@@ -40,10 +40,10 @@ int hello_getattr(const char *path, struct stat *stbuf) {
 	//Si path es igual a "/" nos estan pidiendo los atributos del punto de montaje
 
 	if (strcmp(path, "/") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
+		stbuf->st_mode = S_IFDIR | 0777;
 		stbuf->st_nlink = 2;
 	} else if (strcmp(path, DEFAULT_FILE_PATH) == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
+		stbuf->st_mode = S_IFREG | 0777;
 		stbuf->st_nlink = 1;
 		stbuf->st_size = strlen(DEFAULT_FILE_CONTENT);
 	} else {
@@ -87,19 +87,21 @@ int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 
 
 int hello_open(const char *path, struct fuse_file_info *fi) {
+	/*
 	if (strcmp(path, DEFAULT_FILE_PATH) != 0)
 		return -ENOENT;
 
 	if ((fi->flags & 3) != O_RDONLY)
 		return -EACCES;
-
+	*/
+	printf("joel hello open!!!!!!!!!!!\n");
 	return 0;
 }
 
 
 int hello_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	size_t len;
-	(void) fi;
+	/*(void) fi;
 	if (strcmp(path, DEFAULT_FILE_PATH) != 0)
 		return -ENOENT;
 
@@ -110,10 +112,20 @@ int hello_read(const char *path, char *buf, size_t size, off_t offset, struct fu
 		memcpy(buf, DEFAULT_FILE_CONTENT + offset, size);
 	} else
 		size = 0;
-
+	*/
+	printf("hello_read joel!!!!!!!!!!!!\n");
 	return size;
 }
 
+int mySFS_mkdir(const char *path, mode_t mode)
+{
+       int res;
+
+       res = mkdir(path, mode);
+       if (res == -1)
+              return -errno;
+      return 0;
+}
 
 
 

@@ -25,12 +25,12 @@
  * Si se modifica la cadena se podra ver reflejado cuando
  * se lea el contenido del archivo
  */
-#define DEFAULT_FILE_CONTENT "Hello World!\n"
+#define DEFAULT_FILE_CONTENT "holis!\n"
 
 /*
  * Este es el nombre del archivo que se va a encontrar dentro de nuestro FS
  */
-#define DEFAULT_FILE_NAME "hello"
+#define DEFAULT_FILE_NAME "unArchivoDeJoel"
 
 /*
  * Este es el path de nuestro, relativo al punto de montaje, archivo dentro del FS
@@ -131,7 +131,7 @@ int hello_read(const char *path, char *buf, size_t size, off_t offset, struct fu
  * Como se observa la estructura contiene punteros a funciones.
  */
 
-
+int mySFS_mkdir(const char *path, mode_t mode);
 
 
 /** keys for FUSE_OPT_ options */

@@ -22,6 +22,7 @@ static struct fuse_operations hello_oper = {
 		.readdir = hello_readdir,
 		.open = hello_open,
 		.read = hello_read,
+		.mkdir   = mySFS_mkdir,
 };
 
 struct fuse_opt fuse_options[] = {
@@ -38,7 +39,8 @@ struct fuse_opt fuse_options[] = {
 
 #define SOCK_PATH "/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/cmhmr-osada/Debug/echo_socket"
 
-int main(int argc, char *argv[]) {
+//int main(int argc, char *argv[]) {
+int crearFuse(int argc, char *argv[]) {
 	struct fuse_args args = FUSE_ARGS_INIT(argc, argv);
 
 	// Limpio la estructura que va a contener los parametros
@@ -62,12 +64,12 @@ int main(int argc, char *argv[]) {
 	// de realizar el montaje, comuniscarse con el kernel, delegar todo
 	// en varios threads
 	//return fuse_main(args.argc, args.argv, &hello_oper, NULL);
-	 return fuse_main(argc, argv, &hello_oper, NULL);
+	 return fuse_main(args.argc, args.argv, &hello_oper, NULL);
 
 }
 
 
-void conectarmeAlServidor(){
+void conectarmeAlServidor(int argc, char *argv[]){
     int s, t, len;
     struct sockaddr_un remote;
     char str[100];
@@ -89,6 +91,7 @@ void conectarmeAlServidor(){
 
 	printf("Conectado.\n");
 
+	printf("**************** Se paso del FUSE\n");
 	while(printf("> "), fgets(str, 100, stdin), !feof(stdin)) {
 				if (send(s, str, strlen(str), 0) == -1) {
 	                perror("send");
@@ -96,6 +99,12 @@ void conectarmeAlServidor(){
 	            }
 	            if ((t=recv(s, str, 100, 0)) > 0) {
 	                str[t] = '\0';
+	                /*
+	                 * DEBERIA RECIBIR STRING CON LOS PARAMETROS PARA PODER INTERACTUAR CON EL FUSE
+	                 *
+	                 *
+	                 * */
+	            	crearFuse(argc, argv);
 	                printf("echo> %s", str);
 	            } else {
 	                if (t < 0) perror("recv");
@@ -106,13 +115,16 @@ void conectarmeAlServidor(){
 	        close(s);
 
 }
-/*
-int main(void) {
-	const char *a[2];
-	a[0] = "./cmhmr-fuse";
-	a[1] = "/tmp/example";
-	crearFuse(2, a);
-	//conectarmeAlServidor();
+
+int main(int argc, char *argv[]) {
+	//./cmhmr-fu  -d -s -f /tmp/example
+	//./cmhmr-fu  -d -f /tmp/example
+	//const char *a[2];
+	//a[0] = "./cmhmr-fuse";
+	//a[1] = "/tmp/example";
+
+	crearFuse(argc, argv);
+	//conectarmeAlServidor(argc, argv);
 	return EXIT_SUCCESS;
 }
-*/
+
