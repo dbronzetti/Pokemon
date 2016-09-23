@@ -109,22 +109,47 @@ void mockInicializarOSADA(){
 	free(tablaDeArchivo);
 }
 
+osada_file ingresarValoresAOsadaFile(int pd, char *fileName){
+	osada_file tablaDeArchivo;
+
+	tablaDeArchivo.state = DIRECTORY;
+	tablaDeArchivo.parent_directory = pd;
+	memcpy(tablaDeArchivo.fname, fileName, 17);
+
+	return tablaDeArchivo;
+}
+
+osada_file updatearTablaDeArchivos(){
+	return ingresarValoresAOsadaFile(8,'joel');
+}
+
 void mockCrearDirectorios(unsigned char *osada, osada_header *osadaHeaderFile, int tamanioDelArchivo){
 		/*TABLA DE ARCHIVO*/
 		printf("creaDirectorios\n");
 
 		int sizeOFDelBitMap = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+		printf("ERROR: %s\n", strerror(errno));
 
 		osada_file *tablaDeArchivo = malloc(2048*sizeof(osada_file));
 		int k=0;
+		printf("ERROR: %s\n", strerror(errno));
 
 		//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
 		memcpy(tablaDeArchivo, &osada[64 + sizeOFDelBitMap], 2048*sizeof(osada_file));
+		printf("ERROR: %s\n", strerror(errno));
 
 	 	for (k=0; k <= 2047; k++){
+	 		printf("ERROR: %s\n", strerror(errno));
+
+
 	 		tablaDeArchivo[k].state = DIRECTORY;
 	 		tablaDeArchivo[k].parent_directory = 9;
 	 		memcpy(tablaDeArchivo[k].fname, "puto", 17);
+
+	 		//tablaDeArchivo[k] = updatearTablaDeArchivos();
+			//memcpy(tablaDeArchivo[k], updatearTablaDeArchivos(), sizeof(osada_file));
+	 		printf("ERROR: %s\n", strerror(errno));
+
 		}
 
 	 	memcpy(&osada[64 + sizeOFDelBitMap], tablaDeArchivo, 2048*sizeof(osada_file));

@@ -17,11 +17,12 @@ int main(int argc, char *argv[]){
 	osada_header *osadaHeaderFile = obtenerHeader(osada);
 	t_bitarray *bitMap = obtenerBitmap(osada, osadaHeaderFile);
 	osada_file *tablaDeArchivo = obtenerTablaDeArchivos(osada, osadaHeaderFile);
-	int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
-	char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
+	//int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
+	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
-	//mockCrearDirectorios(osada, osadaHeaderFile, tamanio);
+	mockCrearDirectorios(osada, osadaHeaderFile, tamanio);
 
+	printf("************TERMINO TODO************\n");
 	free(bitMap);
 	free(osadaHeaderFile);
 	free(tablaDeArchivo);
