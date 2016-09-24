@@ -18,11 +18,15 @@ char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
 	int desde = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
 
 	int tamanioQueOcupaElBloqueDeDatos = OSADA_BLOCK_SIZE* osadaHeaderFile->data_blocks;
-	unsigned char *bloqueDeDatos = malloc(sizeof(char) * osadaHeaderFile->data_blocks);
+	//unsigned char *bloqueDeDatos = malloc(sizeof(char) * osadaHeaderFile->data_blocks);
+
+	unsigned char *bloqueDeDatos = malloc(sizeof(char) * OSADA_BLOCK_SIZE * osadaHeaderFile->data_blocks);
+
+
 	//¿CUANTOS BLOQUE DE ADTOS TENGO QUE LEER?
 	//¿NO TENGO QUE HACER 64 del puntero del bloque * cantidadDeBloques?
 
-	//memcpy(bloqueDeDatos, &osada[desde], tamanioQueOcupaElBloqueDeDatos );
+	memcpy(bloqueDeDatos, &osada[desde], tamanioQueOcupaElBloqueDeDatos );
 	return bloqueDeDatos;
 }
 
@@ -42,7 +46,7 @@ int *obtenerTablaDeAsignacion(unsigned char *osada, osada_header *osadaHeaderFil
 	int numeroBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 /64;
 	int tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
 
-	int *arrayTabla = malloc(sizeof(int) * numeroBloques);
+	int *arrayTabla = malloc(sizeof(int) * numeroBloques * OSADA_BLOCK_SIZE);
 	int tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
 	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
 	int tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
@@ -80,7 +84,7 @@ osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHead
 	//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
 	memcpy(tablaDeArchivo, &osada[desde], tamanioQueOcupaLaTablaDeArchivos);
 
-	mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
+	//mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
 
 	return tablaDeArchivo;
 }

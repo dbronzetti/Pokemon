@@ -143,7 +143,7 @@ void mockCrearDirectorios(unsigned char *osada, osada_header *osadaHeaderFile, i
 
 
 	 		tablaDeArchivo[k].state = DIRECTORY;
-	 		tablaDeArchivo[k].parent_directory = 9;
+	 		tablaDeArchivo[k].parent_directory = k;
 	 		memcpy(tablaDeArchivo[k].fname, "puto", 17);
 
 	 		//tablaDeArchivo[k] = updatearTablaDeArchivos();

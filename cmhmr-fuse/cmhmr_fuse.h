@@ -10,8 +10,6 @@
  *  Created on: 12 sep. 2016
  *      Author: joel
  */
-
-
 #include <stddef.h>
 #include <stdlib.h>
 #include <fuse.h>

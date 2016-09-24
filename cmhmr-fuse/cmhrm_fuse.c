@@ -87,32 +87,35 @@ int hello_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t off
 
 
 int hello_open(const char *path, struct fuse_file_info *fi) {
-	/*
+
 	if (strcmp(path, DEFAULT_FILE_PATH) != 0)
 		return -ENOENT;
 
 	if ((fi->flags & 3) != O_RDONLY)
 		return -EACCES;
-	*/
+
 	printf("joel hello open!!!!!!!!!!!\n");
+
 	return 0;
 }
 
 
 int hello_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
 	size_t len;
-	/*(void) fi;
+	(void) fi;
+
 	if (strcmp(path, DEFAULT_FILE_PATH) != 0)
 		return -ENOENT;
 
 	len = strlen(DEFAULT_FILE_CONTENT);
+
 	if (offset < len) {
 		if (offset + size > len)
 			size = len - offset;
 		memcpy(buf, DEFAULT_FILE_CONTENT + offset, size);
 	} else
 		size = 0;
-	*/
+
 	printf("hello_read joel!!!!!!!!!!!!\n");
 	return size;
 }
