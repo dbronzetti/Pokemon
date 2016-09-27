@@ -56,7 +56,3 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 #endif __OSADA_H__
 
 
-
-/*MOCK*/
-void mockInicializarOSADA();
-void mockCrearDirectorios(unsigned char *osada, osada_header *osadaHeaderFile, int tamanioDelArchivo);

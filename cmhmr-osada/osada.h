@@ -55,24 +55,27 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 
 #endif __OSADA_H__
 
-unsigned char *inicializarOSADA();
+unsigned char *inicializarOSADA(int archivoID);
 osada_header *obtenerHeader(unsigned char *osada);
 t_bitarray *obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile);
 osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHeaderFile);
 int *obtenerTablaDeAsignacion(unsigned char *osada, osada_header *osadaHeaderFile);
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile);
 
-int obtenerTamanioDelArchivo(int archivoID);
+int setearTamanioDelArchivo(int archivoID);
 int obtenerIDDelArchivo(char *ruta);
 
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
 
-static int tamanioQueOcupaElHeader;
-static int tamanioDelBitMapa;
-static int tamanioTablaDeArchivos;
-static int tamanioQueOcupaLaTablaDeAsignacion;
+static int tamanioQueOcupaElHeader= 0;
+static int tamanioDelBitMap= 0;
+static int tamanioTablaDeArchivos= 0;
+static int tamanioQueOcupaLaTablaDeAsignacion= 0;
+static int tamanioQueOcupaLaTablaDeAsignacionEnBloques = 0;
+static int tamanioQueOcupaElBloqueDeDatos = 0;
+static int tamanioDelArchivoOSADAEnBytes = 0;
 
-static int desdeParaBloqueDeDatos;
-static int desdeParaBitmap;//LO QUE OCUPA EL HEADER
-static int desdeParaTablaDeArchivos;
-static int desdeParaTablaAsigancion;
+static int desdeParaBloqueDeDatos= 0;
+static int desdeParaBitmap= 0;//LO QUE OCUPA EL HEADER
+static int desdeParaTablaDeArchivos= 0;
+static int desdeParaTablaAsigancion= 0;

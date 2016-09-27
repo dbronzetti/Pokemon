@@ -17,20 +17,10 @@ void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamania
 }
 
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
-
-	int tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
-	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
-	int tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
-	int tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
-
-	int desde = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
-
-	int tamanioQueOcupaElBloqueDeDatos = OSADA_BLOCK_SIZE* osadaHeaderFile->data_blocks;
-
 	//unsigned char *bloqueDeDatos = malloc(sizeof(char) * osadaHeaderFile->data_blocks);OLD
 	unsigned char *bloqueDeDatos = malloc(sizeof(char) * OSADA_BLOCK_SIZE * osadaHeaderFile->data_blocks);
 
-	memcpy(bloqueDeDatos, &osada[desde], tamanioQueOcupaElBloqueDeDatos );
+	memcpy(bloqueDeDatos, &osada[desdeParaBloqueDeDatos], tamanioQueOcupaElBloqueDeDatos );
 	return bloqueDeDatos;
 }
 
@@ -47,17 +37,10 @@ void mostrarTodosLosAsignados(int *arrayTabla, int numeroBloques){
 }
 
 int *obtenerTablaDeAsignacion(unsigned char *osada, osada_header *osadaHeaderFile){
-	int numeroBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
-	int tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
+	int *arrayTabla = malloc(tamanioQueOcupaLaTablaDeAsignacion);
 
-	int *arrayTabla = malloc(sizeof(int) * numeroBloques * OSADA_BLOCK_SIZE);
+	memcpy(arrayTabla, &osada[desdeParaTablaAsigancion], tamanioQueOcupaLaTablaDeAsignacion );
 
-	int tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
-	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
-	int tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
-	int desde = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos;
-
-	memcpy(arrayTabla, &osada[desde], tamanioQueOcupaLaTablaDeAsignacion );
 	//mostrarTodosLosAsignados(arrayTabla, numeroBloques);
 
 	return arrayTabla;
@@ -82,15 +65,12 @@ void mostrarStructDeArchivos(osada_file tablaDeArchivo, int pos){
 }
 
 osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHeaderFile){
-	osada_file *tablaDeArchivo = malloc(2048*sizeof(osada_file));
-	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
-	int tamanioQueOcupaLaTablaDeArchivos = 2048*sizeof(osada_file);
-	int desde = OSADA_BLOCK_SIZE + tamanioDelBitMapa;
+	osada_file *tablaDeArchivo = malloc(tamanioTablaDeArchivos);
 
 	//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
-	memcpy(tablaDeArchivo, &osada[desde], tamanioQueOcupaLaTablaDeArchivos);
+	memcpy(tablaDeArchivo, &osada[desdeParaTablaDeArchivos], tamanioTablaDeArchivos);
 
-	//mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
+	mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
 
 	return tablaDeArchivo;
 }
@@ -119,12 +99,10 @@ void contarBloques(unsigned char *osada, osada_header *osadaHeaderFile, t_bitarr
 t_bitarray *obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile){
 	t_bitarray *bitMap;
 	unsigned char *unBitMapSinFormato;
-	int tamanioQueOcupaElBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
-	int desde = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
 
-	unBitMapSinFormato = malloc(tamanioQueOcupaElBitMapa );
-	memcpy(unBitMapSinFormato, &osada[desde], tamanioQueOcupaElBitMapa );
-	bitMap = bitarray_create(unBitMapSinFormato, tamanioQueOcupaElBitMapa );
+	unBitMapSinFormato = malloc(tamanioDelBitMap );
+	memcpy(unBitMapSinFormato, &osada[desdeParaBitmap], tamanioDelBitMap );
+	bitMap = bitarray_create(unBitMapSinFormato, tamanioDelBitMap );
 
 	contarBloques(osada, osadaHeaderFile, bitMap);
 
@@ -153,10 +131,12 @@ osada_header *obtenerHeader(unsigned char *osada){
 
 }
 
-int obtenerTamanioDelArchivo(int archivoID){
+/*SETEA Y GUARDA EN LA VARIABLE GLOBAL, ADEMAS SI SE NECESITA SE DEVUELVE EL TAMAÑO PARA USARLOS EN MOCKS*/
+int setearTamanioDelArchivo(int archivoID){
 	struct stat buffer;
 	fstat(archivoID, &buffer);
-	return buffer.st_size;
+	tamanioDelArchivoOSADAEnBytes = buffer.st_size;
+	return tamanioDelArchivoOSADAEnBytes;
 }
 
 int obtenerIDDelArchivo(char *ruta){
@@ -165,28 +145,31 @@ int obtenerIDDelArchivo(char *ruta){
 }
 void setearConstantesDePosicionDeOsada(osada_header *osadaHeaderFile){
 	tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
-	tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	tamanioDelBitMap = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
 	tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
 	tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
+	tamanioQueOcupaLaTablaDeAsignacionEnBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
+	tamanioQueOcupaElBloqueDeDatos = OSADA_BLOCK_SIZE* osadaHeaderFile->data_blocks;
 
-	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
 	desdeParaBitmap = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
-	desdeParaTablaDeArchivos = OSADA_BLOCK_SIZE + tamanioDelBitMapa;
-	desdeParaTablaAsigancion = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos;
+	desdeParaTablaDeArchivos = OSADA_BLOCK_SIZE + tamanioDelBitMap;
+	desdeParaTablaAsigancion = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos;
+	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
+
 }
 
 
-unsigned char *inicializarOSADA(int archivoID, int tamanio){
+unsigned char *inicializarOSADA(int archivoID){
 	unsigned char *osada;
 
 	/************************************************************/
 	printf("Que paso?: %s\n", strerror(errno));
 	printf("archivoID: %i\n", archivoID);
-	printf("tamanio: %i\n", tamanio);
+	printf("tamanio: %i\n", tamanioDelArchivoOSADAEnBytes);
 	/************************************************************/
 
 
-	osada = mmap(0, tamanio, PROT_READ|PROT_WRITE,MAP_SHARED, archivoID, 0);
+	osada = mmap(0, tamanioDelArchivoOSADAEnBytes, PROT_READ|PROT_WRITE,MAP_SHARED, archivoID, 0);
 	int statusCerrar = close(archivoID);
 	return osada;
 

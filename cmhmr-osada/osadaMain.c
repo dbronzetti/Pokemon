@@ -10,9 +10,9 @@
 
 int main(int argc, char *argv[]){
 	int archivoID = obtenerIDDelArchivo(argv[1]);
-	int tamanio = obtenerTamanioDelArchivo(archivoID);
+	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
-	unsigned char *osada = inicializarOSADA(archivoID, tamanio);
+	unsigned char *osada = inicializarOSADA(archivoID);
 	osada_header *osadaHeaderFile = obtenerHeader(osada);
 	setearConstantesDePosicionDeOsada(osadaHeaderFile);
 
@@ -22,16 +22,19 @@ int main(int argc, char *argv[]){
 	int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
 	char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
-	//mock_Crear_Directorios(osada, osadaHeaderFile, tamanio);
-	//mock_Crear_La_Tabla_De_Asignacion_De_Los_Directorios(osada, tablaDeAsignacion, tamanio, osadaHeaderFile);
-	//mock_Modificar_Los_Bloques_Del_Bitmap(osada,bitMap , tamanio, osadaHeaderFile);
+	mock_setearTamanioDelArchivo(tamanioDelArchivo);
+	mock_setearConstantesDePosicionDeOsada(osadaHeaderFile);
+
+	//mock_Crear_Directorios(osada, osadaHeaderFile);
+	//mock_Crear_La_Tabla_De_Asignacion_De_Los_Directorios(osada, tablaDeAsignacion, osadaHeaderFile);
+	//mock_Modificar_Los_Bloques_Del_Bitmap(osada, bitMap, osadaHeaderFile);
 
 
 	printf("************TERMINO TODO************\n");
 
-	//free(bitMap);
+	free(bitMap);
 	free(osadaHeaderFile);
-	//free(tablaDeArchivo);
+	free(tablaDeArchivo);
 
 	//free(tablaDeAsignacion);//Error in `./cmhmr-osada': double free or corruption (out): 0x097611b0
 	//free(bloqueDeDatos);//Error in `./cmhmr-osada': double free or corruption (out): 0x097611b0

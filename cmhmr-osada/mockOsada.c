@@ -9,56 +9,26 @@
 #include <errno.h>
 
 
-osada_file ingresarValoresAOsadaFile(int pd, char *fileName){
-	osada_file tablaDeArchivo;
 
-	tablaDeArchivo.state = DIRECTORY;
-	tablaDeArchivo.parent_directory = pd;
-	memcpy(tablaDeArchivo.fname, fileName, 17);
 
-	return tablaDeArchivo;
-}
 
-osada_file updatearTablaDeArchivos(){
-	return ingresarValoresAOsadaFile(8,'joel');
-}
-
-/*
-void mock_guardar(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento){
-	memcpy(&osada[desde], elemento, tamaniaDelElemento );
-	int status = munmap(osada, tamaniaDelElemento);
-
-	if (status == -1)
-		printf("Estado del munmap: %i\n", status);
-}
-*/
-
-void mock_Crear_La_Tabla_De_Asignacion_De_Los_Directorios(unsigned char *osada, int *tablaDeAsignacion, int tamanioDelArchivo, osada_header *osadaHeaderFile){
-	int numeroBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
+void mock_Crear_La_Tabla_De_Asignacion_De_Los_Directorios(unsigned char *osada, int *tablaDeAsignacion, osada_header *osadaHeaderFile){
 	int pos = 0;
 
-	int tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
-	int tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
-	int tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
-	int desde = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos;
-
-
-	for (pos = 0; pos < numeroBloques; pos++){
+	for (pos = 0; pos < tamanioQueOcupaLaTablaDeAsignacionEnBloques; pos++){
 		tablaDeAsignacion[pos] = 6;
 	}
 
-	guardarEnOsada(osada, desde, tablaDeAsignacion, tamanioTablaDeArchivos);
+	guardarEnOsada(osada, desdeParaTablaAsigancion, tablaDeAsignacion, tamanioTablaDeArchivos);
 
 	//printf("Estado del munmap: %i\n", status);
 
 }
 
-void mock_Modificar_Los_Bloques_Del_Bitmap(unsigned char *osada, t_bitarray *bitMap , int tamanioDelArchivo, osada_header *osadaHeaderFile){
+void mock_Modificar_Los_Bloques_Del_Bitmap(unsigned char *osada, t_bitarray *bitMap, osada_header *osadaHeaderFile){
 	int bloquesOcupados  = 0;
 	int bloquesLibres = 0;
 	int i = 0;
-	int tamanioQueOcupaElBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
-	int desde = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
 
 	for (i=0; i < osadaHeaderFile->fs_blocks; i++){
 
@@ -73,26 +43,25 @@ void mock_Modificar_Los_Bloques_Del_Bitmap(unsigned char *osada, t_bitarray *bit
 
 	}
 
-	guardarEnOsada(osada, desde, bitMap, tamanioQueOcupaElBitMapa);
+	guardarEnOsada(osada, desdeParaBitmap, bitMap, tamanioDelBitMap);
 }
 
-void mock_Crear_Directorios(unsigned char *osada, osada_header *osadaHeaderFile, int tamanioDelArchivo){
+void mock_Crear_Directorios(unsigned char *osada, osada_header *osadaHeaderFile){
 		/*TABLA DE ARCHIVO*/
 		printf("creaDirectorios\n");
 		char dir[5];
 		char dir2[5];
 		int k=0;
-		int sizeOFDelBitMap = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
 
-		osada_file *tablaDeArchivo = malloc(2048*sizeof(osada_file));
+		osada_file *tablaDeArchivo = malloc(tamanioTablaDeArchivos);
+		printf("tamanio: %i\n",tamanioTablaDeArchivos);
 
 		//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
-		memcpy(tablaDeArchivo, &osada[64 + sizeOFDelBitMap], 2048*sizeof(osada_file));
-
+		memcpy(tablaDeArchivo, &osada[desdeParaTablaDeArchivos], tamanioTablaDeArchivos);
 
 	 	for (k=0; k <= 2047; k++){
 
-	 		strcpy(dir, "dir2");
+	 		strcpy(dir, "joel");
 	 		sprintf(dir2, "%d",k);
 	 		strcat(dir, dir2);
 
@@ -112,10 +81,10 @@ void mock_Crear_Directorios(unsigned char *osada, osada_header *osadaHeaderFile,
 
 		/*CERRAR TODO*/
 		//printf("archivoID: %i\n", archivoID);
-		printf("tamanio: %i\n", tamanioDelArchivo);
+		printf("tamanio mockOsada: %i\n", tamanioDelArchivoOSADAEnBytes);
 
 		//int status = munmap(osada, tamanioDelArchivo);
-		guardarEnOsada(osada, 64 + sizeOFDelBitMap, tablaDeArchivo, 2048 * sizeof(osada_file));
+		guardarEnOsada(osada, desdeParaTablaDeArchivos, tablaDeArchivo, tamanioTablaDeArchivos);
 
 
 		//printf("Estado del munmap: %i\n", status);
@@ -123,4 +92,22 @@ void mock_Crear_Directorios(unsigned char *osada, osada_header *osadaHeaderFile,
 
 }
 
+void mock_setearConstantesDePosicionDeOsada(osada_header *osadaHeaderFile){
 
+	tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
+	tamanioDelBitMap = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
+	tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
+	tamanioQueOcupaLaTablaDeAsignacionEnBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
+	tamanioQueOcupaElBloqueDeDatos = OSADA_BLOCK_SIZE* osadaHeaderFile->data_blocks;
+
+	desdeParaBitmap = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
+	desdeParaTablaDeArchivos = OSADA_BLOCK_SIZE + tamanioDelBitMap;
+	desdeParaTablaAsigancion = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos;
+	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
+
+}
+
+void mock_setearTamanioDelArchivo(int tamanioDelArchivo ){
+	tamanioDelArchivoOSADAEnBytes = tamanioDelArchivo ;
+}
