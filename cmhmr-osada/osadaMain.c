@@ -14,6 +14,7 @@ int main(int argc, char *argv[]){
 
 	unsigned char *osada = inicializarOSADA(archivoID, tamanio);
 	osada_header *osadaHeaderFile = obtenerHeader(osada);
+	setearConstantesDePosicionDeOsada(osadaHeaderFile);
 
 
 	t_bitarray *bitMap = obtenerBitmap(osada, osadaHeaderFile);

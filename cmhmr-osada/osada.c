@@ -138,6 +138,7 @@ osada_header *obtenerHeader(unsigned char *osada){
 	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
 	memcpy(osadaHeaderFile, osada, OSADA_BLOCK_SIZE);
 
+
 	//mostrarHeader(osadaHeaderFile);
 
 	return osadaHeaderFile;
@@ -154,15 +155,28 @@ int obtenerIDDelArchivo(char *ruta){
 	printf("ruta: %s\n", ruta);
 	return open(ruta, O_RDWR, (mode_t)0777);
 }
+void setearConstantesDePosicionDeOsada(osada_header *osadaHeaderFile){
+	tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;
+	tamanioDelBitMapa = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	tamanioTablaDeArchivos =  2048 * sizeof(osada_file);
+	tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
+
+	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
+	desdeParaBitmap = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
+	desdeParaTablaDeArchivos = OSADA_BLOCK_SIZE + tamanioDelBitMapa;
+	desdeParaTablaAsigancion = tamanioQueOcupaElHeader + tamanioDelBitMapa + tamanioTablaDeArchivos;
+}
+
 
 unsigned char *inicializarOSADA(int archivoID, int tamanio){
 	unsigned char *osada;
 
 	/************************************************************/
-	printf("ERROR: %s\n", strerror(errno));
+	printf("Que paso?: %s\n", strerror(errno));
 	printf("archivoID: %i\n", archivoID);
 	printf("tamanio: %i\n", tamanio);
 	/************************************************************/
+
 
 	osada = mmap(0, tamanio, PROT_READ|PROT_WRITE,MAP_SHARED, archivoID, 0);
 	int statusCerrar = close(archivoID);

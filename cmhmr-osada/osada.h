@@ -65,3 +65,12 @@ char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile);
 int obtenerTamanioDelArchivo(int archivoID);
 int obtenerIDDelArchivo(char *ruta);
 
+static int tamanioQueOcupaElHeader;
+static int tamanioDelBitMapa;
+static int tamanioTablaDeArchivos;
+static int tamanioQueOcupaLaTablaDeAsignacion;
+
+static int desdeParaBloqueDeDatos;
+static int desdeParaBitmap;//LO QUE OCUPA EL HEADER
+static int desdeParaTablaDeArchivos;
+static int desdeParaTablaAsigancion;
