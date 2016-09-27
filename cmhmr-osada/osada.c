@@ -8,6 +8,14 @@
 #include "osada.h"
 #include <errno.h>
 
+void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento){
+	memcpy(&osada[desde], elemento, tamaniaDelElemento );
+	int status = munmap(osada, tamaniaDelElemento);
+
+	if (status == -1)
+		printf("Estado del munmap: %i\n", status);
+}
+
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
 
 	int tamanioQueOcupaElHeader = OSADA_BLOCK_SIZE;

@@ -65,6 +65,8 @@ char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile);
 int obtenerTamanioDelArchivo(int archivoID);
 int obtenerIDDelArchivo(char *ruta);
 
+void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
+
 static int tamanioQueOcupaElHeader;
 static int tamanioDelBitMapa;
 static int tamanioTablaDeArchivos;
