@@ -40,29 +40,29 @@ int main(int argc, char **argv) {
 
 	char* rutaPokenest = string_from_format("%s/Mapas/%s/Pokenest/", pokedex, mapa);
 
-	printf("Directorio de la metadata del mapa '%s': '%s'\n", mapa,	rutaMetadata);
+	log_info(logMapa, "Directorio de la metadata del mapa '%s': '%s'\n", mapa,	rutaMetadata);
 
 	logMapa = log_create(logFile, "MAPA", 0, LOG_LEVEL_TRACE);
 
-	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+	log_info(logMapa, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa);
-	printf("Tiempo de checkeo de deadlock: %d\n",metadataMapa.tiempoChequeoDeadlock);
-	printf("Batalla: %d\n", metadataMapa.batalla);
-	printf("Algoritmo: %s\n", metadataMapa.algoritmo);
-	printf("Quantum: %d\n", metadataMapa.quantum);
-	printf("Retardo: %d\n", metadataMapa.retardo);
-	printf("IP: %s\n", metadataMapa.ip);
-	printf("Puerto: %d\n", metadataMapa.puerto);
-	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+	log_info(logMapa, "Tiempo de checkeo de deadlock: %d\n",metadataMapa.tiempoChequeoDeadlock);
+	log_info(logMapa, "Batalla: %d\n", metadataMapa.batalla);
+	log_info(logMapa, "Algoritmo: %s\n", metadataMapa.algoritmo);
+	log_info(logMapa, "Quantum: %d\n", metadataMapa.quantum);
+	log_info(logMapa, "Retardo: %d\n", metadataMapa.retardo);
+	log_info(logMapa, "IP: %s\n", metadataMapa.ip);
+	log_info(logMapa, "Puerto: %d\n", metadataMapa.puerto);
+	log_info(logMapa, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
 	recorrerdirDePokenest(rutaPokenest);
 
-	puts("Bienvenido al mapa");
+	log_info(logMapa, "Bienvenido al mapa");
 
 	sleep(2);
 	system("clear"); //Espera 2 segundos y borra todo
 
-	//dibujarMapa();
+	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 
@@ -237,7 +237,7 @@ void handShake(void *parameter) {
 		switch ((int) message->process) {
 			case ENTRENADOR: {
 				log_info(logMapa, "Message from '%s': %s",getProcessString(message->process), message->message);
-				puts("Ha ingresado un nuevo ENTRENADOR");
+				log_info(logMapa, "Ha ingresado un nuevo ENTRENADOR");
 				exitCode = sendClientAcceptation(&serverData->socketClient);
 
 				if (exitCode == EXIT_SUCCESS) {
@@ -247,7 +247,7 @@ void handShake(void *parameter) {
 			}
 			case POKEDEX_CLIENTE: {
 				log_info(logMapa, "Message from '%s': %s",	getProcessString(message->process), message->message);
-				puts("Ha ingresado un nuevo POKEDEX_CLIENTE");
+				log_info(logMapa, "Ha ingresado un nuevo POKEDEX_CLIENTE");
 				exitCode = sendClientAcceptation(&serverData->socketClient);
 
 				if (exitCode == EXIT_SUCCESS) {
