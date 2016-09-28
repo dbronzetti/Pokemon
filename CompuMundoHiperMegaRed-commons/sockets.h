@@ -15,9 +15,12 @@
 #include <errno.h>
 #include <assert.h>
 #include <arpa/inet.h>
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <commons/string.h>
-
 
 typedef enum{
 	ACCEPTED=0,
@@ -32,6 +35,7 @@ typedef struct{
 	char *message;
 } t_MessageGenericHandshake;
 
+int openSelectServerConnection(int newSocketServerPort, int *socketServer);
 int openServerConnection(int newSocketServerPort, int *socketServer);
 int acceptClientConnection(int *socketServer, int *socketClient);
 int openClientConnection(char *IPServer, int PortServer, int *socketClient);

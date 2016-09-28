@@ -47,8 +47,8 @@
 								<option id="gnu.c.link.option.libs.2080098385" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="commons"/>
-									<listOptionValue builtIn="false" value="nivel"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="curses"/>
+									<listOptionValue builtIn="false" value="nivel-gui"/>
+									<listOptionValue builtIn="false" value="curses"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.2091685125" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>

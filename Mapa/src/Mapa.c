@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
 	sleep(2);
 	system("clear"); //Espera 2 segundos y borra todo
 
-	dibujarMapa();
+	//dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 
@@ -82,7 +82,7 @@ void startServerProg() {
 	FD_ZERO(&master);    // clear the master and temp sets
 	FD_ZERO(&read_fds);
 
-	exitCode = openServerConnection(metadataMapa.puerto, &socketServer);
+	exitCode = openSelectServerConnection(metadataMapa.puerto, &socketServer);
 	log_info(logMapa, "SocketServer: %d", socketServer);
 
 	//If exitCode == 0 the server connection is opened and listening
@@ -131,7 +131,7 @@ void startServerProg() {
 							// got error or connection closed by client
 							if (receivedBytes == 0) {
 								// connection closed
-								log_error(logMapa,"The client hung up or went down while! - Please check the client '%d'!", i);
+								log_error(logMapa,"The client hung up or went down! - Please check the client '%d'!", i);
 							} else {
 								perror("recv");
 							}
@@ -203,18 +203,7 @@ void newClients(int *socketServer, fd_set *master, int *fdmax) {
 			*fdmax = serverData->socketClient;
 		}
 
-		//Create thread attribute detached
-		pthread_attr_t handShakeThreadAttr;
-		pthread_attr_init(&handShakeThreadAttr);
-		pthread_attr_setdetachstate(&handShakeThreadAttr,
-		PTHREAD_CREATE_DETACHED);
-
-		//Create thread for checking new connections in server socket
-		pthread_t handShakeThread;
-		pthread_create(&handShakeThread, &handShakeThreadAttr,(void*) handShake, serverData);
-
-		//Destroy thread attribute
-		pthread_attr_destroy(&handShakeThreadAttr);
+		handShake(serverData);
 
 	}// END handshakes
 
@@ -241,9 +230,7 @@ void handShake(void *parameter) {
 
 	//Now it's checked that the client is not down
 	if (receivedBytes == 0) {
-		log_error(logMapa,
-				"The client went down while handshaking! - Please check the client '%d' is down!",
-				serverData->socketClient);
+		log_error(logMapa,"The client went down while handshaking! - Please check the client '%d' is down!",serverData->socketClient);
 		close(serverData->socketClient);
 		free(serverData);
 	} else {

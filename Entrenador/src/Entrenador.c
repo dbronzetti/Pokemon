@@ -61,12 +61,11 @@ int main(int argc, char **argv) {
 	exitCode = connectTo(MAPA, &socketMapa);
 	if (exitCode == EXIT_SUCCESS) {
 		log_info(logEntrenador, "ENTRENADOR connected to MAPA successfully\n");
-		printf("Se ha conectado correctamente al mapa: %s", mapaActual);
+		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
 		while (1)
 			scanf("%d", asd);
 	} else {
-		log_error(logEntrenador,
-				"No server available - shutting down proces!!\n");
+		log_error(logEntrenador,"No server available - shutting down proces!!\n");
 		return EXIT_FAILURE;
 	}
 

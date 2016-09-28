@@ -6,6 +6,56 @@
  */
 #include "sockets.h"
 
+int openSelectServerConnection(int newSocketServerPort, int *socketServer){
+	int exitcode = EXIT_SUCCESS; //Normal completition
+	int socketActivated = 1;
+	int rv;
+	struct addrinfo hints, *ai, *p;
+
+	assert(("ERROR - Server port is the DEFAULT (=0)", newSocketServerPort != 0)); // FAILS if the Server port is equal to default value (0)
+
+	// get us a socket and bind it
+	memset(&hints, 0, sizeof hints);
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags = AI_PASSIVE;
+
+	if ((rv = getaddrinfo(NULL, string_itoa(newSocketServerPort), &hints, &ai)) != 0) {
+		printf("selectserver: %s\n", gai_strerror(rv));
+		exitcode = EXIT_FAILURE;
+		return exitcode;
+	}
+
+	for(p = ai; p != NULL; p = p->ai_next) {
+    	*socketServer = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
+		if (*socketServer < 0) {
+			continue;
+		}
+
+		// lose the pesky "address already in use" error message
+		setsockopt(*socketServer, SOL_SOCKET, SO_REUSEADDR, &socketActivated, sizeof(socketActivated));
+
+		if (bind(*socketServer, p->ai_addr, p->ai_addrlen) < 0) {
+			//Free socket created
+			close(*socketServer);
+			continue;
+		}
+
+		break;
+	}
+
+	// if we got here, it means we didn't get bound
+	if (p == NULL) {
+		printf("Failed bind in openServerConnection() - Please check whether another process is using port: %d \n",newSocketServerPort);
+		exitcode = EXIT_FAILURE;
+		return exitcode;
+	}
+
+	freeaddrinfo(ai); // all done with this
+
+	return exitcode;
+}
+
 int openServerConnection(int newSocketServerPort, int *socketServer){
 	int exitcode = EXIT_SUCCESS; //Normal completition
 
