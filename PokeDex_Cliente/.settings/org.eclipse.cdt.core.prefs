@@ -1,0 +1,9 @@
+eclipse.preferences.version=1
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/POKEIP/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/POKEIP/operation=append
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/POKEIP/value=127.0.0.1
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/POKEPORT/delimiter=\:
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/POKEPORT/operation=append
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/POKEPORT/value=8080
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/append=true
+environment/project/cdt.managedbuild.config.gnu.exe.debug.454284936/appendContributed=true

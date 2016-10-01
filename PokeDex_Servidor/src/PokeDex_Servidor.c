@@ -6,10 +6,29 @@
 
 #include "PokeDex_Servidor.h"
 
-int main(void) {
+int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
+
+	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
+
+	//get parameter
+	int i;
+	for (i = 0; i < argc; i++) {
+
+		//check log file parameter
+		if (strcmp(argv[i], "-l") == 0) {
+			logFile = argv[i + 1];
+			printf("Log File: '%s'\n", logFile);
+		}
+	}
+
+	logPokeDexServer = log_create(logFile, "POKEDEX_SERVER", 0, LOG_LEVEL_TRACE);
+
 	puts("Soy el PokeDex Servidor"); /* prints Soy el PokeDex Servidor */
+
+	//getting environment variable for listening
+	PORT = atoi(getenv("POKEPORT"));
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 
@@ -120,7 +139,30 @@ void handShake(void *parameter) {
 
 		case ENTRENADOR: {
 			log_info(logPokeDexServer, "Message from '%s': %s", getProcessString(message->process), message->message);
-			puts("Ha ingresado un nuevo entrenador");
+			log_info(logPokeDexServer, "Ha ingresado un nuevo entrenador");
+			exitCode = sendClientAcceptation(&serverData->socketClient);
+
+			if (exitCode == EXIT_SUCCESS) {
+
+				//Create thread attribute detached
+				pthread_attr_t processMessageThreadAttr;
+				pthread_attr_init(&processMessageThreadAttr);
+				pthread_attr_setdetachstate(&processMessageThreadAttr, PTHREAD_CREATE_DETACHED);
+
+				//Create thread for checking new connections in server socket
+				pthread_t processMessageThread;
+				//pthread_create(&processMessageThread, &processMessageThreadAttr, (void*) processMessageReceived, parameter);
+
+				//Destroy thread attribute
+				pthread_attr_destroy(&processMessageThreadAttr);
+			}
+
+			break;
+		}
+		case POKEDEX_CLIENTE: {
+			log_info(logPokeDexServer, "Message from '%s': %s", getProcessString(message->process), message->message);
+			log_info(logPokeDexServer, "Ha ingresado un nuevo Poke Cliente");
+
 			exitCode = sendClientAcceptation(&serverData->socketClient);
 
 			if (exitCode == EXIT_SUCCESS) {
