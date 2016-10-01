@@ -40,9 +40,10 @@ int main(int argc, char **argv) {
 
 	char* rutaPokenest = string_from_format("%s/Mapas/%s/Pokenest/", pokedex, mapa);
 
-	log_info(logMapa, "Directorio de la metadata del mapa '%s': '%s'\n", mapa,	rutaMetadata);
 
 	logMapa = log_create(logFile, "MAPA", 0, LOG_LEVEL_TRACE);
+
+	log_info(logMapa, "Directorio de la metadata del mapa '%s': '%s'\n", mapa,	rutaMetadata);
 
 	log_info(logMapa, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa);
