@@ -28,5 +28,6 @@ typedef struct {
 void startServerProg();
 void newClients(void *parameter);
 void handShake(void *parameter);
+void processMessageReceived(void *parameter);
 
 #endif /* POKEDEX_SERVIDOR_H_ */

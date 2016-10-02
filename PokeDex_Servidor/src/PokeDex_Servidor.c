@@ -136,29 +136,6 @@ void handShake(void *parameter) {
 		free(serverData);
 	} else {
 		switch ((int) message->process) {
-
-		case ENTRENADOR: {
-			log_info(logPokeDexServer, "Message from '%s': %s", getProcessString(message->process), message->message);
-			log_info(logPokeDexServer, "Ha ingresado un nuevo entrenador");
-			exitCode = sendClientAcceptation(&serverData->socketClient);
-
-			if (exitCode == EXIT_SUCCESS) {
-
-				//Create thread attribute detached
-				pthread_attr_t processMessageThreadAttr;
-				pthread_attr_init(&processMessageThreadAttr);
-				pthread_attr_setdetachstate(&processMessageThreadAttr, PTHREAD_CREATE_DETACHED);
-
-				//Create thread for checking new connections in server socket
-				pthread_t processMessageThread;
-				//pthread_create(&processMessageThread, &processMessageThreadAttr, (void*) processMessageReceived, parameter);
-
-				//Destroy thread attribute
-				pthread_attr_destroy(&processMessageThreadAttr);
-			}
-
-			break;
-		}
 		case POKEDEX_CLIENTE: {
 			log_info(logPokeDexServer, "Message from '%s': %s", getProcessString(message->process), message->message);
 			log_info(logPokeDexServer, "Ha ingresado un nuevo Poke Cliente");
@@ -174,7 +151,7 @@ void handShake(void *parameter) {
 
 				//Create thread for checking new connections in server socket
 				pthread_t processMessageThread;
-				//pthread_create(&processMessageThread, &processMessageThreadAttr, (void*) processMessageReceived, parameter);
+				pthread_create(&processMessageThread, &processMessageThreadAttr, (void*) processMessageReceived, parameter);
 
 				//Destroy thread attribute
 				pthread_attr_destroy(&processMessageThreadAttr);
@@ -194,4 +171,51 @@ void handShake(void *parameter) {
 	free(message->message);
 	free(message);
 	free(messageRcv);
+}
+
+void processMessageReceived(void *parameter){
+	t_serverData *serverData = (t_serverData*) parameter;
+
+	while(1){
+		//Receive message size
+		int messageSize = 0;
+
+		//Get Payload size
+		int receivedBytes = receiveMessage(&serverData->socketClient, &messageSize, sizeof(messageSize));
+
+		if ( receivedBytes > 0 ){
+
+			//Receive process from which the message is going to be interpreted
+			enum_processes fromProcess;
+			receivedBytes = receiveMessage(&serverData->socketClient, &fromProcess, sizeof(fromProcess));
+
+			log_info(logPokeDexServer, "\n\nMessage size received from process '%s' in socket cliente '%d': %d\n",getProcessString(fromProcess), serverData->socketClient, messageSize);
+
+			switch (fromProcess){
+				case POKEDEX_CLIENTE:{
+					log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
+					//processPOKEDEXClienteMessages
+					break;
+				}
+				default:{
+					log_error(logPokeDexServer,"Process not allowed to connect - Invalid process '%s' send a message to MAPA", getProcessString(fromProcess));
+					close(serverData->socketClient);
+					free(serverData);
+					break;
+				}
+			}
+
+		}else if (receivedBytes == 0 ){
+			//The client is down when bytes received are 0
+			log_error(logPokeDexServer,"The client went down while receiving! - Please check the client '%d' is down!", serverData->socketClient);
+			close(serverData->socketClient);
+			free(serverData);
+			break;
+		}else{
+			log_error(logPokeDexServer, "Error - No able to received - Error receiving from socket '%d', with error: %d",serverData->socketClient,errno);
+			close(serverData->socketClient);
+			free(serverData);
+			break;
+		}
+	}
 }
