@@ -84,6 +84,8 @@ void dameTodosLosBorrados(osada_file *tablaDeArchivo){
 }
 /****************FIN LISTAR TODO *************************************************/
 //UN DICCIONARIO CON LISTAS PARA REPRESENTAR JERARQUIAS.
+int iterator_count=0;
+
 void _assertion(char* ___, void* __) {
 	 iterator_count++;
 
@@ -92,11 +94,11 @@ void _assertion(char* ___, void* __) {
 void reconocerDirectorio(osada_file tablaDeArchivo, int pos, t_dictionary *dictionary){
 	if (tablaDeArchivo.state == DIRECTORY  && tablaDeArchivo.parent_directory == 65535){
 		 t_list *list = list_create();
+		 //list_add(list, &tablaDeArchivo);
+		 list_add(list, "test");
 		 dictionary_put(dictionary, tablaDeArchivo.fname , list);
 	}
 }
-
-int iterator_count=0;
 
 void crearArbolDeDirectorios(osada_file *tablaDeArchivo){
 	t_dictionary *dictionary = dictionary_create();
@@ -109,12 +111,15 @@ void crearArbolDeDirectorios(osada_file *tablaDeArchivo){
 
 	t_list *list = dictionary_get(dictionary, "directorio");
 
-	list_add(list, "TEST");
+	//list_add(list, "Tew");
 
-	dictionary_put(dictionary, "directorio", list);
-	list = dictionary_get(dictionary, "directorio");
-
-	printf("ver contenido de: %c\n", list_take(list, 0));
+	//dictionary_put(dictionary, "directorio", list);
+	//list = dictionary_get(dictionary, "directorio");
+	//osada_file *nombre = list_get(list, 0);
+	char *nombre = list_get(list, 0);
+	//->
+	//printf("ver contenido de: %s\n", &nombre->fname);
+	printf("ver contenido de: %s\n", nombre);
 
 	printf("cantidad de padres %i\n", iterator_count);
 
