@@ -19,11 +19,18 @@ int main(int argc, char *argv[]){
 
 	t_bitarray *bitMap = obtenerBitmap(osada, osadaHeaderFile);
 	osada_file *tablaDeArchivo = obtenerTablaDeArchivos(osada, osadaHeaderFile);
-	int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
-	char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
-	mock_setearTamanioDelArchivo(tamanioDelArchivo);
-	mock_setearConstantesDePosicionDeOsada(osadaHeaderFile);
+	//dameTodosLosDirectorios(tablaDeArchivo);
+	//dameTodosLosArchivosRegulares(tablaDeArchivo);
+	//dameTodosLosBorrados(tablaDeArchivo);
+
+	crearArbolDeDirectorios(tablaDeArchivo);
+
+	//int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
+	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
+
+	//mock_setearTamanioDelArchivo(tamanioDelArchivo);
+	//mock_setearConstantesDePosicionDeOsada(osadaHeaderFile);
 
 	//mock_Crear_Directorios(osada, osadaHeaderFile);
 	//mock_Crear_La_Tabla_De_Asignacion_De_Los_Directorios(osada, tablaDeAsignacion, osadaHeaderFile);
@@ -33,8 +40,8 @@ int main(int argc, char *argv[]){
 	printf("************TERMINO TODO************\n");
 
 	free(bitMap);
-	free(osadaHeaderFile);
-	free(tablaDeArchivo);
+	//free(osadaHeaderFile);
+	//free(tablaDeArchivo);
 
 	//free(tablaDeAsignacion);//Error in `./cmhmr-osada': double free or corruption (out): 0x097611b0
 	//free(bloqueDeDatos);//Error in `./cmhmr-osada': double free or corruption (out): 0x097611b0

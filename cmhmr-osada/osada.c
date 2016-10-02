@@ -16,6 +16,7 @@ void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamania
 		printf("Estado del munmap: %i\n", status);
 }
 
+
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
 	//unsigned char *bloqueDeDatos = malloc(sizeof(char) * osadaHeaderFile->data_blocks);OLD
 	unsigned char *bloqueDeDatos = malloc(sizeof(char) * OSADA_BLOCK_SIZE * osadaHeaderFile->data_blocks);
@@ -70,7 +71,7 @@ osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHead
 	//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
 	memcpy(tablaDeArchivo, &osada[desdeParaTablaDeArchivos], tamanioTablaDeArchivos);
 
-	mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
+	//mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
 
 	return tablaDeArchivo;
 }
@@ -104,7 +105,7 @@ t_bitarray *obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile){
 	memcpy(unBitMapSinFormato, &osada[desdeParaBitmap], tamanioDelBitMap );
 	bitMap = bitarray_create(unBitMapSinFormato, tamanioDelBitMap );
 
-	contarBloques(osada, osadaHeaderFile, bitMap);
+	//contarBloques(osada, osadaHeaderFile, bitMap);
 
 	return bitMap;
 

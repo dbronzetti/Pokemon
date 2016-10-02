@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include <commons/bitarray.h>
 #include <stdio.h>
+#include <commons/bitarray.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/types.h>
