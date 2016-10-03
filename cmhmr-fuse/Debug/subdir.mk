@@ -4,16 +4,13 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../cmhrm_fuse.c \
-../pokedex_cliente.c 
+../cmhrm_fuse.c 
 
 OBJS += \
-./cmhrm_fuse.o \
-./pokedex_cliente.o 
+./cmhrm_fuse.o 
 
 C_DEPS += \
-./cmhrm_fuse.d \
-./pokedex_cliente.d 
+./cmhrm_fuse.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
