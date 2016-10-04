@@ -10,9 +10,13 @@
 
 #include "osada.h"
 
+unsigned char *osada;
+
 void _iterarBloques(int bloque){
 	printf("el proximo: %i\n", bloque);
 }
+
+
 
 t_list *crearPosicionesDeBloquesParaUnArchivo(int *arrayTabla, int numeroBloques){
 	int elProximo = 0;
@@ -25,7 +29,7 @@ t_list *crearPosicionesDeBloquesParaUnArchivo(int *arrayTabla, int numeroBloques
 
 	}
 
-	//list_iterate(proximo, (void*) _iterarBloques);
+	list_iterate(proximo, (void*) _iterarBloques);
 
 	return proximo;
 }
@@ -41,7 +45,13 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
 	if (tablaDeArchivo.state == REGULAR && strcmp(nac, n) == 0){
 		free(nac);
 		free(n);
-		printf("posicion del primer bloque: %i\n", tablaDeArchivo.first_block);
+		printf("state_: %c\n", tablaDeArchivo.state);
+		printf("parent_directory_: %i\n", tablaDeArchivo.parent_directory);
+		printf("fname_: %s\n",&tablaDeArchivo.fname);
+		printf("file_size_: %i\n",tablaDeArchivo.file_size);
+		printf("lastmod_: %i\n", tablaDeArchivo.lastmod);
+		printf("first_block_: %i\n",tablaDeArchivo.first_block);
+
 		return tablaDeArchivo.first_block;
 	}
 

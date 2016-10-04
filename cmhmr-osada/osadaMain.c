@@ -28,11 +28,15 @@ int main(int argc, char *argv[]){
 
 	//crearArbolDeDirectorios(tablaDeArchivo);
 
-	//caso para el archivo 114.txt, array 171
-	printf("nombre del archivo: %s\n", tablaDeArchivo[171].fname);
-	osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "114.txt");
-	printf("posicion del primer bloque: %i\n", posicion);
-	//t_list *proximo2 = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, 19685);
+	//README.txt
+	//021.txt
+	//"large.txt" - basic
+	//archivo - basic
+	osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "archivo.txt");
+	//printf("posicion del primer bloque: %i\n", posicion);
+
+	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, posicion);
+	verContenidoDeArchivo(conjuntoDeBloquesDelArchivo, osada);
 
 	/*
 	mostrarLosBloquesAsignados(tablaDeAsignacion, 19685);

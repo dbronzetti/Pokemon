@@ -7,6 +7,7 @@
 
 #include "osada.h"
 #include <errno.h>
+#include <commons/collections/list.h>
 
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento){
 	memcpy(&osada[desde], elemento, tamaniaDelElemento );
@@ -15,6 +16,36 @@ void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamania
 	if (status == -1)
 		printf("Estado del munmap: %i\n", status);
 }
+
+
+/*********************************************************************/
+
+unsigned char *osada;
+
+void _iterarParaVerContenido(int bloque){
+
+	unsigned char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+	int i;
+
+	memcpy(bloqueDeDatos, &osada[desdeParaBloqueDeDatos + bloque], OSADA_BLOCK_SIZE );
+
+	for(i=0; i<64; i++){
+		printf("%c", bloqueDeDatos[i]);
+	}
+	free(bloqueDeDatos);
+
+
+
+}
+
+void verContenidoDeArchivo(t_list *conjuntoDeBloques, unsigned char *osada2){
+	osada = osada2;
+	list_iterate(conjuntoDeBloques, (void*) _iterarParaVerContenido);
+}
+
+/*********************************************************************/
+
+
 
 
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
