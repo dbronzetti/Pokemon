@@ -24,14 +24,15 @@ unsigned char *osada;
 
 void _iterarParaVerContenido(int bloque){
 
-	unsigned char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+	char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
 	int i;
 
 	memcpy(bloqueDeDatos, &osada[desdeParaBloqueDeDatos + bloque], OSADA_BLOCK_SIZE );
 
-	for(i=0; i<64; i++){
+	for(i=1; i<=64; i++){
 		printf("%c", bloqueDeDatos[i]);
 	}
+	printf("\nTERMINO\n");
 	free(bloqueDeDatos);
 
 
