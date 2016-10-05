@@ -30,10 +30,24 @@ typedef enum{
 	POKEDEX_SERVIDOR
 } enum_processes;
 
+typedef enum{
+	NUEVO=0,
+	CONOCER,
+	IR,
+	CAPTURAR,
+	DESCONECTAR
+} enum_messages;
+
+
 typedef struct{
 	enum_processes process;
 	char *message;
 } t_MessageGenericHandshake;
+
+typedef struct{
+	enum_messages tipo;
+	char* mensaje;
+} t_Mensaje;
 
 int openSelectServerConnection(int newSocketServerPort, int *socketServer);
 int openServerConnection(int newSocketServerPort, int *socketServer);
@@ -45,6 +59,10 @@ int sendMessage (int *socketClient, void *buffer, int bufferSize);
 int receiveMessage(int *socketClient, void *messageRcv, int bufferSize);
 void serializeHandShake(t_MessageGenericHandshake *value, char *buffer, int valueSize);
 void deserializeHandShake(t_MessageGenericHandshake *value, char *bufferReceived);
+int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaje); //Envia un string + un enum que dice que tipo de msj es.
+void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize);
+void deserializeClientMessage(t_Mensaje *value, char *bufferReceived);
+
 
 char *getProcessString (enum_processes process);
 

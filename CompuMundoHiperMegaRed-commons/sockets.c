@@ -269,3 +269,72 @@ char *getProcessString (enum_processes process){
 	}
 	return processString;
 }
+
+int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaje){
+	int exitcode = EXIT_SUCCESS; //Normal completition
+	int bufferSize = 0;
+	int messageLen = 0;
+	int payloadSize = 0;
+
+	t_Mensaje *messageACK = malloc(sizeof(t_Mensaje));
+	messageACK->tipo = tipoMensaje;
+
+//	processString = getProcessString(process);
+
+	messageACK->mensaje = string_new();
+	string_append_with_format(&messageACK->mensaje,mensaje);
+	messageLen = strlen(messageACK->mensaje);
+
+	payloadSize = sizeof(messageACK->mensaje) + sizeof(messageLen) + messageLen + 1; // process + length message + message + 1 (+1 because of '\0')
+	bufferSize = sizeof(bufferSize) + payloadSize ;//+1 because of '\0'
+
+	char *buffer = malloc(bufferSize);
+	serializeClientMessage(messageACK, buffer, payloadSize);//has to be sent the PAYLOAD size!!
+
+	exitcode = send(*socketClient, (void*) buffer, bufferSize,0) == -1 ? EXIT_FAILURE : EXIT_SUCCESS ;
+
+	free(buffer);
+	free(messageACK->mensaje);
+	free(messageACK);
+
+	return exitcode;
+}
+
+void deserializeClientMessage(t_Mensaje *value, char *bufferReceived){
+    int offset = 0;
+    int messageLen = 0;
+
+    //1)process
+    memcpy(&value->tipo, bufferReceived, sizeof(value->tipo));
+    offset += sizeof(value->tipo);
+
+    //2)message length
+	memcpy(&messageLen, bufferReceived + offset, sizeof(messageLen));
+	offset += sizeof(messageLen);
+
+    //3)message
+	value->mensaje = malloc(messageLen);
+    memcpy(value->mensaje, bufferReceived + offset, messageLen);
+
+}
+
+void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize){
+    int offset = 0;
+
+    //0)valueSize
+	memcpy(buffer, &valueSize, sizeof(valueSize));
+	offset += sizeof(valueSize);
+
+    //1)process
+    memcpy(buffer + offset, &value->tipo, sizeof(value->tipo));
+    offset += sizeof(value->tipo);
+
+    //2)message length
+    int messageLen = strlen(value->mensaje) + 1;//+1 because of '\0'
+	memcpy(buffer + offset, &messageLen, sizeof(messageLen));
+	offset += sizeof(messageLen);
+
+    //3)message
+    memcpy(buffer + offset, value->mensaje, messageLen);
+
+}

@@ -30,6 +30,9 @@ struct dirent *ditPokenest;
 DIR *dipPokemones;
 struct dirent *ditPokemones;
 t_list* listaDePokenest;
+int semaforo_wait;
+t_list* items;
+t_list* listaDeEntrenadores;
 
 // Estructuras
 typedef struct {
@@ -41,6 +44,14 @@ typedef struct {
 	int* pokemon;
 	t_metadataPokenest metadata;
 } t_pokenest;
+
+typedef struct {
+	char simbolo;
+	int pos_x;
+	int pos_y;
+	int posD_x; //posicion deseada (a la que quiere ir)
+	int posD_y;
+} t_entrenador;
 
 // Funciones de conexion
 void startServerProg();
@@ -54,5 +65,6 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest); //Se encarga de recorrer lo q
 t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
 int levantarNivelDelPokemon(char* rutaDelPokemon);
 void dibujarMapa();
+void crearEntrenadorYDibujar(char simbolo);
 
 #endif /* MAPA_H_ */

@@ -28,6 +28,6 @@ void imprimirArray(char** array);
 
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
-
+void enviarSimbolo(char* simbolo, int socketClient);
 
 #endif /* ENTRENADOR_H_ */

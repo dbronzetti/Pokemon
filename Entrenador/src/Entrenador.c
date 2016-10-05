@@ -62,6 +62,8 @@ int main(int argc, char **argv) {
 	if (exitCode == EXIT_SUCCESS) {
 		log_info(logEntrenador, "ENTRENADOR connected to MAPA successfully\n");
 		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
+		sendClientMessage(&socketMapa,metadataEntrenador.simbolo,NUEVO);
+
 		while (1)
 			scanf("%d", asd);
 	} else {

@@ -11,7 +11,8 @@ int main(int argc, char **argv) {
 	char *mapa = string_new();
 	char *pokedex = string_new();
 	pthread_t serverThread;
-
+	listaDeEntrenadores = list_create();
+	semaforo_wait = 1;
 	listaDePokenest = list_create();
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
@@ -66,7 +67,6 @@ int main(int argc, char **argv) {
 	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
-
 	pthread_join(serverThread, NULL);
 
 	return 0;
@@ -123,25 +123,9 @@ void startServerProg() {
 					} else {
 						// handle data from a client
 						//Receive message size
-						int messageSize = 0;
-
-						//Get Payload size
-						int receivedBytes = receiveMessage(&i, &messageSize, sizeof(messageSize));
-
-						if (receivedBytes <= 0) {
-							// got error or connection closed by client
-							if (receivedBytes == 0) {
-								// connection closed
-								log_error(logMapa,"The client hung up or went down! - Please check the client '%d'!", i);
-							} else {
-								perror("recv");
-							}
-							close(i); // bye!
-							FD_CLR(i, &master); // remove from master set
-
-						} else {
+						if (semaforo_wait == 1){
+							semaforo_wait = 0;
 							// we got some data from a client
-
 							//Create thread attribute detached
 							pthread_attr_t processMessageThreadAttr;
 							pthread_attr_init(&processMessageThreadAttr);
@@ -154,7 +138,7 @@ void startServerProg() {
 							memcpy(&serverData->socketClient, &i ,sizeof(serverData->socketClient));
 
 							pthread_create(&processMessageThread, &processMessageThreadAttr, (void*) processMessageReceived, serverData);
-
+							pthread_join(processMessageThread, NULL);
 							//Destroy thread attribute
 							pthread_attr_destroy(&processMessageThreadAttr);
 
@@ -166,6 +150,8 @@ void startServerProg() {
 	}
 
 }
+
+
 
 void newClients(int *socketServer, fd_set *master, int *fdmax) {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
@@ -271,58 +257,49 @@ void handShake(void *parameter) {
 }
 
 void processMessageReceived (void *parameter){
-
 	t_serverData *serverData = (t_serverData*) parameter;
 
-	while(1){
-		//Receive message size
-		int messageSize = 0;
+	//Receive message size
+	int messageSize = 0;
+	char *messageRcv = malloc(sizeof(messageSize));
+	int receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,sizeof(messageSize));
 
-		//Get Payload size
-		int receivedBytes = receiveMessage(&serverData->socketClient, &messageSize, sizeof(messageSize));
+	//Receive message using the size read before
+	memcpy(&messageSize, messageRcv, sizeof(int));
+	messageRcv = realloc(messageRcv, messageSize);
+	receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,messageSize);
 
-		if ( receivedBytes > 0 ){
+	//starting handshake with client connected
+	t_Mensaje *message = malloc(sizeof(t_Mensaje));
+	deserializeClientMessage(message, messageRcv);
 
-			//Receive process from which the message is going to be interpreted
-			enum_processes fromProcess;
-			receivedBytes = receiveMessage(&serverData->socketClient, &fromProcess, sizeof(fromProcess));
-
-			log_info(logMapa, "\n\nMessage size received from process '%s' in socket cliente '%d': %d\n",getProcessString(fromProcess), serverData->socketClient, messageSize);
-
-			switch (fromProcess){
-			case ENTRENADOR:{
-				log_info(logMapa, "Processing ENTRENADOR message received");
-				//processEntrenadorMessages
+	//Now it's checked that the client is not down
+	if (receivedBytes == 0) {
+		log_error(logMapa,"The client went down while sending message! - Please check the client '%d' is down!",serverData->socketClient); //disculpen mi ingles is very dificcul
+		close(serverData->socketClient);
+		free(serverData);
+	} else {
+		switch (message->tipo) {
+			case NUEVO: {
+				log_info(logMapa, "Creating new user: %s",message->mensaje);
+				crearEntrenadorYDibujar(message->mensaje[0]);
+				semaforo_wait = 1;
 				break;
 			}
-			case POKEDEX_CLIENTE:{
-				log_info(logMapa, "Processing POKEDEX_CLIENTE message received");
-				//processPOKEDEXClienteMessages
-				break;
-			}
-			default:{
-				log_error(logMapa,"Process not allowed to connect - Invalid process '%s' send a message to MAPA", getProcessString(fromProcess));
+			default: {
+				log_error(logMapa, "Message not allowed. Invalid message '%s' tried to send to MAPA",	getProcessString(message->tipo));
 				close(serverData->socketClient);
 				free(serverData);
 				break;
 			}
-			}
-
-		}else if (receivedBytes == 0 ){
-			//The client is down when bytes received are 0
-			log_error(logMapa,"The client went down while receiving! - Please check the client '%d' is down!", serverData->socketClient);
-			close(serverData->socketClient);
-			free(serverData);
-			break;
-		}else{
-			log_error(logMapa, "Error - No able to received - Error receiving from socket '%d', with error: %d",serverData->socketClient,errno);
-			close(serverData->socketClient);
-			free(serverData);
-			break;
 		}
 	}
 
+	free(message->mensaje);
+	free(message);
+	free(messageRcv);
 }
+
 
 int recorrerdirDePokenest(char* rutaDirPokenest) {
 
@@ -438,9 +415,8 @@ int levantarNivelDelPokemon(char* rutaDelPokemon){
 }
 
 void dibujarMapa(){
-
-	t_list* items = list_create();
 	int rows, cols;
+	items = list_create();
 
 	nivel_gui_inicializar();
 
@@ -461,5 +437,20 @@ void dibujarMapa(){
 	nivel_gui_dibujar(items, "TEST");
 
 
+}
+
+void crearEntrenadorYDibujar(char simbolo){
+	t_entrenador* nuevoEntrenador = malloc(sizeof(t_entrenador*));
+
+	nuevoEntrenador->simbolo = simbolo;
+	nuevoEntrenador->pos_x = 1; //por defecto se setea en el (1,1) creo que lo dijeron en la charla, por las dudas preguntar.
+	nuevoEntrenador->pos_y = 1;
+	nuevoEntrenador->posD_x = -1; //flag para representar que por el momento no busca ninguna ubicacion
+	nuevoEntrenador->posD_y = -1;
+
+	CrearPersonaje(items, simbolo, nuevoEntrenador->pos_x, nuevoEntrenador->pos_y);
+	list_add(listaDeEntrenadores, nuevoEntrenador);
+	nivel_gui_dibujar(items, "TEST");
 
 }
+
