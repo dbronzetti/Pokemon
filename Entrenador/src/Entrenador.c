@@ -237,16 +237,19 @@ void recibirSignal(){
 
 void sumarVida(){
 	metadataEntrenador.vidas++;
-	log_info(logEntrenador, "La vida del entrenador ahora es de '%d'\n",
+	log_info(logEntrenador, "Ha aumentado en 1 la vida del entrenador, ahora es de '%d'\n",
 			metadataEntrenador.vidas);
 }
 
 void restarVida(){
 	metadataEntrenador.vidas--;
-	log_info(logEntrenador, "La vida del entrenador ahora es de '%d'\n",
+	log_info(logEntrenador, "Ha disminuido en 1 la vida del entrenador, ahora es de '%d'\n",
 			metadataEntrenador.vidas);
 }
 
 void desconectarse(){
-	puts("DESCONECTARSE"); //TODO
+
+	sendClientMessage(&socketMapa,metadataEntrenador.simbolo,DESCONECTAR);
+	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
+	exit(0);
 }

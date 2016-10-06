@@ -286,6 +286,17 @@ void processMessageReceived (void *parameter){
 				semaforo_wait = 1;
 				break;
 			}
+
+			case DESCONECTAR: {
+				log_info(logMapa, "Deleting user: %s",message->mensaje);
+				eliminarEntrenador(message->mensaje[0]);
+				close(serverData->socketClient);
+				serverData->socketClient = -1;
+				free(serverData);
+				semaforo_wait = 1;
+				break;
+			}
+
 			default: {
 				log_error(logMapa, "Message not allowed. Invalid message '%s' tried to send to MAPA",	getProcessString(message->tipo));
 				close(serverData->socketClient);
@@ -440,7 +451,7 @@ void dibujarMapa(){
 }
 
 void crearEntrenadorYDibujar(char simbolo, int socket){
-	t_entrenador* nuevoEntrenador = malloc(sizeof(t_entrenador*));
+	t_entrenador* nuevoEntrenador = malloc(sizeof(t_entrenador));
 
 	nuevoEntrenador->simbolo = simbolo;
 	nuevoEntrenador->pos_x = 1; //por defecto se setea en el (1,1) creo que lo dijeron en la charla, por las dudas preguntar.
@@ -454,4 +465,24 @@ void crearEntrenadorYDibujar(char simbolo, int socket){
 	nivel_gui_dibujar(items, "TEST");
 
 }
+
+void eliminarEntrenador(char simbolo){
+//	close(serverData->socketClient);
+//	free(serverData);
+	BorrarItem(items, simbolo);
+	nivel_gui_dibujar(items, "TEST");
+//    puts("se borro");
+//	t_entrenador* entrenador_destroyer = malloc(sizeof(t_entrenador));
+//	caracterCondicion = simbolo;
+//	list_remove_and_destroy_by_condition(listaDeEntrenadores,igualarACaracterCondicion, (void*) entrenador_destroyer);
+
+}
+
+bool igualarACaracterCondicion(void* paramatrer){
+
+	t_entrenador *entrenador = (t_entrenador*) paramatrer;
+
+	return caracterCondicion == entrenador->simbolo;
+}
+
 

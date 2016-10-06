@@ -23,6 +23,7 @@
 #include <nivel.h>
 #include <curses.h>
 
+
 t_log* logMapa;
 t_metadataMapa metadataMapa;
 DIR *dipPokenest;
@@ -33,6 +34,7 @@ t_list* listaDePokenest;
 int semaforo_wait;
 t_list* items;
 t_list* listaDeEntrenadores;
+char caracterCondicion;
 
 // Estructuras
 typedef struct {
@@ -67,5 +69,7 @@ t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
 int levantarNivelDelPokemon(char* rutaDelPokemon);
 void dibujarMapa();
 void crearEntrenadorYDibujar(char simbolo, int socket);
+bool igualarACaracterCondicion(void* paramatrer);
+void eliminarEntrenador(char simbolo);
 
 #endif /* MAPA_H_ */
