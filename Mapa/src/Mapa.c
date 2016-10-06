@@ -282,7 +282,7 @@ void processMessageReceived (void *parameter){
 		switch (message->tipo) {
 			case NUEVO: {
 				log_info(logMapa, "Creating new user: %s",message->mensaje);
-				crearEntrenadorYDibujar(message->mensaje[0]);
+				crearEntrenadorYDibujar(message->mensaje[0], serverData->socketClient);
 				semaforo_wait = 1;
 				break;
 			}
@@ -439,7 +439,7 @@ void dibujarMapa(){
 
 }
 
-void crearEntrenadorYDibujar(char simbolo){
+void crearEntrenadorYDibujar(char simbolo, int socket){
 	t_entrenador* nuevoEntrenador = malloc(sizeof(t_entrenador*));
 
 	nuevoEntrenador->simbolo = simbolo;
@@ -447,6 +447,7 @@ void crearEntrenadorYDibujar(char simbolo){
 	nuevoEntrenador->pos_y = 1;
 	nuevoEntrenador->posD_x = -1; //flag para representar que por el momento no busca ninguna ubicacion
 	nuevoEntrenador->posD_y = -1;
+	nuevoEntrenador->socket = socket;
 
 	CrearPersonaje(items, simbolo, nuevoEntrenador->pos_x, nuevoEntrenador->pos_y);
 	list_add(listaDeEntrenadores, nuevoEntrenador);

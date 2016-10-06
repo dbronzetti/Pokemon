@@ -51,6 +51,7 @@ typedef struct {
 	int pos_y;
 	int posD_x; //posicion deseada (a la que quiere ir)
 	int posD_y;
+	int socket; //filedescriptor del socket asociado al entrenador
 } t_entrenador;
 
 // Funciones de conexion
@@ -65,6 +66,6 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest); //Se encarga de recorrer lo q
 t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
 int levantarNivelDelPokemon(char* rutaDelPokemon);
 void dibujarMapa();
-void crearEntrenadorYDibujar(char simbolo);
+void crearEntrenadorYDibujar(char simbolo, int socket);
 
 #endif /* MAPA_H_ */
