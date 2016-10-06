@@ -14,6 +14,8 @@
 #include "commons/log.h"
 #include "commons/config.h"
 #include "metadata.h"
+#include <signal.h>
+#include <pthread.h>
 
 //Logger
 t_log* logEntrenador;
@@ -29,5 +31,11 @@ void imprimirArray(char** array);
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
 void enviarSimbolo(char* simbolo, int socketClient);
+
+//Funciones de signal
+void recibirSignal();
+void sumarVida();
+void restarVida();
+void desconectarse();
 
 #endif /* ENTRENADOR_H_ */

@@ -13,6 +13,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *entrenador = string_new();
 	char *pokedex = string_new();
+	pthread_t hiloSignal;
 
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -59,10 +60,14 @@ int main(int argc, char **argv) {
 	crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa);
 
 	exitCode = connectTo(MAPA, &socketMapa);
+
 	if (exitCode == EXIT_SUCCESS) {
 		log_info(logEntrenador, "ENTRENADOR connected to MAPA successfully\n");
 		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
 		sendClientMessage(&socketMapa,metadataEntrenador.simbolo,NUEVO);
+
+		pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
+		pthread_join(hiloSignal, NULL);
 
 		while (1)
 			scanf("%d", asd);
@@ -222,3 +227,26 @@ void imprimirArray(char** array) {
 	printf(" \n");
 }
 
+void recibirSignal(){
+	while(1){
+		  signal(SIGUSR1, sumarVida);
+		  signal(SIGTERM, restarVida);
+		  signal(SIGINT, desconectarse);
+	}
+}
+
+void sumarVida(){
+	metadataEntrenador.vidas++;
+	log_info(logEntrenador, "La vida del entrenador ahora es de '%d'\n",
+			metadataEntrenador.vidas);
+}
+
+void restarVida(){
+	metadataEntrenador.vidas--;
+	log_info(logEntrenador, "La vida del entrenador ahora es de '%d'\n",
+			metadataEntrenador.vidas);
+}
+
+void desconectarse(){
+	puts("DESCONECTARSE"); //TODO
+}
