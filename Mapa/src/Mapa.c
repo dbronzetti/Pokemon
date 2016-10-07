@@ -289,10 +289,10 @@ void processMessageReceived (void *parameter){
 
 			case DESCONECTAR: {
 				log_info(logMapa, "Deleting user: %s",message->mensaje);
-				eliminarEntrenador(message->mensaje[0]);
 				close(serverData->socketClient);
 				serverData->socketClient = -1;
 				free(serverData);
+				eliminarEntrenador(message->mensaje[0]);
 				semaforo_wait = 1;
 				break;
 			}
@@ -467,22 +467,21 @@ void crearEntrenadorYDibujar(char simbolo, int socket){
 }
 
 void eliminarEntrenador(char simbolo){
-//	close(serverData->socketClient);
-//	free(serverData);
+
 	BorrarItem(items, simbolo);
 	nivel_gui_dibujar(items, "TEST");
-//    puts("se borro");
-//	t_entrenador* entrenador_destroyer = malloc(sizeof(t_entrenador));
-//	caracterCondicion = simbolo;
-//	list_remove_and_destroy_by_condition(listaDeEntrenadores,igualarACaracterCondicion, (void*) entrenador_destroyer);
 
-}
+	bool igualarACaracterCondicion(t_entrenador *entrenador ){
 
-bool igualarACaracterCondicion(void* paramatrer){
+		return simbolo == entrenador->simbolo;
+	}
 
-	t_entrenador *entrenador = (t_entrenador*) paramatrer;
+	void destruirElemento(t_entrenador *entrenador){
+		free(entrenador);
+	}
 
-	return caracterCondicion == entrenador->simbolo;
+	list_remove_and_destroy_by_condition(listaDeEntrenadores,(void*) igualarACaracterCondicion, (void*) destruirElemento);
+
 }
 
 
