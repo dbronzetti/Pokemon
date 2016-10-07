@@ -26,13 +26,14 @@ void _iterarParaVerContenido(int bloque){
 
 	char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
 	int i;
+	//tamanioQueOcupaElBloqueDeDatos ir de atras con los bloques.
 
 	memcpy(bloqueDeDatos, &osada[desdeParaBloqueDeDatos + bloque], OSADA_BLOCK_SIZE );
 
-	for(i=1; i<=64; i++){
-		printf("%c", bloqueDeDatos[i]);
-	}
-	printf("\nTERMINO\n");
+//	for(i=1; i<=64; i++){
+		printf("%s", bloqueDeDatos);
+	//}
+	//printf("\nTERMINO\n");
 	free(bloqueDeDatos);
 
 
@@ -187,7 +188,7 @@ void setearConstantesDePosicionDeOsada(osada_header *osadaHeaderFile){
 	desdeParaBitmap = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
 	desdeParaTablaDeArchivos = OSADA_BLOCK_SIZE + tamanioDelBitMap;
 	desdeParaTablaAsigancion = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos;
-	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
+	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacionEnBloques;
 
 }
 

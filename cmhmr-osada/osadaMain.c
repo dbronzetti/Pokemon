@@ -26,13 +26,14 @@ int main(int argc, char *argv[]){
 	//dameTodosLosArchivosRegulares(tablaDeArchivo);
 	//dameTodosLosBorrados(tablaDeArchivo);
 
-	crearArbolDeDirectorios(tablaDeArchivo);
+	crearArbolDeDirectoriosDelRoot(tablaDeArchivo);
+	crearArbolDeDirectoriosHijos(tablaDeArchivo);
 
 	//README.txt
 	//021.txt
 	//"large.txt" - basic
 	//archivo - basic
-	//osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "special.txt");
+	//osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "README.txt");
 	//printf("posicion del primer bloque: %i\n", posicion);
 
 	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, posicion);

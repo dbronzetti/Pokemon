@@ -84,49 +84,59 @@ void dameTodosLosBorrados(osada_file *tablaDeArchivo){
 }
 /****************FIN LISTAR TODO *************************************************/
 //UN DICCIONARIO CON LISTAS PARA REPRESENTAR JERARQUIAS.
-int iterator_count=0;
 
-void _assertion(char* key,t_list *datos) {
-	//osada_file osadaFile = malloc(64);
-	//osada_file osadaFile;
-	//osadaFile = (osada_file)list_get(datos, 0);
-	printf("Diccionario: %s\n", key);
-	//printf("list: %c\n", osadaFile);
-	//free(osadaFile);
+void _recorrerDirectoriosPadres(char* key,t_list *datos) {
+
+	osada_file *archivo =  malloc(sizeof(osada_file));
+	archivo = list_get(datos, 0);
+	printf("Diccionario - Carpeta en el root: %s\n", key);
+	printf("Un elemento de la lista list, que seria el primer hijo del root: %s\n", archivo->fname);
+	printf("archivo->parent_directory: %i\n", archivo->parent_directory);
+
+	//free(archivo);
+
 }
 
-void reconocerDirectorio(osada_file tablaDeArchivo, int pos, t_dictionary *dictionary){
-	if (tablaDeArchivo.state == DIRECTORY  && tablaDeArchivo.parent_directory == 65535){
-		t_list *list = list_create();
-		 list_add(list, &tablaDeArchivo);
-		 list_get(list, 0);
-		 //list_add(list, "test");
-		dictionary_put(dictionary, tablaDeArchivo.fname , list);
+void reconocerDirectorio(osada_file *archivo, int pos, t_dictionary *dictionary){
+
+	t_list *list = list_create();
+
+	if (archivo->state == DIRECTORY  && archivo->parent_directory == 65535){
+		char str[10];
+		sprintf(str, "%d", pos);
+		list_add(list, archivo);
+
+		//printf("pos: %s", str);
+
+		dictionary_put(dictionary, (char *)archivo->fname , list);
+		//dictionary_put(dictionary, c , list);
 
 	}
+
 }
 
-void crearArbolDeDirectorios(osada_file *tablaDeArchivo){
+void crearArbolDeDirectoriosDelRoot(osada_file *tablaDeArchivo){
 	t_dictionary *dictionary = dictionary_create();
 	int pos=0;
 
 	for (pos=0; pos <= 2047; pos++){
-		reconocerDirectorio(tablaDeArchivo[pos], pos, dictionary);
+		reconocerDirectorio(&tablaDeArchivo[pos], pos, dictionary);
 	}
 
-	dictionary_iterator(dictionary, (void*) _assertion);
+	dictionary_iterator(dictionary, (void*) _recorrerDirectoriosPadres);
 
-	t_list *list = dictionary_get(dictionary, "Viridian City");
 
-	//list_add(list, "Tew");
+}
 
-	//dictionary_put(dictionary, "directorio", list);
-	//list = dictionary_get(dictionary, "directorio");
-	//osada_file *nombre = list_get(list, 0);
-	//char *nombre = list_get(list, 0);
-	//->
-	//printf("ver contenido de: %s\n", &nombre->fname);
-	//printf("ver contenido de: %s\n", nombre);
+void crearArbolDeDirectoriosHijos(osada_file *tablaDeArchivo){
+	t_dictionary *dictionary = dictionary_create();
+	int pos=0;
+
+	for (pos=0; pos <= 2047; pos++){
+		reconocerDirectorio(&tablaDeArchivo[pos], pos, dictionary);
+	}
+
+	dictionary_iterator(dictionary, (void*) _recorrerDirectoriosPadres);
 
 	printf("cantidad de padres %i\n", iterator_count);
 
