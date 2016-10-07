@@ -7,6 +7,8 @@
 #include "osada.h"
 #include "mockOsada.h"
 #include <commons/collections/list.h>
+#include <commons/collections/dictionary.h>
+
 
 int main(int argc, char *argv[]){
 	int archivoID = obtenerIDDelArchivo(argv[1]);
@@ -26,8 +28,8 @@ int main(int argc, char *argv[]){
 	//dameTodosLosArchivosRegulares(tablaDeArchivo);
 	//dameTodosLosBorrados(tablaDeArchivo);
 
-	crearArbolDeDirectoriosDelRoot(tablaDeArchivo);
-	crearArbolDeDirectoriosHijos(tablaDeArchivo);
+	t_dictionary *dirDicRoot = crearArbolDeDirectoriosDelRoot(tablaDeArchivo);
+	t_dictionary *dirDicHijos = crearArbolDeDirectoriosHijos(tablaDeArchivo, dirDicRoot);
 
 	//README.txt
 	//021.txt
