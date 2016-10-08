@@ -24,12 +24,18 @@ int main(int argc, char *argv[]){
 	int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
 	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
-	//dameTodosLosDirectorios(tablaDeArchivo);
+	dameTodosLosDirectorios(tablaDeArchivo);
 	//dameTodosLosArchivosRegulares(tablaDeArchivo);
 	//dameTodosLosBorrados(tablaDeArchivo);
 
-	t_dictionary *dirDicRoot = crearArbolDeDirectoriosDelRoot(tablaDeArchivo);
-	t_dictionary *dirDicHijos = crearArbolDeDirectoriosHijos(tablaDeArchivo, dirDicRoot);
+	/*
+	t_dictionary *dirDicRoot = dictionary_create();
+	t_dictionary *dirDicHijos = dictionary_create();
+	dirDicRoot = crearArbolDeDirectoriosDelRoot(tablaDeArchivo);
+
+	dirDicHijos = crearArbolDeDirectoriosHijos(tablaDeArchivo, dirDicRoot);
+
+	 */
 
 	//README.txt
 	//021.txt

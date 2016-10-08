@@ -115,24 +115,6 @@ void reconocerDirectorio(osada_file *archivo, int pos, t_dictionary *dictionary)
 
 }
 
-void reconocerDirectorioHijos(osada_file *archivo, int pos, t_dictionary *dictionary, t_dictionary *dictionaryDirRoot){
-
-	t_list *list = list_create();
-
-	if (archivo->state == DIRECTORY){
-		char str[10];
-		sprintf(str, "%d", pos);
-		list_add(list, archivo);
-
-		//printf("pos: %s", str);
-
-		//dictionary_put(dictionary, (char *)archivo->fname , list);
-		dictionary_put(dictionary, str , list);
-
-	}
-
-}
-
 t_dictionary *crearArbolDeDirectoriosDelRoot(osada_file *tablaDeArchivo){
 	t_dictionary *dictionaryDirRoot = dictionary_create();
 	int pos=0;
@@ -146,16 +128,46 @@ t_dictionary *crearArbolDeDirectoriosDelRoot(osada_file *tablaDeArchivo){
 	return dictionaryDirRoot;
 }
 
+/*****************************************************/
+
+void reconocerDirectorioHijos(osada_file *archivo, int pos, t_dictionary *dictionaryDirRoot){
+
+
+	if (archivo->state == DIRECTORY && archivo->parent_directory != 65535){
+		//printf("error!");
+		char str[10];
+		sprintf(str, "%d", archivo->parent_directory);
+		//list_add(list, archivo);
+
+		//printf("pos: %i\n",  archivo->parent_directory);
+
+		//dictionary_put(dictionary, (char *)archivo->fname , list);
+		t_list *list = dictionary_get(dictionaryDirRoot, str);
+		//printf("list: %i\n",  list);
+
+		if (list != 0){
+			list_add(list, archivo);
+			dictionary_put(dictionaryDirRoot, str , list);
+		}else{
+
+			printf("Directorios sin padres: %i\n",  archivo->parent_directory);
+			printf("Sin Nombre: %s\n", archivo->fname);
+		}
+
+
+	}
+
+}
+
 t_dictionary *crearArbolDeDirectoriosHijos(osada_file *tablaDeArchivo, t_dictionary *dictionaryDirRoot){
-	t_dictionary *dictionaryDirHijos = dictionary_create();
 	int pos=0;
 
 	for (pos=0; pos <= 2047; pos++){
-		reconocerDirectorioHijos(&tablaDeArchivo[pos], pos, dictionaryDirHijos, dictionaryDirRoot);
+		reconocerDirectorioHijos(&tablaDeArchivo[pos], pos, dictionaryDirRoot);
 	}
 
-	dictionary_iterator(dictionaryDirHijos, (void*) _recorrerDirectoriosPadres);
+	//dictionary_iterator(dictionaryDirRoot, (void*) _recorrerDirectoriosPadres);
 
-	return dictionaryDirHijos;
+	return dictionaryDirRoot;
 }
 
