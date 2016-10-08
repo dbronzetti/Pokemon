@@ -29,7 +29,7 @@ void _iterarParaVerContenido(int bloque){
 	int bloque2 = bloque *64;
 	int i;
 	//tamanioQueOcupaElBloqueDeDatos ir de atras con los bloques.
-	printf("%i\n", dataBlocks);
+	//printf("%i\n", dataBlocks);
 	memcpy(bloqueDeDatos, &osada[dataBlocks+bloque2], OSADA_BLOCK_SIZE );
 
 //	for(i=1; i<=64; i++){
