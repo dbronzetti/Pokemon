@@ -24,7 +24,7 @@ int main(int argc, char *argv[]){
 	int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
 	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
-	dameTodosLosDirectorios(tablaDeArchivo);
+	//dameTodosLosDirectorios(tablaDeArchivo);
 	//dameTodosLosArchivosRegulares(tablaDeArchivo);
 	//dameTodosLosBorrados(tablaDeArchivo);
 
@@ -41,11 +41,11 @@ int main(int argc, char *argv[]){
 	//021.txt
 	//"large.txt" - basic
 	//archivo - basic
-	//osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "README.txt");
+	osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "README.txt");
 	//printf("posicion del primer bloque: %i\n", posicion);
 
-	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, posicion);
-	//verContenidoDeArchivo(conjuntoDeBloquesDelArchivo, osada);
+	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, posicion);
+	verContenidoDeArchivo(conjuntoDeBloquesDelArchivo, osada);
 
 
 	//mock_setearTamanioDelArchivo(tamanioDelArchivo);

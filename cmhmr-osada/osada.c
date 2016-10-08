@@ -21,14 +21,16 @@ void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamania
 /*********************************************************************/
 
 unsigned char *osada;
+static int dataBlocks;
 
 void _iterarParaVerContenido(int bloque){
 
 	char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+	int bloque2 = bloque *64;
 	int i;
 	//tamanioQueOcupaElBloqueDeDatos ir de atras con los bloques.
-
-	memcpy(bloqueDeDatos, &osada[desdeParaBloqueDeDatos + bloque], OSADA_BLOCK_SIZE );
+	printf("%i\n", dataBlocks);
+	memcpy(bloqueDeDatos, &osada[dataBlocks+bloque2], OSADA_BLOCK_SIZE );
 
 //	for(i=1; i<=64; i++){
 		printf("%s", bloqueDeDatos);
@@ -159,7 +161,7 @@ osada_header *obtenerHeader(unsigned char *osada){
 	memcpy(osadaHeaderFile, osada, OSADA_BLOCK_SIZE);
 
 
-	//mostrarHeader(osadaHeaderFile);
+	mostrarHeader(osadaHeaderFile);
 
 	return osadaHeaderFile;
 
@@ -184,12 +186,18 @@ void setearConstantesDePosicionDeOsada(osada_header *osadaHeaderFile){
 	tamanioQueOcupaLaTablaDeAsignacion = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
 	tamanioQueOcupaLaTablaDeAsignacionEnBloques = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
 	tamanioQueOcupaElBloqueDeDatos = OSADA_BLOCK_SIZE* osadaHeaderFile->data_blocks;
+	dataBlocks= (osadaHeaderFile->fs_blocks - osadaHeaderFile->data_blocks)*64;
+	//dataBlocks=  osadaHeaderFile->allocations_table_offset + tamanioQueOcupaLaTablaDeAsignacionEnBloques;
+
+	printf("osadaHeaderFile->fs_blocks - osadaHeaderFile->data_blocks: %i\n",osadaHeaderFile->fs_blocks - osadaHeaderFile->data_blocks);
+	printf("dataBlocks: %i\n",dataBlocks);
 
 	desdeParaBitmap = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
 	desdeParaTablaDeArchivos = OSADA_BLOCK_SIZE + tamanioDelBitMap;
 	desdeParaTablaAsigancion = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos;
-	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacionEnBloques;
-
+	desdeParaBloqueDeDatos = tamanioQueOcupaElHeader + tamanioDelBitMap + tamanioTablaDeArchivos + tamanioQueOcupaLaTablaDeAsignacion;
+	printf("desdeParaTablaAsigancion: %i\n",desdeParaTablaAsigancion);
+	printf("desdeParaBloqueDeDatos: %i\n",desdeParaBloqueDeDatos);
 }
 
 
