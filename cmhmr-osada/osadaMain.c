@@ -10,7 +10,7 @@
 #include <commons/collections/dictionary.h>
 
 
-int main(int argc, char *argv[]){
+int mainMock(int argc, char *argv[]){
 	int archivoID = obtenerIDDelArchivo(argv[1]);
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 

@@ -25,7 +25,7 @@ static int dataBlocks;
 
 void _iterarParaVerContenido(int bloque){
 
-	char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+	char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE + 1);
 	int bloque2 = bloque *64;
 	int i;
 	//tamanioQueOcupaElBloqueDeDatos ir de atras con los bloques.
@@ -33,6 +33,7 @@ void _iterarParaVerContenido(int bloque){
 	memcpy(bloqueDeDatos, &osada[dataBlocks+bloque2], OSADA_BLOCK_SIZE );
 
 //	for(i=1; i<=64; i++){
+	bloqueDeDatos[OSADA_BLOCK_SIZE + 1] = '\0';
 		printf("%s", bloqueDeDatos);
 	//}
 	//printf("\nTERMINO\n");

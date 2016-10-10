@@ -1,0 +1,54 @@
+[INFO] 13:12:22:361 MAPA/(2925:2925): Directorio de la metadata del mapa 'Ciudad Paleta': '/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/pokedex/Mapas/Ciudad Paleta/metadata.dat'
+
+[INFO] 13:12:22:361 MAPA/(2925:2925): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 13:12:22:395 MAPA/(2925:2925): Tiempo de checkeo de deadlock: 10000
+
+[INFO] 13:12:22:395 MAPA/(2925:2925): Batalla: 1
+
+[INFO] 13:12:22:395 MAPA/(2925:2925): Algoritmo: RR
+
+[INFO] 13:12:22:395 MAPA/(2925:2925): Quantum: 3
+
+[INFO] 13:12:22:395 MAPA/(2925:2925): Retardo: 500
+
+[INFO] 13:12:22:395 MAPA/(2925:2925): IP: 127.0.0.1
+
+[INFO] 13:12:22:395 MAPA/(2925:2925): Puerto: 5001
+
+[INFO] 13:12:22:395 MAPA/(2925:2925): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 13:12:22:471 MAPA/(2925:2925): Bienvenido al mapa
+[INFO] 13:12:24:482 MAPA/(2925:2928): SocketServer: 4
+[INFO] 13:12:24:482 MAPA/(2925:2928): the server is opened
+[INFO] 13:12:44:933 MAPA/(2925:2928): The was received a connection in socket: 5.
+[INFO] 13:12:44:933 MAPA/(2925:2928): Message from 'ENTRENADOR': The process 'ENTRENADOR' is trying to connect you!
+[INFO] 13:12:44:933 MAPA/(2925:2928): Ha ingresado un nuevo ENTRENADOR
+[INFO] 13:12:44:933 MAPA/(2925:2928): The client '5' has received SUCCESSFULLY the handshake message
+[INFO] 13:12:44:952 MAPA/(2925:2968): Creating new user: @
+[INFO] 13:12:49:810 MAPA/(2925:2970): Deleting user: @
+[INFO] 13:13:40:565 MAPA/(3015:3015): Directorio de la metadata del mapa 'Ciudad Paleta': '/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/pokedex/Mapas/Ciudad Paleta/metadata.dat'
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 13:13:40:565 MAPA/(3015:3015): Tiempo de checkeo de deadlock: 10000
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): Batalla: 1
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): Algoritmo: RR
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): Quantum: 3
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): Retardo: 500
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): IP: 127.0.0.1
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): Puerto: 5001
+
+[INFO] 13:13:40:565 MAPA/(3015:3015): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 13:13:40:566 MAPA/(3015:3015): Bienvenido al mapa
+[INFO] 13:13:42:577 MAPA/(3015:3018): SocketServer: 4
+[INFO] 13:13:42:577 MAPA/(3015:3018): the server is opened
+[INFO] 13:13:46:162 MAPA/(3015:3018): The was received a connection in socket: 5.
+[INFO] 13:13:46:162 MAPA/(3015:3018): Message from 'ENTRENADOR': The process 'ENTRENADOR' is trying to connect you!
+[INFO] 13:13:46:162 MAPA/(3015:3018): Ha ingresado un nuevo ENTRENADOR
+[INFO] 13:13:46:162 MAPA/(3015:3018): The client '5' has received SUCCESSFULLY the handshake message
+[INFO] 13:13:46:186 MAPA/(3015:3021): Creating new user: @
+[INFO] 13:13:49:416 MAPA/(3015:3023): Deleting user: @
