@@ -15,6 +15,7 @@
 #include <string.h>
 #include <signal.h>
 
+#include <commons/string.h>
 
 int* pmap_pikachu;
 int* pmap_squirtle;
@@ -23,6 +24,8 @@ struct stat pikachuStat;
 struct stat squirtleStat;
 struct stat bulbasaurStat;
 char *ruta;
+char *contenido;
+
 
 static int ejemplo_getattr(const char *path, struct stat *stbuf) {
 	int res = 0;
@@ -38,7 +41,7 @@ static int ejemplo_getattr(const char *path, struct stat *stbuf) {
 	} else if (strcmp(path, "/pepito.txt") == 0) {
 		stbuf->st_mode = S_IFREG | 0444;
 		stbuf->st_nlink = 1;
-		stbuf->st_size = 5;
+		stbuf->st_size = 9;
 	} else {
 		res = -ENOENT;
 	}
@@ -64,10 +67,15 @@ static int ejemplo_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int ejemplo_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi) {
+	char *rutaCompleta=malloc((strlen("/pepito.txt")+1));
+	memcpy(rutaCompleta, "/", strlen("/")+1);
 
-	//strcat('/', ruta);
-	if (strcmp(path, "/pepito.txt") == 0) {
-		memcpy(buf,"Hola\n",size);
+	//printf("ruta!!!!!: %s\n", ruta);
+	strcat(rutaCompleta, ruta);
+	//printf("rutaCompleta!!!!!: %s\n", rutaCompleta);
+	if (strcmp(path, rutaCompleta) == 0) {
+		//memcpy(buf,"Hola\n",size);
+		memcpy(buf, contenido, size);
 	}
 	return size;
 }
@@ -86,7 +94,9 @@ int main(int argc , char *argv[])
     int sock;
     struct sockaddr_in server;
     char message[1000] , server_reply[2000];
-    ruta = malloc(12);
+    ruta = malloc((strlen("pepito.txt")+1));
+    contenido = malloc((strlen("holitas\n")+1));
+    char** substrings;
 
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
@@ -130,9 +140,14 @@ int main(int argc , char *argv[])
 
        // puts("Server reply :");
         puts(server_reply);
-
-        if(strcmp(server_reply,"pepito.txt")==0){
-          	strcpy(ruta, server_reply);
+        substrings = string_split(server_reply, "|");
+        printf("substrings[0]: %s\n", substrings[0]);
+    	strcpy(ruta, substrings[0]);
+        printf("substrings[1]: %s\n", substrings[1]);
+    	strcpy(contenido, substrings[1]);
+    	printf("copi\n");
+        if(strcmp(ruta,"pepito.txt")==0){
+        	printf("PEPITO ES IGUAL\n");
         	close(sock);
         	printf("llego pepito\n");
         	return fuse_main(argc, argv, &ejemplo_oper, NULL );

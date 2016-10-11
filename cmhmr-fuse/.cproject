@@ -31,10 +31,11 @@
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.666687223" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1662850524" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
-								<option id="gnu.c.link.option.other.307355495" name="Other options (-Xlinker [option])" superClass="gnu.c.link.option.other" valueType="stringList"/>
-								<option id="gnu.c.link.option.libs.714886088" superClass="gnu.c.link.option.libs" valueType="libs">
+								<option id="gnu.c.link.option.other.307355495" name="Other options (-Xlinker [option])" superClass="gnu.c.link.option.other"/>
+								<option id="gnu.c.link.option.libs.714886088" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
 									<listOptionValue builtIn="false" value="fuse"/>
+									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="commons"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1007308286" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
