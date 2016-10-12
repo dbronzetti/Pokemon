@@ -58,7 +58,8 @@ int main(int argc , char *argv[])
         //Send the message back to client
         //write(client_sock , client_message , strlen(client_message));
 
-        strcpy(client_message, "pepito.txt|holitas\n");
+        //strcpy(client_message, "pepito.txt|holitas\n");
+        strcpy(client_message, "carpeta1,carpeta2,carpeta3|holitas\n");
         write(client_sock , client_message , strlen(client_message));
     }
 

@@ -23,28 +23,27 @@ int* pmap_bulbasaur;
 struct stat pikachuStat;
 struct stat squirtleStat;
 struct stat bulbasaurStat;
+
 char *ruta;
 char *contenido;
+char** carpetas;
 
 
 static int ejemplo_getattr(const char *path, struct stat *stbuf) {
 	int res = 0;
+	int i = 0;
 	memset(stbuf, 0, sizeof(struct stat));
 
 	//strcat('/', ruta);
 	if (strcmp(path, "/") == 0) {
 		stbuf->st_mode = S_IFDIR | 0755;
 		stbuf->st_nlink = 2;
-	} else if (strcmp(path, "/pikachu") == 0) {
-		stbuf->st_mode = S_IFDIR | 0755;
-		stbuf->st_nlink = 2;
-	} else if (strcmp(path, "/pepito.txt") == 0) {
-		stbuf->st_mode = S_IFREG | 0444;
-		stbuf->st_nlink = 1;
-		stbuf->st_size = 9;
-	} else {
-		res = -ENOENT;
+		} else {
+			stbuf->st_mode = S_IFDIR | 0777;
+			stbuf->st_nlink = 1;
+		//res = -ENOENT;
 	}
+
 
 	return res;
 }
@@ -53,9 +52,14 @@ static int ejemplo_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		off_t offset, struct fuse_file_info *fi) {
 
 	int res = 0;
+	int i=0;
 
 	if (strcmp(path, "/") == 0) {
-		filler(buf, "pikachu", NULL, 0);
+		filler(buf, "pikachu2", NULL, 0);
+		for (i=0; i<=2;i++){
+
+			filler(buf, carpetas[i], NULL, 0);
+		}
 		filler(buf, "pepito.txt", NULL, 0);
 	} else {
 		res = -ENOENT;
@@ -67,16 +71,21 @@ static int ejemplo_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int ejemplo_read(const char *path, char *buf, size_t size, off_t offset,
 		struct fuse_file_info *fi) {
-	char *rutaCompleta=malloc((strlen("/pepito.txt")+1));
-	memcpy(rutaCompleta, "/", strlen("/")+1);
+	//char *rutaCompleta=malloc((strlen("/pepito.txt")+1));
+	//memcpy(rutaCompleta, "/", strlen("/")+1);
 
 	//printf("ruta!!!!!: %s\n", ruta);
-	strcat(rutaCompleta, ruta);
+	//strcat(rutaCompleta, ruta);
 	//printf("rutaCompleta!!!!!: %s\n", rutaCompleta);
+	/*
 	if (strcmp(path, rutaCompleta) == 0) {
 		//memcpy(buf,"Hola\n",size);
 		memcpy(buf, contenido, size);
 	}
+	*/
+	if (strcmp(path, "/pepito.txt") == 0) {
+			memcpy(buf,"Hola\n",size);
+		}
 	return size;
 }
 
@@ -97,6 +106,7 @@ int main(int argc , char *argv[])
     ruta = malloc((strlen("pepito.txt")+1));
     contenido = malloc((strlen("holitas\n")+1));
     char** substrings;
+
 
     //Create socket
     sock = socket(AF_INET , SOCK_STREAM , 0);
@@ -141,17 +151,22 @@ int main(int argc , char *argv[])
        // puts("Server reply :");
         puts(server_reply);
         substrings = string_split(server_reply, "|");
+        carpetas = string_split(substrings[0], ",");
+
         printf("substrings[0]: %s\n", substrings[0]);
-    	strcpy(ruta, substrings[0]);
+        printf("carpetas[0]: %s\n", carpetas[0]);
+        printf("carpetas[2]: %s\n", carpetas[2]);
+    	//strcpy(ruta, substrings[0]);
         printf("substrings[1]: %s\n", substrings[1]);
-    	strcpy(contenido, substrings[1]);
+    	//strcpy(contenido, substrings[1]);
     	printf("copi\n");
-        if(strcmp(ruta,"pepito.txt")==0){
+
+        //if(strcmp(ruta,"pepito.txt")==0){
         	printf("PEPITO ES IGUAL\n");
         	close(sock);
         	printf("llego pepito\n");
         	return fuse_main(argc, argv, &ejemplo_oper, NULL );
-        }
+        //}
 
 
     }
