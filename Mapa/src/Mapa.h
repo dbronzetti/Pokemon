@@ -34,7 +34,8 @@ t_list* listaDePokenest;
 int semaforo_wait;
 t_list* items;
 t_list* listaDeEntrenadores;
-char caracterCondicion;
+t_queue* colaDeListos;
+t_queue* colaDeBloqueados;
 
 // Estructuras
 typedef struct {
@@ -44,8 +45,15 @@ typedef struct {
 
 typedef struct {
 	int* pokemon;
+	t_list* listaDePokemones;
 	t_metadataPokenest metadata;
 } t_pokenest;
+
+typedef struct {
+	int nivel;
+	char id;
+	char* tipo;
+} t_pokemon;
 
 typedef struct {
 	char simbolo;
@@ -54,6 +62,9 @@ typedef struct {
 	int posD_x; //posicion deseada (a la que quiere ir)
 	int posD_y;
 	int socket; //filedescriptor del socket asociado al entrenador
+	enum_messages accion; //accion que pretende hacer (conocer pokenest, moverse, etc)
+	char pokemonD; //pokemon deseado por el entrenador;
+	t_list* listaDePokemonesCapturados;
 } t_entrenador;
 
 // Funciones de conexion
@@ -71,5 +82,6 @@ void dibujarMapa();
 void crearEntrenadorYDibujar(char simbolo, int socket);
 bool igualarACaracterCondicion(void* paramatrer);
 void eliminarEntrenador(char simbolo);
+void planificar();
 
 #endif /* MAPA_H_ */

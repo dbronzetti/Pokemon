@@ -27,7 +27,7 @@ typedef struct {
 	char* tipo;
 	int pos_x;
 	int pos_y;
-	char* id;
+	char id;
 } t_metadataPokenest;
 
 typedef struct {
