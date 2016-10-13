@@ -73,10 +73,10 @@ int main(int argc, char **argv) {
 	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
-//	pthread_create(&planificador, NULL, (void*) probando, NULL);
+	pthread_create(&planificador, NULL, (void*) planificar, NULL);
 
 	pthread_join(serverThread, NULL);
-//	pthread_join(planificador, NULL);
+	pthread_join(planificador, NULL);
 
 	return 0;
 
@@ -133,6 +133,7 @@ void startServerProg() {
 						// handle data from a client
 						//Receive message size
 						if (semaforo_wait == 1) {
+//							printf("Recibi un mensaje \n");
 							semaforo_wait = 0;
 							// we got some data from a client
 							//Create thread attribute detached
@@ -157,6 +158,7 @@ void startServerProg() {
 							pthread_join(processMessageThread, NULL);
 							//Destroy thread attribute
 							pthread_attr_destroy(&processMessageThreadAttr);
+							semaforo_wait = 1;
 
 						}
 					} // END handle data from client
@@ -316,36 +318,32 @@ void processMessageReceived(void *parameter) {
 	} else {
 		switch (message->tipo) {
 		case NUEVO: {
-			log_info(logMapa, "Creating new user: %s", message->mensaje);
+			log_info(logMapa, "Creating new trainer: %s", message->mensaje);
 			crearEntrenadorYDibujar(message->mensaje[0],
 					serverData->socketClient);
-
-			semaforo_wait = 1;
+			log_info(logMapa, "Trainer:%s created SUCCESSFUL", message->mensaje);
 			break;
 		}
 
 		case DESCONECTAR: {
-			log_info(logMapa, "Deleting user: %s", message->mensaje);
+			log_info(logMapa, "Deleting trainer: %s", message->mensaje);
 			close(serverData->socketClient);
-			serverData->socketClient = -1;
 			free(serverData);
 			eliminarEntrenador(message->mensaje[0]);
-
-			semaforo_wait = 1;
+			log_info(logMapa, "Trainer:%s deleted SUCCESSFUL", message->mensaje);
 			break;
 		}
 
 		case CONOCER: {
-			log_info(logMapa, "User want to know the position of: %s", message->mensaje);
+			log_info(logMapa, "Trainer want to know the position of: %s", message->mensaje);
 			char id_pokemon = message->mensaje[0];
 			bool buscarPorSocket(t_entrenador* entrenador){
-				return entrenador->socket = serverData->socketClient;
+				return (entrenador->socket = serverData->socketClient);
 			}
-			t_entrenador* entrenador = list_find(listaDeEntrenadores,buscarPorSocket);
+			t_entrenador* entrenador = list_find(listaDeEntrenadores,(void*) buscarPorSocket);
 			entrenador->pokemonD = id_pokemon;
 			entrenador->accion = CONOCER;
 
-			semaforo_wait = 1;
 			break;
 		}
 
@@ -373,7 +371,7 @@ int recorrerdirDePokenest(char* rutaDirPokenest) {
 
 	if ((dipPokenest = opendir(rutaDirPokenest)) == NULL) {
 		log_error(logMapa,
-				"Error al abrir el directorio donde se encuentran las pokenests.");
+				"Error trying to open dir of pokenests.");
 		return -1;
 	}
 
@@ -393,7 +391,7 @@ int recorrerdirDePokenest(char* rutaDirPokenest) {
 
 	if (closedir(dipPokenest) == -1) {
 		log_error(logMapa,
-				"Error al cerrar el directorio donde se encuentran las pokenest.");
+				"Error trying to close the dir of pokenest.");
 		return -1;
 	}
 
@@ -404,14 +402,13 @@ int recorrerdirDePokenest(char* rutaDirPokenest) {
 int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 
 	int i;
-	int b = 0;
 
 	t_pokenest* pokenest = malloc(sizeof(t_pokenest));
 	pokenest->pokemon = malloc((sizeof(int)));
 	pokenest->listaDePokemones = list_create();
 
 	if ((dipPokemones = opendir(rutaDeUnaPokenest)) == NULL) {
-		log_error(logMapa, "Error al abrir el directorio %s",
+		log_error(logMapa, "Error trying to open the dir %s",
 				rutaDeUnaPokenest);
 		return -1;
 	}
@@ -446,7 +443,7 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 	}
 
 		if (closedir(dipPokemones) == -1) {
-			log_error(logMapa, "Error al cerrar el directorio %s",
+			log_error(logMapa, "Error trying to close the dir %s",
 					rutaDeUnaPokenest);
 			return -1;
 		}
@@ -551,10 +548,8 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 		void destruirElemento(t_entrenador *entrenador) {
 			free(entrenador);
 		}
-
 		list_remove_and_destroy_by_condition(listaDeEntrenadores,
 				(void*) igualarACaracterCondicion, (void*) destruirElemento);
-
 	}
 
 
@@ -565,41 +560,44 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 			while (queue_size(colaDeListos) != 0) {
 				int i;
 				t_entrenador* entrenador = queue_pop(colaDeListos);
-				send(entrenador->socket, 1, sizeof(int), 0); //se le envia un flag significa que es su turno!.
+	//			send(entrenador->socket, 1, sizeof(int), 0); //se le envia un flag significa que es su turno!.
 
+				log_info(logMapa, "Begins the turn of trainer: %c", entrenador->simbolo);
 				for (i = 0; i < metadataMapa.quantum; i++) {
-					sleep(metadataMapa.retardo / 1000); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
-					switch (entrenador->accion) {
-
-					case CONOCER: {
-
-					bool buscarPokenestPorId(t_pokenest* pokenest){
-						return (pokenest->metadata.id = entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
-						}
-
-					t_pokenest* pokenest = list_find(listaDePokenest,(void*) buscarPokenestPorId);
-					int posX = pokenest->metadata.pos_x;
-					int posY = pokenest->metadata.pos_y;
-					//TODO: falta enviarlo
-
-						break;
-					}
-
-					case IR: {
-						//TODO
-						break;
-					}
-
-					case CAPTURAR: {
-						//TODO
-						i = metadataMapa.quantum; // si captura ocupa todos los turnos
-						break;
-					}
-
-					}
+					sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
+					log_info(logMapa, "Movement: %d of trainer : %c", i, entrenador->simbolo);
+//					switch (entrenador->accion) {
+//
+//					case CONOCER: {
+//
+//					bool buscarPokenestPorId(t_pokenest* pokenest){
+//						return (pokenest->metadata.id = entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
+//						}
+//
+//					t_pokenest* pokenest = list_find(listaDePokenest,(void*) buscarPokenestPorId);
+//					int posX = pokenest->metadata.pos_x;
+//					int posY = pokenest->metadata.pos_y;
+//					//TODO: falta enviarlo
+//
+//						break;
+//					}
+//
+//					case IR: {
+//						//TODO
+//						break;
+//					}
+//
+//					case CAPTURAR: {
+//						//TODO
+//						i = metadataMapa.quantum; // si captura ocupa todos los turnos
+//						break;
+//					}
+//
+//					}
 
 				}
 
+				log_info(logMapa, "End of the turn, trainer: %c goes to colaDeBloqueados", entrenador->simbolo);
 				queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
 
 			}
@@ -608,6 +606,7 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 					&& queue_size(colaDeListos) == 0) {
 				t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
 				queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
+				log_info(logMapa, "Trainer: %c goes to colaDeListos", entrenador->simbolo);
 			}
 		}
 
