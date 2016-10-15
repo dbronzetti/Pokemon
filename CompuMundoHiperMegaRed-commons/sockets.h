@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <commons/string.h>
+#include "osada.h"
 
 typedef enum{
 	ACCEPTED=0,
@@ -38,6 +39,17 @@ typedef enum{
 	DESCONECTAR
 } enum_messages;
 
+typedef enum{
+	READ=0,
+	CREATE_FILE,
+	WRITE_FILE,
+	MODIFY_FILE,
+	DELETE_FILE,
+	CREATE_DIR,
+	CREATE_SUBDIR,
+	DELETE_DIR,
+	RENAME_FILE
+} enum_FUSEOperations;
 
 typedef struct{
 	enum_processes process;
@@ -48,6 +60,13 @@ typedef struct{
 	enum_messages tipo;
 	char* mensaje;
 } t_Mensaje;
+
+typedef struct{
+	int keyID;
+	enum_FUSEOperations operation;
+	osada_file osadaFile;
+	char string;
+} t_MessagePokeServer_Client;
 
 int openSelectServerConnection(int newSocketServerPort, int *socketServer);
 int openServerConnection(int newSocketServerPort, int *socketServer);

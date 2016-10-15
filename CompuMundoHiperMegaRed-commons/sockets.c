@@ -300,6 +300,8 @@ int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaj
 	return exitcode;
 }
 
+/********************** PROTOCOL USAGE *****************************/
+
 void deserializeClientMessage(t_Mensaje *value, char *bufferReceived){
     int offset = 0;
     int messageLen = 0;
@@ -338,3 +340,60 @@ void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize){
     memcpy(buffer + offset, value->mensaje, messageLen);
 
 }
+/*
+void serializeCPU_UMC(t_MessageCPU_UMC *value, char *buffer, int valueSize){
+	int offset = 0;
+	enum_processes process = CPU;
+
+	//0)valueSize
+	memcpy(buffer, &valueSize, sizeof(valueSize));
+	offset += sizeof(valueSize);
+
+	//1)From process
+	memcpy(buffer + offset, &process, sizeof(process));
+	offset += sizeof(process);
+
+	//2)operation
+	memcpy(buffer + offset, &value->operation, sizeof(value->operation));
+	offset += sizeof(value->operation);
+
+	//3)processID
+	memcpy(buffer + offset, &value->PID, sizeof(value->PID));
+	offset += sizeof(value->PID);
+
+	//4)pageNro
+	memcpy(buffer + offset, &value->virtualAddress->pag, sizeof(value->virtualAddress->pag));
+	offset += sizeof(value->virtualAddress->pag);
+
+	//5)offset
+	memcpy(buffer + offset, &value->virtualAddress->offset, sizeof(value->virtualAddress->offset));
+	offset += sizeof(value->virtualAddress->offset);
+
+	//6)size
+	memcpy(buffer + offset, &value->virtualAddress->size, sizeof(value->virtualAddress->size));
+
+}
+
+void deserializeUMC_CPU(t_MessageCPU_UMC *value, char *bufferReceived){
+	int offset = 0;
+
+	//2)operation
+	memcpy(&value->operation, bufferReceived, sizeof(value->operation));
+	offset += sizeof(value->operation);
+
+	//3)processID
+	memcpy(&value->PID, bufferReceived + offset, sizeof(value->PID));
+	offset += sizeof(value->PID);
+
+	//4)pageNro
+	memcpy(&value->virtualAddress->pag, bufferReceived + offset, sizeof(value->virtualAddress->pag));
+	offset += sizeof(value->virtualAddress->pag);
+
+	//5)offset
+	memcpy(&value->virtualAddress->offset, bufferReceived + offset, sizeof(value->virtualAddress->offset));
+	offset += sizeof(value->virtualAddress->offset);
+
+	//6)size
+	memcpy(&value->virtualAddress->size, bufferReceived + offset, sizeof(value->virtualAddress->size));
+}
+*/
