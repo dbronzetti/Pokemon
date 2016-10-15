@@ -27,6 +27,7 @@ t_metadataMapa metadataMapa;
 //Funciones
 void crearArchivoMetadata(char *rutaMetadata);
 void imprimirArray(char** array);
+t_queue* parsearObjetivos(char* objetivos); //convierte un strings con objetivos a una cola donde cada elemento es un objetivo
 
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);

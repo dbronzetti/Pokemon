@@ -321,7 +321,8 @@ void processMessageReceived(void *parameter) {
 			log_info(logMapa, "Creating new trainer: %s", message->mensaje);
 			crearEntrenadorYDibujar(message->mensaje[0],
 					serverData->socketClient);
-			log_info(logMapa, "Trainer:%s created SUCCESSFUL", message->mensaje);
+			log_info(logMapa, "Trainer:%s created SUCCESSFUL",
+					message->mensaje);
 			break;
 		}
 
@@ -330,24 +331,28 @@ void processMessageReceived(void *parameter) {
 			close(serverData->socketClient);
 			free(serverData);
 			eliminarEntrenador(message->mensaje[0]);
-			log_info(logMapa, "Trainer:%s deleted SUCCESSFUL", message->mensaje);
+			log_info(logMapa, "Trainer:%s deleted SUCCESSFUL",
+					message->mensaje);
 			break;
 		}
 
 		case CONOCER: {
-			log_info(logMapa, "Trainer want to know the position of: %s", message->mensaje);
+			log_info(logMapa, "Trainer want to know the position of: %s",
+					message->mensaje);
 			char id_pokemon = message->mensaje[0];
-			bool buscarPorSocket(t_entrenador* entrenador){
+
+			bool buscarPorSocket(t_entrenador* entrenador) {
 				return (entrenador->socket = serverData->socketClient);
 			}
-			t_entrenador* entrenador = list_find(listaDeEntrenadores,(void*) buscarPorSocket);
+			t_entrenador* entrenador = list_find(listaDeEntrenadores,
+					(void*) buscarPorSocket); //tal vez sea mejor buscarlo por el simbolo
+
 			entrenador->pokemonD = id_pokemon;
 			entrenador->accion = CONOCER;
+			entrenador->mandoMsj = 1; //flag para avisarle al planificador que el entrenador mando un msj
 
 			break;
 		}
-
-
 
 		default: {
 			log_error(logMapa,
@@ -370,8 +375,7 @@ int recorrerdirDePokenest(char* rutaDirPokenest) {
 	int i;
 
 	if ((dipPokenest = opendir(rutaDirPokenest)) == NULL) {
-		log_error(logMapa,
-				"Error trying to open dir of pokenests.");
+		log_error(logMapa, "Error trying to open dir of pokenests.");
 		return -1;
 	}
 
@@ -390,8 +394,7 @@ int recorrerdirDePokenest(char* rutaDirPokenest) {
 	}
 
 	if (closedir(dipPokenest) == -1) {
-		log_error(logMapa,
-				"Error trying to close the dir of pokenest.");
+		log_error(logMapa, "Error trying to close the dir of pokenest.");
 		return -1;
 	}
 
@@ -442,162 +445,179 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 
 	}
 
-		if (closedir(dipPokemones) == -1) {
-			log_error(logMapa, "Error trying to close the dir %s",
-					rutaDeUnaPokenest);
-			return -1;
-		}
-
-		void mapearIdYTipo(t_pokemon* pokemon) {
-			pokemon->id = pokenest->metadata.id;
-			pokemon->tipo = pokenest->metadata.tipo;
-		}
-
-		pokenest->listaDePokemones = list_map(pokenest->listaDePokemones, (void*) mapearIdYTipo);
-
-		list_add(listaDePokenest, pokenest);
-
-		return 0;
-
+	if (closedir(dipPokemones) == -1) {
+		log_error(logMapa, "Error trying to close the dir %s",
+				rutaDeUnaPokenest);
+		return -1;
 	}
 
-	t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest) {
-		t_config* metadata;
-		metadata = config_create(rutaMetadataPokenest);
-		t_metadataPokenest metadataPokenest;
-
-		metadataPokenest.tipo = config_get_string_value(metadata, "Tipo");
-		metadataPokenest.id =
-				config_get_string_value(metadata, "Identificador")[0];
-
-		char* posicionSinParsear = config_get_string_value(metadata,
-				"Posicion");
-
-		char** posicionYaParseadas = string_split(posicionSinParsear, ";");
-
-		metadataPokenest.pos_x = atoi(posicionYaParseadas[0]);
-		metadataPokenest.pos_y = atoi(posicionYaParseadas[1]);
-
-		free(metadata);
-
-		return metadataPokenest;
+	void mapearIdYTipo(t_pokemon* pokemon) {
+		pokemon->id = pokenest->metadata.id;
+		pokemon->tipo = pokenest->metadata.tipo;
 	}
 
-	int levantarNivelDelPokemon(char* rutaDelPokemon) {
+	pokenest->listaDePokemones = list_map(pokenest->listaDePokemones,
+			(void*) mapearIdYTipo);
 
-		t_config* metadata;
-		metadata = config_create(rutaDelPokemon);
-		return config_get_int_value(metadata, "Nivel");
+	list_add(listaDePokenest, pokenest);
 
-		free(metadata);
+	return 0;
+
+}
+
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest) {
+	t_config* metadata;
+	metadata = config_create(rutaMetadataPokenest);
+	t_metadataPokenest metadataPokenest;
+
+	metadataPokenest.tipo = config_get_string_value(metadata, "Tipo");
+	metadataPokenest.id = config_get_string_value(metadata, "Identificador")[0];
+
+	char* posicionSinParsear = config_get_string_value(metadata, "Posicion");
+
+	char** posicionYaParseadas = string_split(posicionSinParsear, ";");
+
+	metadataPokenest.pos_x = atoi(posicionYaParseadas[0]);
+	metadataPokenest.pos_y = atoi(posicionYaParseadas[1]);
+
+	free(metadata);
+
+	return metadataPokenest;
+}
+
+int levantarNivelDelPokemon(char* rutaDelPokemon) {
+
+	t_config* metadata;
+	metadata = config_create(rutaDelPokemon);
+	return config_get_int_value(metadata, "Nivel");
+
+	free(metadata);
+}
+
+void dibujarMapa() {
+	int rows, cols;
+	items = list_create();
+
+	nivel_gui_inicializar();
+
+	int ultimoElemento = list_size(listaDePokenest);
+	int i = 0;
+
+	nivel_gui_get_area_nivel(&rows, &cols);
+
+	for (i = 0; i < ultimoElemento; i++) {
+		t_pokenest* pokenest = list_get(listaDePokenest, i);
+		int cantidadDePokemones = list_size(pokenest->listaDePokemones);
+		CrearCaja(items, pokenest->metadata.id, pokenest->metadata.pos_x,
+				pokenest->metadata.pos_y, cantidadDePokemones);
 	}
 
-	void dibujarMapa() {
-		int rows, cols;
-		items = list_create();
+	nivel_gui_dibujar(items, "TEST");
 
-		nivel_gui_inicializar();
+}
 
-		int ultimoElemento = list_size(listaDePokenest);
-		int i = 0;
+void crearEntrenadorYDibujar(char simbolo, int socket) {
+	t_entrenador* nuevoEntrenador = malloc(sizeof(t_entrenador));
 
-		nivel_gui_get_area_nivel(&rows, &cols);
+	nuevoEntrenador->simbolo = simbolo;
+	nuevoEntrenador->pos_x = 1; //por defecto se setea en el (1,1) creo que lo dijeron en la charla, por las dudas preguntar.
+	nuevoEntrenador->pos_y = 1;
+	nuevoEntrenador->posD_x = -1; //flag para representar que por el momento no busca ninguna ubicacion
+	nuevoEntrenador->posD_y = -1;
+	nuevoEntrenador->socket = socket;
+	nuevoEntrenador->accion = NUEVO;
+	nuevoEntrenador->pokemonD = '/'; //flag para representar que por el momento no busca ningun pokemon
+	nuevoEntrenador->listaDePokemonesCapturados = list_create();
+	nuevoEntrenador->mandoMsj = 0;
 
-		for (i = 0; i < ultimoElemento; i++) {
-			t_pokenest* pokenest = list_get(listaDePokenest, i);
-			int cantidadDePokemones = list_size(pokenest->listaDePokemones);
-			CrearCaja(items, pokenest->metadata.id, pokenest->metadata.pos_x,
-					pokenest->metadata.pos_y, cantidadDePokemones);
-		}
+	CrearPersonaje(items, simbolo, nuevoEntrenador->pos_x,
+			nuevoEntrenador->pos_y);
+	list_add(listaDeEntrenadores, nuevoEntrenador);
+	queue_push(colaDeListos, nuevoEntrenador);
+	nivel_gui_dibujar(items, "TEST");
 
-		nivel_gui_dibujar(items, "TEST");
+}
 
+void eliminarEntrenador(char simbolo) {
+
+	BorrarItem(items, simbolo);
+	nivel_gui_dibujar(items, "TEST");
+
+	bool igualarACaracterCondicion(t_entrenador *entrenador) {
+
+		return simbolo == entrenador->simbolo;
 	}
 
-	void crearEntrenadorYDibujar(char simbolo, int socket) {
-		t_entrenador* nuevoEntrenador = malloc(sizeof(t_entrenador));
-
-		nuevoEntrenador->simbolo = simbolo;
-		nuevoEntrenador->pos_x = 1; //por defecto se setea en el (1,1) creo que lo dijeron en la charla, por las dudas preguntar.
-		nuevoEntrenador->pos_y = 1;
-		nuevoEntrenador->posD_x = -1; //flag para representar que por el momento no busca ninguna ubicacion
-		nuevoEntrenador->posD_y = -1;
-		nuevoEntrenador->socket = socket;
-		nuevoEntrenador->accion = NUEVO;
-		nuevoEntrenador->pokemonD = '/'; //flag para representar que por el momento no busca ningun pokemon
-		nuevoEntrenador->listaDePokemonesCapturados = list_create();
-
-		CrearPersonaje(items, simbolo, nuevoEntrenador->pos_x,
-				nuevoEntrenador->pos_y);
-		list_add(listaDeEntrenadores, nuevoEntrenador);
-		queue_push(colaDeListos, nuevoEntrenador);
-		nivel_gui_dibujar(items, "TEST");
-
+	void destruirElemento(t_entrenador *entrenador) {
+		free(entrenador);
 	}
+	list_remove_and_destroy_by_condition(listaDeEntrenadores,
+			(void*) igualarACaracterCondicion, (void*) destruirElemento);
+}
 
-	void eliminarEntrenador(char simbolo) {
+void planificar() {
 
-		BorrarItem(items, simbolo);
-		nivel_gui_dibujar(items, "TEST");
+	while (1) {
 
-		bool igualarACaracterCondicion(t_entrenador *entrenador) {
+		while (queue_size(colaDeListos) != 0) {
+			int i;
+			int estaEnMovimiento = 1;
+			t_entrenador* entrenador = queue_pop(colaDeListos);
+			//			send(entrenador->socket, 1, sizeof(int), 0); //se le envia un flag significa que es su turno!.
 
-			return simbolo == entrenador->simbolo;
-		}
+			log_info(logMapa, "Begins the turn of trainer: %c",
+					entrenador->simbolo);
 
-		void destruirElemento(t_entrenador *entrenador) {
-			free(entrenador);
-		}
-		list_remove_and_destroy_by_condition(listaDeEntrenadores,
-				(void*) igualarACaracterCondicion, (void*) destruirElemento);
-	}
+			for (i = 0; i < metadataMapa.quantum; i++) {
+				sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
+				log_info(logMapa, "Movement: %d of trainer : %c", i,
+						entrenador->simbolo);
 
+				while (estaEnMovimiento) { //un movimiento representa una accion que puede llevar acabo el usuario dentro del turno
 
-	void planificar() {
+					if (entrenador->mandoMsj) { //0 para false, 1 para true
+						switch (entrenador->accion) {
 
-		while (1) {
+					case CONOCER: {
 
-			while (queue_size(colaDeListos) != 0) {
-				int i;
-				t_entrenador* entrenador = queue_pop(colaDeListos);
-	//			send(entrenador->socket, 1, sizeof(int), 0); //se le envia un flag significa que es su turno!.
+							bool buscarPokenestPorId(t_pokenest* pokenest) {
+								return (pokenest->metadata.id ==
+										entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
+							}
 
-				log_info(logMapa, "Begins the turn of trainer: %c", entrenador->simbolo);
-				for (i = 0; i < metadataMapa.quantum; i++) {
-					sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
-					log_info(logMapa, "Movement: %d of trainer : %c", i, entrenador->simbolo);
-//					switch (entrenador->accion) {
-//
-//					case CONOCER: {
-//
-//					bool buscarPokenestPorId(t_pokenest* pokenest){
-//						return (pokenest->metadata.id = entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
-//						}
-//
-//					t_pokenest* pokenest = list_find(listaDePokenest,(void*) buscarPokenestPorId);
-//					int posX = pokenest->metadata.pos_x;
-//					int posY = pokenest->metadata.pos_y;
-//					//TODO: falta enviarlo
-//
-//						break;
-//					}
-//
-//					case IR: {
-//						//TODO
-//						break;
-//					}
-//
-//					case CAPTURAR: {
-//						//TODO
-//						i = metadataMapa.quantum; // si captura ocupa todos los turnos
-//						break;
-//					}
-//
-//					}
+							t_pokenest* pokenest = list_find(listaDePokenest,
+									(void*) buscarPokenestPorId);
+							int posX = pokenest->metadata.pos_x;
+							int posY = pokenest->metadata.pos_y;
+					//TODO: falta enviarlo
+							entrenador->mandoMsj = 0;
+							estaEnMovimiento = 0;
+						break;
+					}
 
+					case IR: {
+						moverEntrenador(entrenador); //mueve el entrenador de a 1 til.
+						estaEnMovimiento = 0;
+						entrenador->mandoMsj = 0;
+						break;
+					}
+
+					case CAPTURAR: {
+						//TODO
+						entrenador->mandoMsj = 0;
+						estaEnMovimiento = 0;
+						i = metadataMapa.quantum; // si captura ocupa todos los turnos
+						break;
+					}
+
+					}
+						}
+					}
 				}
 
-				log_info(logMapa, "End of the turn, trainer: %c goes to colaDeBloqueados", entrenador->simbolo);
+				log_info(logMapa,
+						"End of the turn, trainer: %c goes to colaDeBloqueados",
+						entrenador->simbolo);
 				queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
 
 			}
@@ -606,9 +626,40 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 					&& queue_size(colaDeListos) == 0) {
 				t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
 				queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
-				log_info(logMapa, "Trainer: %c goes to colaDeListos", entrenador->simbolo);
+				log_info(logMapa, "Trainer: %c goes to colaDeListos",
+						entrenador->simbolo);
 			}
 		}
 
 	}
 
+void moverEntrenador(t_entrenador* entrenador){
+	if(entrenador->pos_x > entrenador->posD_x){ // si esta arriba de la posicion x que desea le bajamos uno.
+		entrenador->pos_x--;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+
+	if(entrenador->pos_x < entrenador->posD_x){ //si esta abajo de la posicion x que desea le subimos uno.
+		entrenador->pos_x++;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+
+	if(entrenador->pos_y > entrenador->posD_y){ // si esta arriba de la posicion y que desea le bajamos uno.
+		entrenador->pos_y--;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+
+	if(entrenador->pos_y < entrenador->posD_y){ //si esta abajo de la posicion y que desea le subimos uno.
+		entrenador->pos_y++;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+	return;
+}
