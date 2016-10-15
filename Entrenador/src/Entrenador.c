@@ -7,13 +7,15 @@
 #include "Entrenador.h"
 
 int socketMapa = 0;
-int asd;
+int llegoMsj = 0;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *entrenador = string_new();
 	char *pokedex = string_new();
-	pthread_t hiloSignal;
+	pthread_t hiloSignal; //un hio para detectar la signals que se le envia
+	pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
+	int ganoMapa;
 
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -39,8 +41,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	char* rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",pokedex, entrenador);
-
+	char* rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
+			pokedex, entrenador);
 
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
 			rutaMetadata);
@@ -53,29 +55,40 @@ int main(int argc, char **argv) {
 
 	puts("@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 
-	char* mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
+	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
 
-	char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata.dat",pokedex, mapaActual);
+	i = 0;
+	for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
+		char* mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
+		char* objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
-	crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa);
+		t_queue* colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola de objetivos actuales donde cada elemento es un char
 
-	exitCode = connectTo(MAPA, &socketMapa);
+		char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata.dat",
+				pokedex, mapaActual);
 
-	if (exitCode == EXIT_SUCCESS) {
-		log_info(logEntrenador, "ENTRENADOR connected to MAPA successfully\n");
-		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
-		sendClientMessage(&socketMapa,metadataEntrenador.simbolo,NUEVO);
+		crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa);
 
-		pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
-		pthread_join(hiloSignal, NULL);
+		exitCode = connectTo(MAPA, &socketMapa);
 
-		while (1)
-			scanf("%d", asd);
-	} else {
-		log_error(logEntrenador,"No server available - shutting down proces!!\n");
-		return EXIT_FAILURE;
+		if (exitCode == EXIT_SUCCESS) {
+			log_info(logEntrenador,
+					"ENTRENADOR connected to MAPA successfully\n");
+			printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
+			sendClientMessage(&socketMapa, metadataEntrenador.simbolo, NUEVO);
+			pthread_create(&hiloEscuchar, NULL, (void*) recibirSignal, NULL);
+
+			jugar();
+
+			pthread_join(hiloSignal, NULL);
+
+		} else {
+			log_error(logEntrenador,
+					"No server available - shutting down proces!!\n");
+			return EXIT_FAILURE;
+		}
+
 	}
-
 	return 0;
 }
 
@@ -181,8 +194,7 @@ void crearArchivoMetadata(char *rutaMetadata) {
 	metadataEntrenador.simbolo = config_get_string_value(metadata, "simbolo");
 	printf("Simbolo: %s\n", metadataEntrenador.simbolo);
 
-	hojaDeViaje = config_get_array_value(metadata,
-			"hojaDeViaje");
+	hojaDeViaje = config_get_array_value(metadata, "hojaDeViaje");
 	while (hojaDeViaje[i] != NULL) {
 		queue_push(metadataEntrenador.hojaDeViaje, hojaDeViaje[i]);
 		i++;
@@ -192,12 +204,10 @@ void crearArchivoMetadata(char *rutaMetadata) {
 
 	i = 0;
 	while (hojaDeViaje[i] != NULL) {
-		char* obj = string_from_format("obj[%s]",
-				hojaDeViaje[i]);
+		char* obj = string_from_format("obj[%s]", hojaDeViaje[i]);
 		queue_push(metadataEntrenador.obj,
 				config_get_array_value(metadata, obj));
-		printf("Dentro del mapa %s debe atrapar: ",
-				hojaDeViaje[i]);
+		printf("Dentro del mapa %s debe atrapar: ", hojaDeViaje[i]);
 		imprimirArray(config_get_array_value(metadata, obj));
 		i++;
 	}
@@ -205,7 +215,8 @@ void crearArchivoMetadata(char *rutaMetadata) {
 	metadataEntrenador.vidas = config_get_int_value(metadata, "vidas");
 	printf("Cantidad de vidas: %d\n", metadataEntrenador.vidas);
 
-	metadataEntrenador.reintentos = config_get_int_value(metadata, "reintentos");
+	metadataEntrenador.reintentos = config_get_int_value(metadata,
+			"reintentos");
 	printf("Cantidad de reintentos: %d\n", metadataEntrenador.reintentos);
 
 }
@@ -227,29 +238,117 @@ void imprimirArray(char** array) {
 	printf(" \n");
 }
 
-void recibirSignal(){
-	while(1){
-		  signal(SIGUSR1, sumarVida);
-		  signal(SIGTERM, restarVida);
-		  signal(SIGINT, desconectarse);
+void recibirSignal() {
+	while (1) {
+		signal(SIGUSR1, sumarVida);
+		signal(SIGTERM, restarVida);
+		signal(SIGINT, desconectarse);
 	}
 }
 
-void sumarVida(){
+void sumarVida() {
 	metadataEntrenador.vidas++;
-	log_info(logEntrenador, "Ha aumentado en 1 la vida del entrenador, ahora es de '%d'\n",
+	log_info(logEntrenador,
+			"Ha aumentado en 1 la vida del entrenador, ahora es de '%d'\n",
 			metadataEntrenador.vidas);
 }
 
-void restarVida(){
+void restarVida() {
 	metadataEntrenador.vidas--;
-	log_info(logEntrenador, "Ha disminuido en 1 la vida del entrenador, ahora es de '%d'\n",
+	log_info(logEntrenador,
+			"Ha disminuido en 1 la vida del entrenador, ahora es de '%d'\n",
 			metadataEntrenador.vidas);
 }
 
-void desconectarse(){
+void desconectarse() {
 
-	sendClientMessage(&socketMapa,metadataEntrenador.simbolo,DESCONECTAR);
+	sendClientMessage(&socketMapa, metadataEntrenador.simbolo, DESCONECTAR);
 	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
+	sleep(1); //dormimos un segundo para darle tiempo al mapa de cerrar el socket correctamente y no joder el select.
+	close(socketMapa);
 	exit(0);
 }
+
+void jugar() {
+	int quedanObjetivos = 1;
+	while (quedanObjetivos) //mientras queduen objetivos se sigue jugando en el mapa
+	{
+
+	}
+
+	desconectarse();
+}
+
+t_queue* parsearObjetivos(char* objetivos) {
+
+	int i = 0;
+	t_queue* colaDeObjetivos = queue_create();
+	char** objetivosSeparados = string_split(objetivos, ","); // los separo por coma
+	while (objetivosSeparados[i] != NULL) { //el bucle dura hasta que se lee todo el array
+		char* unObjetivo = objetivosSeparados[i];
+
+		queue_push(colaDeObjetivos, unObjetivo);
+	}
+	return colaDeObjetivos;
+
+}
+
+void recibirMsjs() {
+	while (1) {
+
+		int messageSize = 0;
+		char *messageRcv = malloc(sizeof(messageSize));
+		int receivedBytes = receiveMessage(socketMapa, messageRcv,
+				sizeof(messageSize));
+
+		if (receivedBytes > 0) {
+			//Receive message using the size read before
+			memcpy(&messageSize, messageRcv, sizeof(int));
+			messageRcv = realloc(messageRcv, messageSize);
+			receivedBytes = receiveMessage(socketMapa, messageRcv, messageSize);
+
+			//starting handshake with client connected
+			t_Mensaje *message = malloc(sizeof(t_Mensaje));
+			deserializeClientMessage(message, messageRcv);
+
+			free(messageRcv);
+
+			switch (message->tipo) {
+			case LIBRE: { //msj que envia el mapa para indicar que comenzo un turno libre
+				log_info(logEntrenador, "Conectado a MAPA - Messsage: %s\n",
+						message->mensaje);
+				int llegoMsj = 1;
+				puts("Conectado al mapa!");
+				break;
+			}
+
+			case IR: { //msj que envia el mapa para indicar que llego a la pokenest
+				log_info(logEntrenador, "Trainer came to pokenest: %s\n",
+						message->mensaje);
+				int llegoMsj = 1;
+				break;
+			}
+
+			default: {
+				log_error(logEntrenador,
+						"Process couldn't connect to SERVER - Not able to connect to server %s. Please check if it's down.\n",
+						metadataMapa.ip);
+				close(*socketMapa);
+				break;
+			}
+			}
+		} else if (receivedBytes == 0) {
+			//The client is down when bytes received are 0
+			log_error(logEntrenador,
+					"The client went down while receiving! - Please check the client '%d' is down!\n",
+					*socketMapa);
+			close(*socketMapa);
+		} else {
+			log_error(logEntrenador,
+					"Error - No able to received - Error receiving from socket '%d', with error: %d\n",
+					*socketMapa, errno);
+			close(*socketMapa);
+		}
+	}
+}
+

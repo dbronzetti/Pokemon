@@ -67,6 +67,7 @@ typedef struct {
 	enum_messages accion; //accion que pretende hacer (conocer pokenest, moverse, etc)
 	char pokemonD; //pokemon deseado por el entrenador;
 	t_list* listaDePokemonesCapturados;
+	int mandoMsj;
 } t_entrenador;
 
 // Funciones de conexion

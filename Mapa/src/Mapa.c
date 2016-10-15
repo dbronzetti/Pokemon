@@ -322,7 +322,6 @@ void processMessageReceived(void *parameter) {
 		pthread_mutex_unlock(&setFDmutex);
 
 	} else {
-
 		//Receive message using the size read before
 		memcpy(&messageSize, messageRcv, sizeof(int));
 		messageRcv = realloc(messageRcv, messageSize);
@@ -568,6 +567,7 @@ void eliminarEntrenador(char simbolo) {
 		return simbolo == entrenador->simbolo;
 	}
 
+
 	void destruirElemento(t_entrenador *entrenador) {
 		free(entrenador);
 	}
@@ -576,63 +576,113 @@ void eliminarEntrenador(char simbolo) {
 }
 /*
 
- void planificar() {
+void planificar() {
 
- while (1) {
+	while (1) {
 
- while (queue_size(colaDeListos) != 0) {
- int i;
- t_entrenador* entrenador = queue_pop(colaDeListos);
- //			send(entrenador->socket, 1, sizeof(int), 0); //se le envia un flag significa que es su turno!.
+		while (queue_size(colaDeListos) != 0) {
+			int i;
+			int estaEnMovimiento = 1;
+			t_entrenador* entrenador = queue_pop(colaDeListos);
+			//			send(entrenador->socket, 1, sizeof(int), 0); //se le envia un flag significa que es su turno!.
 
- log_info(logMapa, "Begins the turn of trainer: %c", entrenador->simbolo);
- for (i = 0; i < metadataMapa.quantum; i++) {
- sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
- log_info(logMapa, "Movement: %d of trainer : %c", i, entrenador->simbolo);
- //					switch (entrenador->accion) {
- //
- //					case CONOCER: {
- //
- //					bool buscarPokenestPorId(t_pokenest* pokenest){
- //						return (pokenest->metadata.id = entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
- //						}
- //
- //					t_pokenest* pokenest = list_find(listaDePokenest,(void*) buscarPokenestPorId);
- //					int posX = pokenest->metadata.pos_x;
- //					int posY = pokenest->metadata.pos_y;
- //					//TODO: falta enviarlo
- //
- //						break;
- //					}
- //
- //					case IR: {
- //						//TODO
- //						break;
- //					}
- //
- //					case CAPTURAR: {
- //						//TODO
- //						i = metadataMapa.quantum; // si captura ocupa todos los turnos
- //						break;
- //					}
- //
- //					}
+			log_info(logMapa, "Begins the turn of trainer: %c",
+					entrenador->simbolo);
 
- }
+			for (i = 0; i < metadataMapa.quantum; i++) {
+				sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
+				log_info(logMapa, "Movement: %d of trainer : %c", i,
+						entrenador->simbolo);
 
- log_info(logMapa, "End of the turn, trainer: %c goes to colaDeBloqueados", entrenador->simbolo);
- queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
+				while (estaEnMovimiento) { //un movimiento representa una accion que puede llevar acabo el usuario dentro del turno
 
- }
+					if (entrenador->mandoMsj) { //0 para false, 1 para true
+						switch (entrenador->accion) {
 
- if (queue_size(colaDeBloqueados) != 0
- && queue_size(colaDeListos) == 0) {
- t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
- queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
- log_info(logMapa, "Trainer: %c goes to colaDeListos", entrenador->simbolo);
- }
- }
+					case CONOCER: {
 
- }
+							bool buscarPokenestPorId(t_pokenest* pokenest) {
+								return (pokenest->metadata.id ==
+										entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
+							}
+
+							t_pokenest* pokenest = list_find(listaDePokenest,
+									(void*) buscarPokenestPorId);
+							int posX = pokenest->metadata.pos_x;
+							int posY = pokenest->metadata.pos_y;
+					//TODO: falta enviarlo
+							entrenador->mandoMsj = 0;
+							estaEnMovimiento = 0;
+						break;
+					}
+
+					case IR: {
+						moverEntrenador(entrenador); //mueve el entrenador de a 1 til.
+						estaEnMovimiento = 0;
+						entrenador->mandoMsj = 0;
+						break;
+					}
+
+					case CAPTURAR: {
+						//TODO
+						entrenador->mandoMsj = 0;
+						estaEnMovimiento = 0;
+						i = metadataMapa.quantum; // si captura ocupa todos los turnos
+						break;
+					}
+
+					}
+						}
+					}
+				}
+
+				log_info(logMapa,
+						"End of the turn, trainer: %c goes to colaDeBloqueados",
+						entrenador->simbolo);
+				queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
+
+			}
+
+			if (queue_size(colaDeBloqueados) != 0
+					&& queue_size(colaDeListos) == 0) {
+				t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
+				queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
+				log_info(logMapa, "Trainer: %c goes to colaDeListos",
+						entrenador->simbolo);
+			}
+		}
+
+	}
+
+void moverEntrenador(t_entrenador* entrenador){
+	if(entrenador->pos_x > entrenador->posD_x){ // si esta arriba de la posicion x que desea le bajamos uno.
+		entrenador->pos_x--;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+
+	if(entrenador->pos_x < entrenador->posD_x){ //si esta abajo de la posicion x que desea le subimos uno.
+		entrenador->pos_x++;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+
+	if(entrenador->pos_y > entrenador->posD_y){ // si esta arriba de la posicion y que desea le bajamos uno.
+		entrenador->pos_y--;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+
+	if(entrenador->pos_y < entrenador->posD_y){ //si esta abajo de la posicion y que desea le subimos uno.
+		entrenador->pos_y++;
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		nivel_gui_dibujar(items, "Test");
+		return;
+	}
+	return;
+}
 
  */
