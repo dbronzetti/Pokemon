@@ -36,11 +36,13 @@ t_list* items;
 t_list* listaDeEntrenadores;
 t_queue* colaDeListos;
 t_queue* colaDeBloqueados;
+pthread_mutex_t setFDmutex;
 
 // Estructuras
 typedef struct {
 	int socketServer;
 	int socketClient;
+	fd_set *masterFD;
 } t_serverData;
 
 typedef struct {
