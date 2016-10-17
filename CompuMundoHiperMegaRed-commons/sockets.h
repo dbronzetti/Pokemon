@@ -24,6 +24,7 @@
 #include <commons/collections/list.h>
 #include "osada.h"
 
+
 typedef enum{
 	ACCEPTED=0,
 	ENTRENADOR,
@@ -89,4 +90,4 @@ void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *off
 
 char *getProcessString (enum_processes process);
 
-#endif /* SOCKETS_H_ */
+#endif /* SOCKETS_H_1 */
