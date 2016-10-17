@@ -2,7 +2,7 @@
  * sockets.c
  *
  *  Created on: 29/8/2016
- *      Author: utnso1
+ *      Author: utnso
  */
 #include "sockets.h"
 
@@ -424,5 +424,4 @@ void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *off
 	*offset += sizeof(unaPosicion->lastmod);
 	memcpy(&unaPosicion->first_block, posicionRecibida + *offset, sizeof(unaPosicion->first_block));
 	*offset += sizeof(unaPosicion->first_block);
-
 }
