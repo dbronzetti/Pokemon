@@ -21,6 +21,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <commons/string.h>
+#include <commons/collections/list.h>
 #include "osada.h"
 
 typedef enum{
@@ -81,7 +82,10 @@ void deserializeHandShake(t_MessageGenericHandshake *value, char *bufferReceived
 int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaje); //Envia un string + un enum que dice que tipo de msj es.
 void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize);
 void deserializeClientMessage(t_Mensaje *value, char *bufferReceived);
-
+char *serializeListaBloques(t_list* listaASerializar, char* listaSerializada);
+void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int *offset);
+char *serializeBloque(osada_file* unaPosicion, char* value, int *offset);
+void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *offset);
 
 char *getProcessString (enum_processes process);
 

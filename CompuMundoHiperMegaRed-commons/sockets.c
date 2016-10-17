@@ -340,60 +340,88 @@ void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize){
     memcpy(buffer + offset, value->mensaje, messageLen);
 
 }
-/*
-void serializeCPU_UMC(t_MessageCPU_UMC *value, char *buffer, int valueSize){
+
+char *serializeListaBloques(t_list* listaASerializar, char* listaSerializada) {
 	int offset = 0;
-	enum_processes process = CPU;
+	char *nuevoElementoSerializado;
+	osada_file* unaPosicion;
 
-	//0)valueSize
-	memcpy(buffer, &valueSize, sizeof(valueSize));
-	offset += sizeof(valueSize);
+	//Request more memory for the new element to be serialized
+	int tamanioBloqueNuevo = offset + sizeof(listaASerializar->elements_count);
+	nuevoElementoSerializado = malloc(tamanioBloqueNuevo);
+	memcpy(nuevoElementoSerializado, listaSerializada, tamanioBloqueNuevo);
 
-	//1)From process
-	memcpy(buffer + offset, &process, sizeof(process));
-	offset += sizeof(process);
+	free(listaSerializada);
 
-	//2)operation
-	memcpy(buffer + offset, &value->operation, sizeof(value->operation));
-	offset += sizeof(value->operation);
+	memcpy(nuevoElementoSerializado + offset, &listaASerializar->elements_count, sizeof(listaASerializar->elements_count));
+	offset += sizeof(listaASerializar->elements_count);
 
-	//3)processID
-	memcpy(buffer + offset, &value->PID, sizeof(value->PID));
-	offset += sizeof(value->PID);
+	int i;
+	for (i = 0; i < listaASerializar->elements_count; i++) {
+		//get the element from the list by index
+		unaPosicion = list_get(listaASerializar,i);
 
-	//4)pageNro
-	memcpy(buffer + offset, &value->virtualAddress->pag, sizeof(value->virtualAddress->pag));
-	offset += sizeof(value->virtualAddress->pag);
+		//serialize the element to the buffer
+		nuevoElementoSerializado = serializeBloque(unaPosicion, nuevoElementoSerializado, &offset);
+	}
 
-	//5)offset
-	memcpy(buffer + offset, &value->virtualAddress->offset, sizeof(value->virtualAddress->offset));
-	offset += sizeof(value->virtualAddress->offset);
+	return nuevoElementoSerializado;
+}
 
-	//6)size
-	memcpy(buffer + offset, &value->virtualAddress->size, sizeof(value->virtualAddress->size));
+void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int *offset){
+
+	//Getting element count
+	int cantidadDeElementos = 0;
+	memcpy(&cantidadDeElementos, listaSerializada + *offset, sizeof(listaBloques->elements_count));
+	*offset += sizeof(listaBloques->elements_count);
+
+	int i;
+	for(i=0; i < cantidadDeElementos; i++){
+		osada_file* posicionDeMemoria = malloc(sizeof(osada_file));
+		deserializeBloque(posicionDeMemoria, listaSerializada, offset);
+		list_add(listaBloques, posicionDeMemoria);
+	}
 
 }
 
-void deserializeUMC_CPU(t_MessageCPU_UMC *value, char *bufferReceived){
-	int offset = 0;
+char *serializeBloque(osada_file* unaPosicion, char* value, int *offset) {
+	char *nuevoBloqueSerializado;
 
-	//2)operation
-	memcpy(&value->operation, bufferReceived, sizeof(value->operation));
-	offset += sizeof(value->operation);
+	//Request more memory for the new element to be serialized
+	int tamanioRegistroViejo = *offset + sizeof(unaPosicion->state) + sizeof(unaPosicion->fname) + sizeof(unaPosicion->parent_directory) + sizeof(unaPosicion->file_size) + sizeof(unaPosicion->lastmod) + sizeof(unaPosicion->first_block);
+	nuevoBloqueSerializado = malloc(tamanioRegistroViejo);
+	memcpy(nuevoBloqueSerializado, value, tamanioRegistroViejo);
 
-	//3)processID
-	memcpy(&value->PID, bufferReceived + offset, sizeof(value->PID));
-	offset += sizeof(value->PID);
+	free(value);
 
-	//4)pageNro
-	memcpy(&value->virtualAddress->pag, bufferReceived + offset, sizeof(value->virtualAddress->pag));
-	offset += sizeof(value->virtualAddress->pag);
+	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->state, sizeof(unaPosicion->state));
+	*offset += sizeof(unaPosicion->state);
+	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->fname, sizeof(unaPosicion->fname));
+	*offset += sizeof(unaPosicion->fname);
+	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->parent_directory, sizeof(unaPosicion->parent_directory));
+	*offset += sizeof(unaPosicion->parent_directory);
+	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->file_size, sizeof(unaPosicion->file_size));
+	*offset += sizeof(unaPosicion->file_size);
+	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->lastmod, sizeof(unaPosicion->lastmod));
+	*offset += sizeof(unaPosicion->lastmod);
+	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->first_block, sizeof(unaPosicion->first_block));
+	*offset += sizeof(unaPosicion->first_block);
 
-	//5)offset
-	memcpy(&value->virtualAddress->offset, bufferReceived + offset, sizeof(value->virtualAddress->offset));
-	offset += sizeof(value->virtualAddress->offset);
-
-	//6)size
-	memcpy(&value->virtualAddress->size, bufferReceived + offset, sizeof(value->virtualAddress->size));
+	return nuevoBloqueSerializado;
 }
-*/
+
+void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *offset) {
+
+	memcpy(&unaPosicion->state, posicionRecibida + *offset, sizeof(unaPosicion->state));
+	*offset += sizeof(unaPosicion->state);
+	memcpy(&unaPosicion->fname, posicionRecibida + *offset, sizeof(unaPosicion->fname));
+	*offset += sizeof(unaPosicion->fname);
+	memcpy(&unaPosicion->parent_directory, posicionRecibida + *offset, sizeof(unaPosicion->parent_directory));
+	*offset += sizeof(unaPosicion->parent_directory);
+	memcpy(&unaPosicion->file_size, posicionRecibida + *offset, sizeof(unaPosicion->file_size));
+	*offset += sizeof(unaPosicion->file_size);
+	memcpy(&unaPosicion->lastmod, posicionRecibida + *offset, sizeof(unaPosicion->lastmod));
+	*offset += sizeof(unaPosicion->lastmod);
+	memcpy(&unaPosicion->first_block, posicionRecibida + *offset, sizeof(unaPosicion->first_block));
+	*offset += sizeof(unaPosicion->first_block);
+}
