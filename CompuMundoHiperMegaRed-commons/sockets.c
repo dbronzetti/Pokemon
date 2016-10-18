@@ -341,19 +341,14 @@ void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize){
 
 }
 
-char *serializeListaBloques(t_list* listaASerializar, char* listaSerializada) {
+char *serializeListaBloques(t_list* listaASerializar) {
 	int offset = 0;
 	char *nuevoElementoSerializado;
 	osada_file* unaPosicion;
 
-	//Request more memory for the new element to be serialized
-	int tamanioBloqueNuevo = offset + sizeof(listaASerializar->elements_count);
-	nuevoElementoSerializado = malloc(tamanioBloqueNuevo);
-	memcpy(nuevoElementoSerializado, listaSerializada, tamanioBloqueNuevo);
-
-	free(listaSerializada);
-
-	memcpy(nuevoElementoSerializado + offset, &listaASerializar->elements_count, sizeof(listaASerializar->elements_count));
+	//Request more memory for the quantity of elements to be serialized
+	nuevoElementoSerializado = malloc(sizeof(listaASerializar->elements_count));
+	memcpy(nuevoElementoSerializado, &listaASerializar->elements_count, sizeof(listaASerializar->elements_count));
 	offset += sizeof(listaASerializar->elements_count);
 
 	int i;
@@ -388,9 +383,9 @@ char *serializeBloque(osada_file* unaPosicion, char* value, int *offset) {
 	char *nuevoBloqueSerializado;
 
 	//Request more memory for the new element to be serialized
-	int tamanioRegistroViejo = *offset + sizeof(unaPosicion->state) + sizeof(unaPosicion->fname) + sizeof(unaPosicion->parent_directory) + sizeof(unaPosicion->file_size) + sizeof(unaPosicion->lastmod) + sizeof(unaPosicion->first_block);
-	nuevoBloqueSerializado = malloc(tamanioRegistroViejo);
-	memcpy(nuevoBloqueSerializado, value, tamanioRegistroViejo);
+	int tamanioRegistroNuevo = *offset + sizeof(unaPosicion->state) + sizeof(unaPosicion->fname) + sizeof(unaPosicion->parent_directory) + sizeof(unaPosicion->file_size) + sizeof(unaPosicion->lastmod) + sizeof(unaPosicion->first_block);
+	nuevoBloqueSerializado = malloc(tamanioRegistroNuevo);
+	memcpy(nuevoBloqueSerializado, value, tamanioRegistroNuevo);
 
 	free(value);
 
