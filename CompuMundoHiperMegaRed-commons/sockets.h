@@ -63,10 +63,8 @@ typedef struct{
 } t_Mensaje;
 
 typedef struct{
-	int keyID;
 	enum_FUSEOperations operation;
-	osada_file osadaFile;
-	char string;
+	char *mensaje;
 } t_MessagePokeServer_Client;
 
 int openSelectServerConnection(int newSocketServerPort, int *socketServer);
@@ -82,8 +80,8 @@ void deserializeHandShake(t_MessageGenericHandshake *value, char *bufferReceived
 int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaje); //Envia un string + un enum que dice que tipo de msj es.
 void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize);
 void deserializeClientMessage(t_Mensaje *value, char *bufferReceived);
-char *serializeListaBloques(t_list* listaASerializar, char* listaSerializada);
-void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int *offset);
+char *serializeListaBloques(t_list* listaASerializar);
+void deserializeListaBloques(t_list* listaBloques, char* listaSerializada);
 char *serializeBloque(osada_file* unaPosicion, char* value, int *offset);
 void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *offset);
 

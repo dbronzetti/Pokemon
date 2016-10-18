@@ -363,18 +363,19 @@ char *serializeListaBloques(t_list* listaASerializar) {
 	return nuevoElementoSerializado;
 }
 
-void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int *offset){
+void deserializeListaBloques(t_list* listaBloques, char* listaSerializada){
+	int offset = 0;
 
 	//Getting element count
 	int cantidadDeElementos = 0;
-	memcpy(&cantidadDeElementos, listaSerializada + *offset, sizeof(listaBloques->elements_count));
-	*offset += sizeof(listaBloques->elements_count);
+	memcpy(&cantidadDeElementos, listaSerializada, sizeof(listaBloques->elements_count));
+	offset += sizeof(listaBloques->elements_count);
 
 	int i;
 	for(i=0; i < cantidadDeElementos; i++){
-		osada_file* posicionDeMemoria = malloc(sizeof(osada_file));
-		deserializeBloque(posicionDeMemoria, listaSerializada, offset);
-		list_add(listaBloques, posicionDeMemoria);
+		osada_file* nuevoBloque = malloc(sizeof(osada_file));
+		deserializeBloque(nuevoBloque, listaSerializada, &offset);
+		list_add(listaBloques, nuevoBloque);
 	}
 
 }
