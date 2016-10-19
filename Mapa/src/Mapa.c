@@ -73,11 +73,10 @@ int main(int argc, char **argv) {
 	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
-	//pthread_create(&planificador, NULL, (void*) planificar, NULL);
+	pthread_create(&planificador, NULL, (void*) planificar, NULL);
 
 	pthread_join(serverThread, NULL);
-	//pthread_join(planificador, NULL);
-
+	pthread_join(planificador, NULL);
 	return 0;
 
 }
@@ -369,6 +368,22 @@ void processMessageReceived(void *parameter) {
 						(void*) buscarPorSocket);
 				entrenador->pokemonD = id_pokemon;
 				entrenador->accion = CONOCER;
+				entrenador->mandoMsj = 1;
+
+				break;
+			}
+
+			case IR: {
+				log_info(logMapa, "Trainer want to go to: '%s'",
+						message->mensaje);
+				bool buscarPorSocket(t_entrenador* entrenador) {
+					return (entrenador->socket = serverData->socketClient);
+				}
+				t_entrenador* entrenador = list_find(listaDeEntrenadores,
+						(void*) buscarPorSocket);
+//				entrenador->pokemonD = id_pokemon;
+				entrenador->accion = IR;
+				entrenador->mandoMsj = 1;
 
 				break;
 			}
@@ -548,6 +563,8 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	nuevoEntrenador->accion = NUEVO;
 	nuevoEntrenador->pokemonD = '/'; //flag para representar que por el momento no busca ningun pokemon
 	nuevoEntrenador->listaDePokemonesCapturados = list_create();
+	nuevoEntrenador->mandoMsj = 0;
+	nuevoEntrenador->seEstaMoviendo = 0;
 
 	CrearPersonaje(items, simbolo, nuevoEntrenador->pos_x,
 			nuevoEntrenador->pos_y);
@@ -567,14 +584,12 @@ void eliminarEntrenador(char simbolo) {
 		return simbolo == entrenador->simbolo;
 	}
 
-
 	void destruirElemento(t_entrenador *entrenador) {
 		free(entrenador);
 	}
 	list_remove_and_destroy_by_condition(listaDeEntrenadores,
 			(void*) igualarACaracterCondicion, (void*) destruirElemento);
 }
-/*
 
 void planificar() {
 
@@ -582,107 +597,170 @@ void planificar() {
 
 		while (queue_size(colaDeListos) != 0) {
 			int i;
-			int estaEnMovimiento = 1;
+
 			t_entrenador* entrenador = queue_pop(colaDeListos);
-			//			send(entrenador->socket, 1, sizeof(int), 0); //se le envia un flag significa que es su turno!.
 
 			log_info(logMapa, "Begins the turn of trainer: %c",
 					entrenador->simbolo);
 
 			for (i = 0; i < metadataMapa.quantum; i++) {
-				sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
-				log_info(logMapa, "Movement: %d of trainer : %c", i,
+				int estaEnAccion = 1;
+
+				//sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
+
+				sleep(5);
+
+				log_info(logMapa, "Action: %d of trainer : %c", i,
 						entrenador->simbolo);
 
-				while (estaEnMovimiento) { //un movimiento representa una accion que puede llevar acabo el usuario dentro del turno
+				if (entrenador->pokemonD == '/') { //sino busca ninguno por el momento le preguntamos cual quiera buscar (movimiento libre)
+					sendClientMessage(&entrenador->socket, "ASD", LIBRE); //no hace falta enviar un string solo un enum, por eso pongo "ASD"
+					log_info(logMapa, "The trainer:%c has free action ",
+							entrenador->simbolo);
+				}
 
-					if (entrenador->mandoMsj) { //0 para false, 1 para true
+				if (entrenador->posD_x != -1) {
+					if (entrenador->posD_x == entrenador->pos_x
+							&& entrenador->posD_y == entrenador->pos_y) { //si se encuentra en la posicion deseada le avisamos que llego y asi comienza su movimiento
+						sendClientMessage(&entrenador->socket, "ASD", LLEGO);
+						entrenador->seEstaMoviendo = 0; // si ya llego a la posicion no se esta moviendo mas
+						log_info(logMapa, "The trainer:%c came to the pokenest",
+								entrenador->simbolo);
+					}
+				}
+
+				if (entrenador->seEstaMoviendo) { // le pedimos que se mueva
+					log_info(logMapa, "Trainer:%c has not yet reached his position",
+							entrenador->simbolo);
+					sendClientMessage(&entrenador->socket, "cualquiercosa",
+							MOVETE);
+
+				}
+				while (estaEnAccion) { //una accion que puede llevar acabo el usuario dentro del turno
+
+					if (entrenador->mandoMsj != 0) { //0 para false, 1 para true, este if verifica que el entrenador respondio :D
 						switch (entrenador->accion) {
 
-					case CONOCER: {
-
+						case CONOCER: {
+							log_info(logMapa,
+									"The trainer: %c wants to know the position of: %c",
+									entrenador->simbolo, entrenador->pokemonD);
 							bool buscarPokenestPorId(t_pokenest* pokenest) {
-								return (pokenest->metadata.id ==
-										entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
+								return (pokenest->metadata.id
+										== entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
 							}
 
 							t_pokenest* pokenest = list_find(listaDePokenest,
 									(void*) buscarPokenestPorId);
 							int posX = pokenest->metadata.pos_x;
 							int posY = pokenest->metadata.pos_y;
-					//TODO: falta enviarlo
+							entrenador->posD_x = pokenest->metadata.pos_x;
+							entrenador->posD_y = pokenest->metadata.pos_y;
+							char* mensajeAEnviar = convertirPosicionesAString(
+									posX, posY);
 							entrenador->mandoMsj = 0;
-							estaEnMovimiento = 0;
-						break;
-					}
+							entrenador->seEstaMoviendo = 1;
+							sendClientMessage(&entrenador->socket,
+									mensajeAEnviar, CONOCER);
+							estaEnAccion = 0;
+							break;
+						}
 
-					case IR: {
-						moverEntrenador(entrenador); //mueve el entrenador de a 1 til.
-						estaEnMovimiento = 0;
-						entrenador->mandoMsj = 0;
-						break;
-					}
+						case IR: {
+							log_info(logMapa,
+									"Trainer: %c, want to move",
+									entrenador->simbolo);
+							moverEntrenador(entrenador); //mueve el entrenador de a 1 til.
+							estaEnAccion = 0;
+							entrenador->mandoMsj = 0;
+							log_info(logMapa,
+									"Trainer: %c, moves to x: %d, y: %d ",
+									entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+							break;
+						}
 
-					case CAPTURAR: {
-						//TODO
-						entrenador->mandoMsj = 0;
-						estaEnMovimiento = 0;
-						i = metadataMapa.quantum; // si captura ocupa todos los turnos
-						break;
-					}
+						case CAPTURAR: {
 
-					}
+							bool buscarPokenestPorId(t_pokenest* pokenest) {
+								return (pokenest->metadata.id
+										== entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
+							}
+
+							t_pokenest* pokenest = list_find(listaDePokenest,
+									(void*) buscarPokenestPorId);
+
+							t_pokemon* pokemon = list_remove_by_condition(
+									pokenest->listaDePokemones, (void*) true); //saca al primero que encuentra
+							list_add(entrenador->listaDePokemonesCapturados,
+									pokemon);
+							entrenador->pokemonD = '/';
+							entrenador->mandoMsj = 0;
+							estaEnAccion = 0;
+							i = metadataMapa.quantum; // si captura ocupa todos los turnos
+							break;
+						}
+
 						}
 					}
 				}
-
-				log_info(logMapa,
-						"End of the turn, trainer: %c goes to colaDeBloqueados",
-						entrenador->simbolo);
-				queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
-
 			}
 
-			if (queue_size(colaDeBloqueados) != 0
-					&& queue_size(colaDeListos) == 0) {
-				t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
-				queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
-				log_info(logMapa, "Trainer: %c goes to colaDeListos",
-						entrenador->simbolo);
-			}
+			log_info(logMapa,
+					"End of the turn, trainer: %c goes to colaDeBloqueados",
+					entrenador->simbolo);
+			queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
+
 		}
 
+		if (queue_size(colaDeBloqueados) != 0
+				&& queue_size(colaDeListos) == 0) {
+			t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
+			queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
+			log_info(logMapa, "Trainer: %c goes to colaDeListos",
+					entrenador->simbolo);
+		}
 	}
 
-void moverEntrenador(t_entrenador* entrenador){
-	if(entrenador->pos_x > entrenador->posD_x){ // si esta arriba de la posicion x que desea le bajamos uno.
+}
+
+void moverEntrenador(t_entrenador* entrenador) {
+	if (entrenador->pos_x > entrenador->posD_x) { // si esta arriba de la posicion x que desea le bajamos uno.
 		entrenador->pos_x--;
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+				entrenador->pos_y);
 		nivel_gui_dibujar(items, "Test");
-		return;
 	}
 
-	if(entrenador->pos_x < entrenador->posD_x){ //si esta abajo de la posicion x que desea le subimos uno.
+	if (entrenador->pos_x < entrenador->posD_x) { //si esta abajo de la posicion x que desea le subimos uno.
 		entrenador->pos_x++;
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+				entrenador->pos_y);
 		nivel_gui_dibujar(items, "Test");
-		return;
 	}
 
-	if(entrenador->pos_y > entrenador->posD_y){ // si esta arriba de la posicion y que desea le bajamos uno.
+	if (entrenador->pos_y > entrenador->posD_y) { // si esta arriba de la posicion y que desea le bajamos uno.
 		entrenador->pos_y--;
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+				entrenador->pos_y);
 		nivel_gui_dibujar(items, "Test");
-		return;
 	}
 
-	if(entrenador->pos_y < entrenador->posD_y){ //si esta abajo de la posicion y que desea le subimos uno.
+	if (entrenador->pos_y < entrenador->posD_y) { //si esta abajo de la posicion y que desea le subimos uno.
 		entrenador->pos_y++;
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+				entrenador->pos_y);
 		nivel_gui_dibujar(items, "Test");
-		return;
 	}
 	return;
 }
 
- */
+char* convertirPosicionesAString(int posX, int posY) {
+	char* posXstr;
+	char* posYstr;
+	sprintf(posXstr, "%d", posX);
+	sprintf(posYstr, "%d", posY);
+
+	return string_from_format("%s,%s", posXstr, posYstr);
+
+}
+

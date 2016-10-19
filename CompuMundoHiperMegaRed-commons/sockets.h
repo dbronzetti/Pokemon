@@ -37,7 +37,10 @@ typedef enum{
 	CONOCER,
 	IR,
 	CAPTURAR,
-	DESCONECTAR
+	DESCONECTAR,
+	MOVETE,
+	LLEGO,
+	LIBRE
 } enum_messages;
 
 typedef enum{

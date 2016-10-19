@@ -68,6 +68,7 @@ typedef struct {
 	char pokemonD; //pokemon deseado por el entrenador;
 	t_list* listaDePokemonesCapturados;
 	int mandoMsj;
+	int seEstaMoviendo;
 } t_entrenador;
 
 // Funciones de conexion
@@ -86,5 +87,7 @@ void crearEntrenadorYDibujar(char simbolo, int socket);
 bool igualarACaracterCondicion(void* paramatrer);
 void eliminarEntrenador(char simbolo);
 void planificar();
+char* convertirPosicionesAString(int posX, int posY);
+void moverEntrenador(t_entrenador* entrenador);
 
 #endif /* MAPA_H_ */
