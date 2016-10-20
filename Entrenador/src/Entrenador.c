@@ -327,7 +327,7 @@ t_queue* parsearObjetivos(char** objetivos) {
 	t_queue* colaDeObjetivos = queue_create();
 	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee todo el array
 		char* unObjetivo = objetivos[i];
-		printf("este es un objetivo: %s \n", unObjetivo);
+
 		queue_push(colaDeObjetivos, unObjetivo);
 		i++;
 	}

@@ -17,6 +17,7 @@ int main(int argc, char **argv) {
 	colaDeBloqueados = queue_create();
 	colaDeListos = queue_create();
 	semaforo_wait = 1;
+	pthread_mutex_init(&setEntrenadores, NULL);
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -342,8 +343,10 @@ void processMessageReceived(void *parameter) {
 			switch (message->tipo) {
 			case NUEVO: {
 				log_info(logMapa, "Creating new trainer: %s", message->mensaje);
+				pthread_mutex_lock(&setEntrenadores);
 				crearEntrenadorYDibujar(message->mensaje[0],
 						serverData->socketClient);
+				pthread_mutex_unlock(&setEntrenadores);
 				log_info(logMapa, "Trainer:%s created SUCCESSFUL",
 						message->mensaje);
 				break;
@@ -351,7 +354,9 @@ void processMessageReceived(void *parameter) {
 
 			case DESCONECTAR: {
 				log_info(logMapa, "Deleting trainer: '%s'", message->mensaje);
+				pthread_mutex_lock(&setEntrenadores);
 				eliminarEntrenador(message->mensaje[0]);
+				pthread_mutex_unlock(&setEntrenadores);
 				log_info(logMapa, "Trainer: '%s' deleted SUCCESSFUL",
 						message->mensaje);
 				break;
@@ -364,11 +369,13 @@ void processMessageReceived(void *parameter) {
 				bool buscarPorSocket(t_entrenador* entrenador) {
 					return (entrenador->socket = serverData->socketClient);
 				}
+				pthread_mutex_lock(&setEntrenadores);
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
 						(void*) buscarPorSocket);
 				entrenador->pokemonD = id_pokemon;
 				entrenador->accion = CONOCER;
 				entrenador->mandoMsj = 1;
+				pthread_mutex_unlock(&setEntrenadores);
 
 				break;
 			}
@@ -379,11 +386,13 @@ void processMessageReceived(void *parameter) {
 				bool buscarPorSocket(t_entrenador* entrenador) {
 					return (entrenador->socket = serverData->socketClient);
 				}
+				pthread_mutex_lock(&setEntrenadores);
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
 						(void*) buscarPorSocket);
 //				entrenador->pokemonD = id_pokemon;
 				entrenador->accion = IR;
 				entrenador->mandoMsj = 1;
+				pthread_mutex_unlock(&setEntrenadores);
 
 				break;
 			}
@@ -598,7 +607,9 @@ void planificar() {
 		while (queue_size(colaDeListos) != 0) {
 			int i;
 
+			pthread_mutex_lock(&setEntrenadores);
 			t_entrenador* entrenador = queue_pop(colaDeListos);
+			pthread_mutex_unlock(&setEntrenadores);
 
 			log_info(logMapa, "Begins the turn of trainer: %c",
 					entrenador->simbolo);
@@ -613,6 +624,7 @@ void planificar() {
 				log_info(logMapa, "Action: %d of trainer : %c", i,
 						entrenador->simbolo);
 
+				pthread_mutex_lock(&setEntrenadores);
 				if (entrenador->pokemonD == '/') { //sino busca ninguno por el momento le preguntamos cual quiera buscar (movimiento libre)
 					sendClientMessage(&entrenador->socket, "ASD", LIBRE); //no hace falta enviar un string solo un enum, por eso pongo "ASD"
 					log_info(logMapa, "The trainer:%c has free action ",
@@ -623,28 +635,32 @@ void planificar() {
 					if (entrenador->posD_x == entrenador->pos_x
 							&& entrenador->posD_y == entrenador->pos_y) { //si se encuentra en la posicion deseada le avisamos que llego y asi comienza su movimiento
 						sendClientMessage(&entrenador->socket, "ASD", LLEGO);
+
 						entrenador->seEstaMoviendo = 0; // si ya llego a la posicion no se esta moviendo mas
+
 						log_info(logMapa, "The trainer:%c came to the pokenest",
 								entrenador->simbolo);
 					}
 				}
 
 				if (entrenador->seEstaMoviendo) { // le pedimos que se mueva
-					log_info(logMapa, "Trainer:%c has not yet reached his position",
+					log_info(logMapa,
+							"Trainer:%c has not yet reached his position",
 							entrenador->simbolo);
 					sendClientMessage(&entrenador->socket, "cualquiercosa",
 							MOVETE);
 
 				}
+				pthread_mutex_unlock(&setEntrenadores);
 				while (estaEnAccion) { //una accion que puede llevar acabo el usuario dentro del turno
 
-					if (entrenador->mandoMsj != 0) { //0 para false, 1 para true, este if verifica que el entrenador respondio :D
+//					log_info(logMapa, "Trainer: %c esperando mensaje",
+//							entrenador->simbolo);
+					if (entrenador->mandoMsj != 0) { //este if verifica que el entrenador respondio :D
+
 						switch (entrenador->accion) {
 
 						case CONOCER: {
-							log_info(logMapa,
-									"The trainer: %c wants to know the position of: %c",
-									entrenador->simbolo, entrenador->pokemonD);
 							bool buscarPokenestPorId(t_pokenest* pokenest) {
 								return (pokenest->metadata.id
 										== entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
@@ -654,6 +670,7 @@ void planificar() {
 									(void*) buscarPokenestPorId);
 							int posX = pokenest->metadata.pos_x;
 							int posY = pokenest->metadata.pos_y;
+							pthread_mutex_lock(&setEntrenadores);
 							entrenador->posD_x = pokenest->metadata.pos_x;
 							entrenador->posD_y = pokenest->metadata.pos_y;
 							char* mensajeAEnviar = convertirPosicionesAString(
@@ -662,20 +679,26 @@ void planificar() {
 							entrenador->seEstaMoviendo = 1;
 							sendClientMessage(&entrenador->socket,
 									mensajeAEnviar, CONOCER);
+							log_info(logMapa,
+									"Map send the position to the trainer:%c",
+									entrenador->simbolo);
+							pthread_mutex_unlock(&setEntrenadores);
+
 							estaEnAccion = 0;
 							break;
 						}
 
 						case IR: {
-							log_info(logMapa,
-									"Trainer: %c, want to move",
-									entrenador->simbolo);
+							pthread_mutex_lock(&setEntrenadores);
 							moverEntrenador(entrenador); //mueve el entrenador de a 1 til.
 							estaEnAccion = 0;
 							entrenador->mandoMsj = 0;
 							log_info(logMapa,
 									"Trainer: %c, moves to x: %d, y: %d ",
-									entrenador->simbolo, entrenador->pos_x, entrenador->pos_y);
+									entrenador->simbolo, entrenador->pos_x,
+									entrenador->pos_y);
+							pthread_mutex_unlock(&setEntrenadores);
+
 							break;
 						}
 
@@ -691,10 +714,12 @@ void planificar() {
 
 							t_pokemon* pokemon = list_remove_by_condition(
 									pokenest->listaDePokemones, (void*) true); //saca al primero que encuentra
+							pthread_mutex_lock(&setEntrenadores);
 							list_add(entrenador->listaDePokemonesCapturados,
 									pokemon);
 							entrenador->pokemonD = '/';
 							entrenador->mandoMsj = 0;
+							pthread_mutex_unlock(&setEntrenadores);
 							estaEnAccion = 0;
 							i = metadataMapa.quantum; // si captura ocupa todos los turnos
 							break;
@@ -708,22 +733,26 @@ void planificar() {
 			log_info(logMapa,
 					"End of the turn, trainer: %c goes to colaDeBloqueados",
 					entrenador->simbolo);
+			pthread_mutex_lock(&setEntrenadores);
 			queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
-
+			pthread_mutex_unlock(&setEntrenadores);
 		}
 
 		if (queue_size(colaDeBloqueados) != 0
 				&& queue_size(colaDeListos) == 0) {
+			pthread_mutex_lock(&setEntrenadores);
 			t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
 			queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
+			pthread_mutex_unlock(&setEntrenadores);
 			log_info(logMapa, "Trainer: %c goes to colaDeListos",
 					entrenador->simbolo);
 		}
+
 	}
 
 }
 
-void moverEntrenador(t_entrenador* entrenador) {
+void moverEntrenador(t_entrenador* entrenador) { //esto esta medio para el orto despues lo tengo que arreglar (en sentido de requerimento del enunciado, funcionar funciona barbaro)
 	if (entrenador->pos_x > entrenador->posD_x) { // si esta arriba de la posicion x que desea le bajamos uno.
 		entrenador->pos_x--;
 		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
@@ -755,10 +784,10 @@ void moverEntrenador(t_entrenador* entrenador) {
 }
 
 char* convertirPosicionesAString(int posX, int posY) {
-	char* posXstr;
-	char* posYstr;
-	sprintf(posXstr, "%d", posX);
-	sprintf(posYstr, "%d", posY);
+	char* posXstr = "a";
+	char* posYstr = "b";
+//	sprintf(posXstr, "%d", posX);
+//	sprintf(posYstr, "%d", posY);
 
 	return string_from_format("%s,%s", posXstr, posYstr);
 

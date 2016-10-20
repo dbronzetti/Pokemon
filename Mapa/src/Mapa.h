@@ -37,6 +37,7 @@ t_list* listaDeEntrenadores;
 t_queue* colaDeListos;
 t_queue* colaDeBloqueados;
 pthread_mutex_t setFDmutex;
+pthread_mutex_t setEntrenadores;
 
 // Estructuras
 typedef struct {
