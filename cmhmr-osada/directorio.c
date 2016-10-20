@@ -1,9 +1,10 @@
 /*
+
  * directorio.c
  *
  *  Created on: 16/9/2016
  *      Author: utnso
- */
+
 #include "osada.h"
 #include <commons/collections/dictionary.h>
 #include <commons/collections/list.h>
@@ -13,15 +14,15 @@
 //
 
 //LEER LA SECUENCIA DE BLOQUES
-/*
+
  * A - LEER first_block
  * B - IR A TABLA ASIGANACION Y LEER EL BLOQUE
  * C - EL BLOQUE NOS DA EL PROXIMO BLOQUE A LEER(POSICIONES DEL ARRAY PONELE) Y EL FIN ES FFFFFFF
  * D - SUPONGO QUE ESOS BLOQUE SON LAS POSICIONES DEL BLOQUE DATOS
  *
  *
- * */
-/****************LISTAR TODO *************************************************/
+ *
+***************LISTAR TODO ************************************************
 void mostrarLosDirectorios(osada_file tablaDeArchivo, int pos){
 	if (tablaDeArchivo.state == DIRECTORY){
 		printf("Empieza: %i****************\n",pos);
@@ -61,6 +62,20 @@ void mostrarLosBorrados(osada_file tablaDeArchivo, int pos){
 	}
 }
 
+void mostrarOtrosEstados(osada_file tablaDeArchivo, int pos){
+	if (tablaDeArchivo.state != DELETED && tablaDeArchivo.state != REGULAR && tablaDeArchivo.state !=DIRECTORY){
+		printf("Empieza: %i****************\n",pos);
+		printf("state_%i: %c\n",pos, tablaDeArchivo.state);
+		printf("parent_directory_%i: %i\n",pos, tablaDeArchivo.parent_directory);
+		printf("fname_%i: %s\n",pos, &tablaDeArchivo.fname);
+		printf("file_size_%i: %i\n",pos, tablaDeArchivo.file_size);
+		printf("lastmod_%i: %i\n",pos, tablaDeArchivo.lastmod);
+		printf("first_block_%i: %i\n",pos, tablaDeArchivo.first_block);
+		printf("Termina: %i****************\n",pos);
+	}
+}
+
+
 
 void dameTodosLosDirectorios(osada_file *tablaDeArchivo){
 	int pos=0;
@@ -82,7 +97,14 @@ void dameTodosLosBorrados(osada_file *tablaDeArchivo){
 		mostrarLosBorrados(tablaDeArchivo[pos], pos);
 	}
 }
-/****************FIN LISTAR TODO *************************************************/
+
+void dameTodosLosOtrosEstados(osada_file *tablaDeArchivo){
+	int pos=0;
+	for (pos=0; pos <= 2047; pos++){
+		mostrarOtrosEstados(tablaDeArchivo[pos], pos);
+	}
+}
+***************FIN LISTAR TODO ************************************************
 //UN DICCIONARIO CON LISTAS PARA REPRESENTAR JERARQUIAS.
 
 void _recorrerDirectoriosPadres(char* key,t_list *datos) {
@@ -128,7 +150,7 @@ t_dictionary *crearArbolDeDirectoriosDelRoot(osada_file *tablaDeArchivo){
 	return dictionaryDirRoot;
 }
 
-/*****************************************************/
+***************************************************
 
 void reconocerDirectorioHijos(osada_file *archivo, int pos, t_dictionary *dictionaryDirRoot){
 
@@ -170,4 +192,57 @@ t_dictionary *crearArbolDeDirectoriosHijos(osada_file *tablaDeArchivo, t_diction
 
 	return dictionaryDirRoot;
 }
+*******************************************************************************************************
+void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre ){
 
+
+
+	if (archivo->parent_directory == padre){
+		printf("EMPIEZA reconocerArchivosParaArbol %i: ****************\n", pos);
+		printf("state_: %c\n", archivo->state);
+		printf("parent_directory_: %i\n", archivo->parent_directory);
+		printf("fname_: %s\n", &archivo->fname);
+		printf("file_size_: %i\n", archivo->file_size);
+		printf("lastmod_: %i\n", archivo->lastmod);
+		printf("first_block_: %i\n", archivo->first_block);
+		printf("Termina reconocerArchivosParaArbol %i ****************\n", pos);
+	}
+
+}
+
+void reconocerDirectorioPadre(osada_file *archivo, int pos, int padre){
+	if (archivo[padre].state == DIRECTORY  ){
+		printf("EMPIEZA reconocerDirectorioPadre %i: ****************\n", pos);
+		printf("state_: %c\n", archivo->state);
+		printf("parent_directory_: %i\n", archivo->parent_directory);
+		printf("fname_: %s\n", &archivo->fname);
+		printf("file_size_: %i\n", archivo->file_size);
+		printf("lastmod_: %i\n", archivo->lastmod);
+		printf("first_block_: %i\n", archivo->first_block);
+		printf("Termina reconocerDirectorioPadre %i: ****************\n", pos);
+	}
+}
+
+void crearArbolAPartirDelPadre(osada_file *tablaDeArchivo, int padre){
+	int pos=0;
+
+	for (pos=0; pos <= 2047; pos++){
+		reconocerArchivosParaArbol(&tablaDeArchivo[pos], pos, padre);
+	}
+
+}
+
+void encontrarArbolPadre(osada_file *tablaDeArchivo, int padre){
+	int pos=0;
+
+	//for (pos=0; pos <= 2047; pos++){
+		reconocerDirectorioPadre(&tablaDeArchivo[pos], pos, padre);
+	//}
+
+}
+
+***************************************************
+void crearUnDirectorio(){
+
+}
+*/
