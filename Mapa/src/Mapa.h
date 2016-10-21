@@ -30,14 +30,19 @@ DIR *dipPokenest;
 struct dirent *ditPokenest;
 DIR *dipPokemones;
 struct dirent *ditPokemones;
-t_list* listaDePokenest;
 int semaforo_wait;
+t_list* listaDePokenest;
 t_list* items;
 t_list* listaDeEntrenadores;
 t_queue* colaDeListos;
 t_queue* colaDeBloqueados;
 pthread_mutex_t setFDmutex;
-pthread_mutex_t setEntrenadores;
+pthread_mutex_t setEntrenadoresMutex;
+pthread_mutex_t colaDeListosMutex;
+pthread_mutex_t colaDeBloqueadosMutex;
+pthread_mutex_t itemsMutex;
+pthread_mutex_t listaDePokenestMutex;
+
 
 // Estructuras
 typedef struct {
