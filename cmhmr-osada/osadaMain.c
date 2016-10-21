@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
 	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
 	//contarBloques(osada, osadaHeaderFile, bitMap);
-	crearUnArchivo("hola mundo\n", 128);
+	//crearUnArchivo("hola mundo\n", 128);
 
 	//dameTodosLosDirectorios(tablaDeArchivo);
 	//dameTodosLosArchivosRegulares(tablaDeArchivo);

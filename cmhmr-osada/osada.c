@@ -7,6 +7,7 @@
 
 #include "osada.h"
 #include <errno.h>
+#include <commons/string.h>
 
 
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento){
@@ -364,7 +365,8 @@ void _recorrerComoSeriaElArray(char* bloquePos, int bloqueSig) {
 }
 
 void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
-	printf("Bloque Pos: %i\n", atoi(bloquePos));
+	//printf("_guardarEnTablaDeDatos - Bloque Pos: %i\n", atoi(bloquePos));
+	//printf("_guardarEnTablaDeDatos - contenido: %s\n",contenido);
 	int bloquePosInt = 0;
 	bloquePosInt = atoi(bloquePos);
 
@@ -375,6 +377,14 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 	printf("_guardarEnTablaDeDatos - bloqueDeDatos: %s\n",bloqueDeDatos);
 	memcpy(&OSADA[DATA_BLOCKS+bloque2], bloqueDeDatos, OSADA_BLOCK_SIZE );
 
+
+}
+
+void _test(char* bloquePos, char* contenido){
+	printf("_test - Bloque Pos: %i\n", atoi(bloquePos));
+	printf("_test - contenido: %s\n",contenido);
+
+
 }
 
 void prepararBloquesDeDatos(t_list* listado, char *contenido){
@@ -382,16 +392,21 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 	int bloquePos;
 	int i;
 	t_dictionary *dicBloqueDeDatos = dictionary_create();
-	char *bloqueConDatos = malloc(64);
+//	t_dictionary *dicBloqueDeDatos2 = dictionary_create();
+
 	printf("cantidadDeElemento: %i\n",cantidadDeElemento);
 
 	for(i=0;i<cantidadDeElemento;i++){
+		char *bloqueConDatos = malloc(64);
+		char *bloquePosStr;
+
 		bloquePos = list_get(listado, i);
+		bloquePosStr = string_itoa(bloquePos);
+
 		printf("prepararBloquesDeDatos - bloquePos: %i\n",bloquePos);
 
-		char bloquePosStr[10];
-		sprintf(bloquePosStr, "%d", bloquePos);
-		sprintf(bloqueConDatos, "%d", i);
+		bloqueConDatos = string_itoa(i);
+
 		printf("prepararBloquesDeDatos - bloqueConDatos: %i\n",i);
 
 		strcat(bloqueConDatos, "hola");
@@ -400,10 +415,45 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 		printf("prepararBloquesDeDatos - bloqueConDatos: %s\n",bloqueConDatos);
 
 		dictionary_put(dicBloqueDeDatos, bloquePosStr, bloqueConDatos);
+		printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos, bloquePosStr));
 
 	}
 	dictionary_iterator(dicBloqueDeDatos, (void*) _guardarEnTablaDeDatos);
+
+/*	printf("**************************************************************************\n");
+	char *bloquePosStr=malloc(sizeof(int));
+	char* newString;
+	char *bloqueConDatos2 = malloc(64);
+	for(i=0;i <=4;i++){
+//		char *bloqueConDatos2 = malloc(64);
+	     newString = string_itoa(i);
+
+		strcpy(bloqueConDatos2, "");
+		strcat(bloqueConDatos2, newString);
+		strcat(bloqueConDatos2, "bloqueConDatos");
+
+		//dictionary_put(dicBloqueDeDatos2, "1", "hola1");
+		dictionary_put(dicBloqueDeDatos2, newString, bloqueConDatos2);
+
+		printf("%s, %i\n",newString, strcmp(newString,"1") );
+		printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, newString));
+	}
+	//dictionary_put(dicBloqueDeDatos2, "3", "3bloqueConDatos");
+	//printf("%s, %i\n",newString, sizeof(newString));
+
+
+	printf("********************\n");
+
+	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "0"));
+	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "1"));
+	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "2"));
+	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "3"));
+
+	dictionary_iterator(dicBloqueDeDatos2, (void*) _test);
+
 	free(bloqueConDatos);
+	*/
+	//free(bloqueConDatos2);
 }
 
 
