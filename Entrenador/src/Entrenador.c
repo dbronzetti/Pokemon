@@ -8,6 +8,9 @@
 
 int socketMapa = 0;
 int llegoMsj = 0;
+t_queue* colaDeObjetivos;
+enum_messages turno;
+char* posicionPokenest;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
@@ -57,12 +60,13 @@ int main(int argc, char **argv) {
 
 	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
 
+
 	i = 0;
 	for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
 		char* mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
-		char* objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
+		char** objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
-		t_queue* colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola de objetivos actuales donde cada elemento es un char
+		colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola de objetivos actuales donde cada elemento es un char
 
 		char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata.dat",
 				pokedex, mapaActual);
@@ -76,11 +80,13 @@ int main(int argc, char **argv) {
 					"ENTRENADOR connected to MAPA successfully\n");
 			printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
 			sendClientMessage(&socketMapa, metadataEntrenador.simbolo, NUEVO);
-			pthread_create(&hiloEscuchar, NULL, (void*) recibirSignal, NULL);
+			pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
 
 			jugar();
 
 			pthread_join(hiloSignal, NULL);
+			pthread_join(hiloEscuchar, NULL);
+
 
 		} else {
 			log_error(logEntrenador,
@@ -205,8 +211,9 @@ void crearArchivoMetadata(char *rutaMetadata) {
 	i = 0;
 	while (hojaDeViaje[i] != NULL) {
 		char* obj = string_from_format("obj[%s]", hojaDeViaje[i]);
+
 		queue_push(metadataEntrenador.obj,
-				config_get_array_value(metadata, obj));
+				config_get_array_value(metadata, obj)); //pushea en la cola un array de strings
 		printf("Dentro del mapa %s debe atrapar: ", hojaDeViaje[i]);
 		imprimirArray(config_get_array_value(metadata, obj));
 		i++;
@@ -270,24 +277,59 @@ void desconectarse() {
 }
 
 void jugar() {
-	int quedanObjetivos = 1;
-	while (quedanObjetivos) //mientras queduen objetivos se sigue jugando en el mapa
+
+	while (queue_size(colaDeObjetivos)) //mientras queden objetivos se sigue jugando en el mapa
 	{
+		char* objetivoActual;
+		if (llegoMsj!=0) {
+			switch (turno) {
+			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
+				log_info(logEntrenador, "Trainer send the id of the pokenest");
+				objetivoActual = queue_pop(colaDeObjetivos);
+				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
+				llegoMsj = 0;
+				break;
+			}
+
+			case CONOCER: {	// no se hace nada...
+				log_info(logEntrenador, "Trainer receive the position");
+		//		sendClientMessage(&socketMapa, posicionPokenest, IR);
+				llegoMsj = 0;
+				break;
+			}
+
+			case LLEGO: {	// si llegamos le pedimos que lo capture
+				log_info(logEntrenador, "Trainer ask to Mapa capture the pokemon");
+				sendClientMessage(&socketMapa, objetivoActual, CAPTURAR);
+				llegoMsj = 0;
+				break;
+			}
+
+			case MOVETE: {	// si estamos yendo a la pokenest le pedimos seguir moviendonos
+				log_info(logEntrenador, "Trainer ask to mapa to move to the pokenest");
+				sendClientMessage(&socketMapa, objetivoActual, IR);
+				llegoMsj = 0;
+				break;
+			}
+
+			}
+
+		}
 
 	}
 
 	desconectarse();
 }
 
-t_queue* parsearObjetivos(char* objetivos) {
+t_queue* parsearObjetivos(char** objetivos) {
 
 	int i = 0;
 	t_queue* colaDeObjetivos = queue_create();
-	char** objetivosSeparados = string_split(objetivos, ","); // los separo por coma
-	while (objetivosSeparados[i] != NULL) { //el bucle dura hasta que se lee todo el array
-		char* unObjetivo = objetivosSeparados[i];
+	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee todo el array
+		char* unObjetivo = objetivos[i];
 
 		queue_push(colaDeObjetivos, unObjetivo);
+		i++;
 	}
 	return colaDeObjetivos;
 
@@ -298,14 +340,14 @@ void recibirMsjs() {
 
 		int messageSize = 0;
 		char *messageRcv = malloc(sizeof(messageSize));
-		int receivedBytes = receiveMessage(socketMapa, messageRcv,
+		int receivedBytes = receiveMessage(&socketMapa, messageRcv,
 				sizeof(messageSize));
 
 		if (receivedBytes > 0) {
 			//Receive message using the size read before
 			memcpy(&messageSize, messageRcv, sizeof(int));
 			messageRcv = realloc(messageRcv, messageSize);
-			receivedBytes = receiveMessage(socketMapa, messageRcv, messageSize);
+			receivedBytes = receiveMessage(&socketMapa, messageRcv, messageSize);
 
 			//starting handshake with client connected
 			t_Mensaje *message = malloc(sizeof(t_Mensaje));
@@ -315,17 +357,36 @@ void recibirMsjs() {
 
 			switch (message->tipo) {
 			case LIBRE: { //msj que envia el mapa para indicar que comenzo un turno libre
-				log_info(logEntrenador, "Conectado a MAPA - Messsage: %s\n",
-						message->mensaje);
-				int llegoMsj = 1;
-				puts("Conectado al mapa!");
+				log_info(logEntrenador, "New action begins", message->mensaje);
+				llegoMsj = 1;
+				turno = LIBRE;
 				break;
 			}
 
-			case IR: { //msj que envia el mapa para indicar que llego a la pokenest
-				log_info(logEntrenador, "Trainer came to pokenest: %s\n",
+			case LLEGO: { //msj que envia el mapa para indicar que llego a la pokenest
+				log_info(logEntrenador,
+						"New action begins: trainer came to pokenest: %s\n",
 						message->mensaje);
-				int llegoMsj = 1;
+				llegoMsj = 1;
+				turno = LLEGO;
+				break;
+			}
+
+			case CONOCER: { //msj que envia el mapa para indicando la posicion de la pokenest
+				log_info(logEntrenador,
+						"New action begins: the position of the pokenest is: %s\n",
+						message->mensaje);
+				llegoMsj = 1;
+				turno = CONOCER;
+				break;
+			}
+
+			case MOVETE: { //msj que envia el mapa para indicando que el pokemon ha sido capturado
+				log_info(logEntrenador,
+						"New action begins: trainer has not yet reached his position: %s\n",
+						message->mensaje);
+				llegoMsj = 1;
+				turno = MOVETE;
 				break;
 			}
 
@@ -333,7 +394,7 @@ void recibirMsjs() {
 				log_error(logEntrenador,
 						"Process couldn't connect to SERVER - Not able to connect to server %s. Please check if it's down.\n",
 						metadataMapa.ip);
-				close(*socketMapa);
+				close(socketMapa);
 				break;
 			}
 			}
@@ -341,13 +402,13 @@ void recibirMsjs() {
 			//The client is down when bytes received are 0
 			log_error(logEntrenador,
 					"The client went down while receiving! - Please check the client '%d' is down!\n",
-					*socketMapa);
-			close(*socketMapa);
+					socketMapa);
+			close(socketMapa);
 		} else {
 			log_error(logEntrenador,
 					"Error - No able to received - Error receiving from socket '%d', with error: %d\n",
-					*socketMapa, errno);
-			close(*socketMapa);
+					socketMapa, errno);
+			close(socketMapa);
 		}
 	}
 }

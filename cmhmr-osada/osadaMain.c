@@ -6,11 +6,10 @@
  */
 #include "osada.h"
 #include "mockOsada.h"
-#include <commons/collections/list.h>
-#include <commons/collections/dictionary.h>
 
 
-int mainMock(int argc, char *argv[]){
+
+int main(int argc, char *argv[]){
 	int archivoID = obtenerIDDelArchivo(argv[1]);
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
@@ -19,14 +18,29 @@ int mainMock(int argc, char *argv[]){
 	setearConstantesDePosicionDeOsada(osadaHeaderFile);
 
 
-	t_bitarray *bitMap = obtenerBitmap(osada, osadaHeaderFile);
+	//t_bitarray *bitMap = obtenerBitmap();
+	obtenerBitmap();
+
 	osada_file *tablaDeArchivo = obtenerTablaDeArchivos(osada, osadaHeaderFile);
-	int *tablaDeAsignacion = obtenerTablaDeAsignacion(osada, osadaHeaderFile);
+	int *tablaDeAsignacion = obtenerTablaDeAsignacion();
 	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
+
+	//contarBloques(osada, osadaHeaderFile, bitMap);
+	crearUnArchivo("hola mundo\n", 128);
 
 	//dameTodosLosDirectorios(tablaDeArchivo);
 	//dameTodosLosArchivosRegulares(tablaDeArchivo);
 	//dameTodosLosBorrados(tablaDeArchivo);
+	//dameTodosLosOtrosEstados(tablaDeArchivo);
+
+	//crearArbolAPartirDelPadre(tablaDeArchivo, 65535);
+
+	//t_list unaLista = crearArbolAPartirDelPadre(tablaDeArchivo, 0); //METER TODO EN UNA LISTA, SERIALIZAR E ENVIAR
+	//char *altoPaquete = serializeListaBloques(unaLista);
+	//sendMessage(&serverData->socketClient, altoPaquete, sizeof(altoPaquete));
+
+	//encontrarArbolPadre(tablaDeArchivo, 140);
+	//printf("bytes libres: %i\n",bytesLibres());
 
 	/*
 	t_dictionary *dirDicRoot = dictionary_create();
@@ -41,11 +55,14 @@ int mainMock(int argc, char *argv[]){
 	//021.txt
 	//"large.txt" - basic
 	//archivo - basic
-	osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "README.txt");
+	//special.mp4 - 138
+	//osada_block_pointer posicion = buscarArchivo(tablaDeArchivo, "README.txt");
 	//printf("posicion del primer bloque: %i\n", posicion);
 
-	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, posicion);
-	verContenidoDeArchivo(conjuntoDeBloquesDelArchivo, osada);
+	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, posicion);
+	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, 31216);
+
+	verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
 
 
 	//mock_setearTamanioDelArchivo(tamanioDelArchivo);
@@ -58,7 +75,7 @@ int mainMock(int argc, char *argv[]){
 
 	printf("\n************TERMINO TODO************\n");
 
-	free(bitMap);
+	//free(bitMap);
 	//free(osadaHeaderFile);
 	//free(tablaDeArchivo);
 

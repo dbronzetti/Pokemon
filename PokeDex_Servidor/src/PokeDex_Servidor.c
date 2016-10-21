@@ -185,7 +185,18 @@ void processMessageReceived(void *parameter){
 
 		if ( receivedBytes > 0 ){
 
+			printf("tamaño mensaje : %d\n",messageSize);
+			char* message= malloc(messageSize);
+			receivedBytes = receiveMessage(&serverData->socketClient, message, messageSize);
+			printf("mensaje : %s\n",message);
+
+			message = "pikachu2\0";
+			printf("Envio: %s\n",message);
+
+			sendMessage(&serverData->socketClient, message, 9);
 			//Receive process from which the message is going to be interpreted
+
+			/*
 			enum_processes fromProcess;
 			receivedBytes = receiveMessage(&serverData->socketClient, &fromProcess, sizeof(fromProcess));
 
@@ -204,7 +215,7 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 			}
-
+			*/
 		}else if (receivedBytes == 0 ){
 			//The client is down when bytes received are 0
 			log_error(logPokeDexServer,"The client went down while receiving! - Please check the client '%d' is down!", serverData->socketClient);

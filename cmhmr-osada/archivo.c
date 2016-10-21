@@ -5,12 +5,14 @@
  *  Created on: 3/10/2016
  *      Author: utnso
  */
+/*
 #include <commons/collections/list.h>
 #include <commons/string.h>
 
 #include "osada.h"
 
-unsigned char *osada;
+unsigned char *OSADA;
+
 
 void _iterarBloques(int bloque){
 	printf("el proximo: %i\n", bloque);
@@ -66,10 +68,15 @@ osada_block_pointer buscarArchivo(osada_file *tablaDeArchivo, char *nombre){
 
 	for (pos=0; pos <= 2047; pos++){
 		if ((posicion = devolverBloque(tablaDeArchivo[pos],  nombre)) != -666){
-			printf("enbcontro>! , %i\n", pos);
+			printf("encontro>! , %i\n", pos);
 			return posicion;
 		};
 	}
 	return posicion;
 }
 
+void crearUnArchivo(void *contenido, int tamanio){
+	//si el contenido del archivo es suficiente para guardar en el osada
+
+}
+*/

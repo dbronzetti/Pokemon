@@ -30,13 +30,19 @@ DIR *dipPokenest;
 struct dirent *ditPokenest;
 DIR *dipPokemones;
 struct dirent *ditPokemones;
-t_list* listaDePokenest;
 int semaforo_wait;
+t_list* listaDePokenest;
 t_list* items;
 t_list* listaDeEntrenadores;
 t_queue* colaDeListos;
 t_queue* colaDeBloqueados;
 pthread_mutex_t setFDmutex;
+pthread_mutex_t setEntrenadoresMutex;
+pthread_mutex_t colaDeListosMutex;
+pthread_mutex_t colaDeBloqueadosMutex;
+pthread_mutex_t itemsMutex;
+pthread_mutex_t listaDePokenestMutex;
+
 
 // Estructuras
 typedef struct {
@@ -68,6 +74,7 @@ typedef struct {
 	char pokemonD; //pokemon deseado por el entrenador;
 	t_list* listaDePokemonesCapturados;
 	int mandoMsj;
+	int seEstaMoviendo;
 } t_entrenador;
 
 // Funciones de conexion
@@ -86,5 +93,7 @@ void crearEntrenadorYDibujar(char simbolo, int socket);
 bool igualarACaracterCondicion(void* paramatrer);
 void eliminarEntrenador(char simbolo);
 void planificar();
+char* convertirPosicionesAString(int posX, int posY);
+void moverEntrenador(t_entrenador* entrenador);
 
 #endif /* MAPA_H_ */

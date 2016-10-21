@@ -8,7 +8,7 @@
 #include <arpa/inet.h> //inet_addr
 #include <unistd.h>    //write
 
-int main(int argc , char *argv[])
+int mainMock(int argc , char *argv[])
 {
     int socket_desc , client_sock , c , read_size;
     struct sockaddr_in server , client;
