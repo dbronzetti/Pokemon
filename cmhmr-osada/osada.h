@@ -59,17 +59,19 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 #endif __OSADA_H__
 
 unsigned char *inicializarOSADA(int archivoID);
-osada_header *obtenerHeader(unsigned char *osada);
+osada_header *obtenerHeader();
 t_bitarray *obtenerBitmap();
-osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHeaderFile);
+osada_file *obtenerTablaDeArchivos();
 int *obtenerTablaDeAsignacion();
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile);
 
 int setearTamanioDelArchivo(int archivoID);
 int obtenerIDDelArchivo(char *ruta);
+void setearConstantesDePosicionDeOsada();
 
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento);
+osada_block_pointer buscarArchivo(char *nombre);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER= 0;
 static int TAMANIO_DEL_BITMAP= 0;
@@ -88,6 +90,7 @@ static int BYTES_OCUPADOS = 0;
 
 static unsigned char *OSADA;
 static osada_header *HEADER;
-t_bitarray *BITMAP;
+static t_bitarray *BITMAP;
 static int DATA_BLOCKS;
 static int *ARRAY_TABLA_ASIGNACION;
+static osada_file *TABLA_DE_ARCHIVOS;

@@ -75,14 +75,14 @@ void mostrarStructDeArchivos(osada_file tablaDeArchivo, int pos){
 	printf("Termina: %i****************\n",pos);
 }
 
-osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHeaderFile){
+osada_file *obtenerTablaDeArchivos(){
 	osada_file *tablaDeArchivo = malloc(TAMANIO_TABLA_DE_ARCHIVOS);
 
 	//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
-	memcpy(tablaDeArchivo, &osada[DESDE_PARA_TABLA_DE_ARCHIVOS ], TAMANIO_TABLA_DE_ARCHIVOS);
+	memcpy(tablaDeArchivo, &OSADA[DESDE_PARA_TABLA_DE_ARCHIVOS ], TAMANIO_TABLA_DE_ARCHIVOS);
 
 	//mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
-
+	TABLA_DE_ARCHIVOS = tablaDeArchivo;
 	return tablaDeArchivo;
 }
 
@@ -147,9 +147,9 @@ void mostrarHeader(osada_header *osadaHeaderFile){
 	printf("padding: %s\n",   osadaHeaderFile->padding);
 }
 
-osada_header *obtenerHeader(unsigned char *osada){
+osada_header *obtenerHeader(){
 	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
-	memcpy(osadaHeaderFile, osada, OSADA_BLOCK_SIZE);
+	memcpy(osadaHeaderFile, OSADA, OSADA_BLOCK_SIZE);
 
 
 	mostrarHeader(osadaHeaderFile);
@@ -170,17 +170,17 @@ int obtenerIDDelArchivo(char *ruta){
 	printf("ruta: %s\n", ruta);
 	return open(ruta, O_RDWR, (mode_t)0777);
 }
-void setearConstantesDePosicionDeOsada(osada_header *osadaHeaderFile){
+void setearConstantesDePosicionDeOsada(){
 	TAMANIO_QUE_OCUPA_EL_HEADER = OSADA_BLOCK_SIZE;
-	TAMANIO_DEL_BITMAP = osadaHeaderFile->bitmap_blocks * OSADA_BLOCK_SIZE;
+	TAMANIO_DEL_BITMAP = HEADER->bitmap_blocks * OSADA_BLOCK_SIZE;
 	TAMANIO_TABLA_DE_ARCHIVOS =  2048 * sizeof(osada_file);
-	TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4;
-	TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION_EN_BLOQUES = (osadaHeaderFile->fs_blocks - 1 - osadaHeaderFile->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
-	TAMANIO_QUE_OCUPA_EL_BLOQUE_DE_DATOS = OSADA_BLOCK_SIZE* osadaHeaderFile->data_blocks;
-	DATA_BLOCKS= (osadaHeaderFile->fs_blocks - osadaHeaderFile->data_blocks)*64;
+	TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION = (HEADER->fs_blocks - 1 - HEADER->bitmap_blocks - 1024) * 4;
+	TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION_EN_BLOQUES = (HEADER->fs_blocks - 1 - HEADER->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
+	TAMANIO_QUE_OCUPA_EL_BLOQUE_DE_DATOS = OSADA_BLOCK_SIZE* HEADER->data_blocks;
+	DATA_BLOCKS= (HEADER->fs_blocks - HEADER->data_blocks)*64;
 	//dataBlocks=  osadaHeaderFile->allocations_table_offset + tamanioQueOcupaLaTablaDeAsignacionEnBloques;
 
-	printf("osadaHeaderFile->fs_blocks - osadaHeaderFile->data_blocks: %i\n",osadaHeaderFile->fs_blocks - osadaHeaderFile->data_blocks);
+	printf("HEADER->fs_blocks - HEADER->data_blocks: %i\n",HEADER->fs_blocks - HEADER->data_blocks);
 	printf("dataBlocks: %i\n",DATA_BLOCKS);
 
 	DESDE_PARA_BITMAP = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
@@ -282,12 +282,12 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
 	return -666;
 }
 
-osada_block_pointer buscarArchivo(osada_file *tablaDeArchivo, char *nombre){
+osada_block_pointer buscarArchivo(char *nombre){
 	int pos=0;
 	osada_block_pointer posicion = 0;
 
 	for (pos=0; pos <= 2047; pos++){
-		if ((posicion = devolverBloque(tablaDeArchivo[pos],  nombre)) != -666){
+		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos],  nombre)) != -666){
 			printf("encontro>! , %i\n", pos);
 			return posicion;
 		};
@@ -304,9 +304,42 @@ int elTamanioDelArchivoEntraEnElOsada(int tamanio){
  return tamanio<=BYTES_LIBRES;
 }
 
-void escribirEnLaTablaDeArchivos(){
+void escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block){
+	osada_file *tablaDeArchivo = obtenerTablaDeArchivos();
+	int k=0;
 
-};
+	for (k=0; k <= 2047; k++){
+		//printf("EN EL FOR\n");
+		if (tablaDeArchivo[k].state == DELETED){
+			printf("EN EL if\n");
+				tablaDeArchivo[k].state = REGULAR;
+				printf("state\n");
+				tablaDeArchivo[k].parent_directory = parent_directory;
+				printf("parent_directory\n");
+				//printf("fname: %s\n", fname);
+				printf("sizeof(fname): %i\n", strlen(fname));
+				strcpy(tablaDeArchivo[k].fname, "\0");
+				strcat(tablaDeArchivo[k].fname, fname);
+
+				printf("fname: %s\n", fname);
+				tablaDeArchivo[k].file_size = file_size;
+				printf("file_size\n");
+				tablaDeArchivo[k].lastmod = 0;
+				printf("lastmod\n");
+				tablaDeArchivo[k].first_block= first_block;
+				printf("first_block\n");
+				break;
+
+		}
+		//printf("afuera del if\n");
+	}
+	printf("k: %i\n", k);
+	printf("tablaDeArchivo[k].fname: %s\n", tablaDeArchivo[k].fname);
+
+	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, tablaDeArchivo, TAMANIO_TABLA_DE_ARCHIVOS);
+	printf("guarda osada 2 fuera\n");
+
+}
 
 t_list* obtenerLosIndicesDeLosBloquesDisponibles(int cantidadBloques){
 	t_bitarray *bitMap = obtenerBitmap();
@@ -380,85 +413,35 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 
 }
 
-void _test(char* bloquePos, char* contenido){
-	printf("_test - Bloque Pos: %i\n", atoi(bloquePos));
-	printf("_test - contenido: %s\n",contenido);
 
-
-}
 
 void prepararBloquesDeDatos(t_list* listado, char *contenido){
-	int cantidadDeElemento = list_size(listado);
+	int cantidadDeBloques = list_size(listado);
 	int bloquePos;
 	int i;
 	t_dictionary *dicBloqueDeDatos = dictionary_create();
-//	t_dictionary *dicBloqueDeDatos2 = dictionary_create();
 
-	printf("cantidadDeElemento: %i\n",cantidadDeElemento);
 
-	for(i=0;i<cantidadDeElemento;i++){
+	for(i=0;i<cantidadDeBloques;i++){
 		char *bloqueConDatos = malloc(64);
 		char *bloquePosStr;
 
 		bloquePos = list_get(listado, i);
 		bloquePosStr = string_itoa(bloquePos);
 
-		printf("prepararBloquesDeDatos - bloquePos: %i\n",bloquePos);
-
 		bloqueConDatos = string_itoa(i);
-
-		printf("prepararBloquesDeDatos - bloqueConDatos: %i\n",i);
 
 		strcat(bloqueConDatos, "hola");
 
-		printf("prepararBloquesDeDatos - bloquePos: %i\n",bloquePos);
-		printf("prepararBloquesDeDatos - bloqueConDatos: %s\n",bloqueConDatos);
-
 		dictionary_put(dicBloqueDeDatos, bloquePosStr, bloqueConDatos);
-		printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos, bloquePosStr));
-
 	}
+
 	dictionary_iterator(dicBloqueDeDatos, (void*) _guardarEnTablaDeDatos);
-
-/*	printf("**************************************************************************\n");
-	char *bloquePosStr=malloc(sizeof(int));
-	char* newString;
-	char *bloqueConDatos2 = malloc(64);
-	for(i=0;i <=4;i++){
-//		char *bloqueConDatos2 = malloc(64);
-	     newString = string_itoa(i);
-
-		strcpy(bloqueConDatos2, "");
-		strcat(bloqueConDatos2, newString);
-		strcat(bloqueConDatos2, "bloqueConDatos");
-
-		//dictionary_put(dicBloqueDeDatos2, "1", "hola1");
-		dictionary_put(dicBloqueDeDatos2, newString, bloqueConDatos2);
-
-		printf("%s, %i\n",newString, strcmp(newString,"1") );
-		printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, newString));
-	}
-	//dictionary_put(dicBloqueDeDatos2, "3", "3bloqueConDatos");
-	//printf("%s, %i\n",newString, sizeof(newString));
-
-
-	printf("********************\n");
-
-	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "0"));
-	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "1"));
-	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "2"));
-	printf("dictionary_get: %s\n", dictionary_get(dicBloqueDeDatos2, "3"));
-
-	dictionary_iterator(dicBloqueDeDatos2, (void*) _test);
-
-	free(bloqueConDatos);
-	*/
-	//free(bloqueConDatos2);
 }
 
 
 
-void crearUnArchivo(char *contenido, int tamanio){
+void crearUnArchivo(char *contenido, int tamanio, char* fname){
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listado;
 	int i=0;
@@ -477,7 +460,7 @@ void crearUnArchivo(char *contenido, int tamanio){
 		for(i=0;i<cantidadDeElemento;i++){
 			bloquePos = list_get(listado, i);
 			bloqueSig = list_get(listado, i+1);
-			//printf("bloquePos: %i\n", bloquePos);
+			printf("bloquePos: %i\n", bloquePos);
 
 			if(bloqueSig==0){
 				bloqueSig =-1;
@@ -498,6 +481,7 @@ void crearUnArchivo(char *contenido, int tamanio){
 		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
 		prepararBloquesDeDatos(listado, contenido);
+		escribirEnLaTablaDeArchivos(666, tamanio,fname,list_get(listado, 0));
 	}
 
 
@@ -567,10 +551,10 @@ void dameTodosLosDirectorios(osada_file *tablaDeArchivo){
 	}
 }
 
-void dameTodosLosArchivosRegulares(osada_file *tablaDeArchivo){
+void dameTodosLosArchivosRegulares(){
 	int pos=0;
 	for (pos=0; pos <= 2047; pos++){
-		mostrarLosRegulares(tablaDeArchivo[pos], pos);
+		mostrarLosRegulares(TABLA_DE_ARCHIVOS[pos], pos);
 	}
 }
 
@@ -715,11 +699,11 @@ void crearArbolAPartirDelPadre(osada_file *tablaDeArchivo, int padre){
 
 }
 
-void encontrarArbolPadre(osada_file *tablaDeArchivo, int padre){
+void encontrarArbolPadre(int padre){
 	int pos=0;
 
 	//for (pos=0; pos <= 2047; pos++){
-		reconocerDirectorioPadre(&tablaDeArchivo[pos], pos, padre);
+		reconocerDirectorioPadre(&TABLA_DE_ARCHIVOS[pos], pos, padre);
 	//}
 
 }
