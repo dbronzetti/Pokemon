@@ -20,6 +20,9 @@
 //Logger
 t_log* logEntrenador;
 
+//Mutex
+pthread_mutex_t turnoMutex;
+
 //Metadata
 t_metadataEntrenador metadataEntrenador;
 t_metadataMapa metadataMapa;

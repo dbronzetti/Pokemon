@@ -53,20 +53,19 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 	} else 	{
 
 		//@TODO: Esta funcion llama al socket y pide el bloque
-		t_list* nodos =  obtenerTablaDeArchivos(path);
-		int i;
-		if(nodos!=NULL){
-			for (i = 0; i < nodos->elements_count; i++) {
-				osada_file nodo = list_get(nodos,i);
-				if (nodo.state == 1){
-					stbuf->st_mode = S_IFREG | 0777;
-					stbuf->st_nlink = 1;
-					stbuf->st_size = nodo.file_size;
-				}
-				else if (nodo.state == 2) {
-					stbuf->st_mode = S_IFDIR | 0777;
-					stbuf->st_nlink = 1;
-				}
+		osada_file* nodo = obtenerTablaDeArchivos(path);
+		if (nodo != NULL)
+		{
+			if (nodo->state == 1)
+			{
+				stbuf->st_mode = S_IFREG | 0777;
+				stbuf->st_nlink = 1;
+				stbuf->st_size = nodo->file_size;
+			}
+			else if (nodo->state == 2)
+			{
+				stbuf->st_mode = S_IFDIR | 0777;
+				stbuf->st_nlink = 1;
 			}
 		} else {
 			res = -ENOENT;
@@ -81,13 +80,13 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 	(void) offset;
 
 	int i;
-	t_list* nodos = obtenerTablaDeArchivos(path);
+	t_list* nodos = obtenerDirectorio(path);
 
 	if(nodos!=NULL){
 		for (i = 0; i < nodos->elements_count; i++) 		{
-			osada_file nodo = list_get(nodos,i);
-			if ((nodo.state != 0)){
-				filler(buffer, nodo.fname, NULL, 0);
+			osada_file *nodo = list_get(nodos,i);
+			if ((nodo->state != 0)){
+				filler(buffer, nodo->fname, NULL, 0);
 			}
 		}
 	}else{
@@ -195,7 +194,6 @@ static struct fuse_operations xmp_oper = {
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *disco = string_new();
-	int socketPokeServer = 0;
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
@@ -308,5 +306,28 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 	return exitcode;
 }
 
+t_list * obtenerDirectorio(char* path){
+	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+	t_list *listaBloques = list_create();
 
+	string_append(&path, "\0");
+	//1) send path length (+1 due to \0)
+	int pathLength = strlen(path) + 1;
+	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+	//2) send path
+	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+
+	//Receive message size
+	int messageSize = 0;
+	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+
+	if (receivedBytes > 0){
+		char *messageRcv = malloc(sizeof(messageSize));
+		receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+		deserializeListaBloques(listaBloques,messageRcv);
+	}
+
+	return listaBloques;
+
+}
 

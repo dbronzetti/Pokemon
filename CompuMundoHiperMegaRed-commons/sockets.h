@@ -33,7 +33,8 @@ typedef enum{
 } enum_processes;
 
 typedef enum{
-	NUEVO=0,
+	SIN_MENSAJE = -1,
+	NUEVO,
 	CONOCER,
 	IR,
 	CAPTURAR,
