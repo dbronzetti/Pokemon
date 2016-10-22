@@ -1,11 +1,14 @@
 #include <stdint.h>
 #include <stdio.h>
-#include <commons/bitarray.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <commons/bitarray.h>
+#include <commons/collections/list.h>
+#include <commons/string.h>
+#include <commons/collections/dictionary.h>
 
 #ifndef __OSADA_H__
 #define __OSADA_H__
@@ -56,26 +59,38 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 #endif __OSADA_H__
 
 unsigned char *inicializarOSADA(int archivoID);
-osada_header *obtenerHeader(unsigned char *osada);
-t_bitarray *obtenerBitmap(unsigned char *osada, osada_header *osadaHeaderFile);
-osada_file *obtenerTablaDeArchivos(unsigned char *osada, osada_header *osadaHeaderFile);
-int *obtenerTablaDeAsignacion(unsigned char *osada, osada_header *osadaHeaderFile);
+osada_header *obtenerHeader();
+t_bitarray *obtenerBitmap();
+osada_file *obtenerTablaDeArchivos();
+int *obtenerTablaDeAsignacion();
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile);
 
 int setearTamanioDelArchivo(int archivoID);
 int obtenerIDDelArchivo(char *ruta);
+void setearConstantesDePosicionDeOsada();
 
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
+void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento);
+osada_block_pointer buscarArchivo(char *nombre);
 
-static int tamanioQueOcupaElHeader= 0;
-static int tamanioDelBitMap= 0;
-static int tamanioTablaDeArchivos= 0;
-static int tamanioQueOcupaLaTablaDeAsignacion= 0;
-static int tamanioQueOcupaLaTablaDeAsignacionEnBloques = 0;
-static int tamanioQueOcupaElBloqueDeDatos = 0;
-static int tamanioDelArchivoOSADAEnBytes = 0;
+static int TAMANIO_QUE_OCUPA_EL_HEADER= 0;
+static int TAMANIO_DEL_BITMAP= 0;
+static int TAMANIO_TABLA_DE_ARCHIVOS= 0;
+static int TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION= 0;
+static int TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION_EN_BLOQUES = 0;
+static int TAMANIO_QUE_OCUPA_EL_BLOQUE_DE_DATOS = 0;
+static int TAMANIO_DEL_ARCHIVO_OSADA_EN_BYTES = 0;
 
-static int desdeParaBloqueDeDatos= 0;
-static int desdeParaBitmap= 0;//LO QUE OCUPA EL HEADER
-static int desdeParaTablaDeArchivos= 0;
-static int desdeParaTablaAsigancion= 0;
+static int DESDE_PARA_BLOQUE_DE_DATOS= 0;
+static int DESDE_PARA_BITMAP= 0;//LO QUE OCUPA EL HEADER
+static int DESDE_PARA_TABLA_DE_ARCHIVOS = 0;
+static int DESDE_PARA_TABLA_ASIGNACION = 0;
+static int BYTES_LIBRES = 0;
+static int BYTES_OCUPADOS = 0;
+
+static unsigned char *OSADA;
+static osada_header *HEADER;
+static t_bitarray *BITMAP;
+static int DATA_BLOCKS;
+static int *ARRAY_TABLA_ASIGNACION;
+static osada_file *TABLA_DE_ARCHIVOS;
