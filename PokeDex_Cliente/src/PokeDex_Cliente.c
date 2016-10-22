@@ -6,7 +6,6 @@
 
 #include "PokeDex_Cliente.h"
 
-const char *full(const char *path) /* Anade un punto de montaje */;//Esto da un warning no importa!
 const char *full(const char *path) /* Anade un punto de montaje */
 {
 
@@ -178,29 +177,24 @@ static int fuse_rename (const char *oldname, const char *newName){
 static struct fuse_operations xmp_oper = {
     .init       = fuse_init,
     .getattr	= fuse_getattr,
-    .rmdir		= fuse_rmdir,
     .readdir	= fuse_readdir,
-    .unlink		= fuse_unlink,
-    .open		= fuse_open,
     .mkdir		= fuse_mkdir,
+    .unlink		= fuse_unlink,
+    .rmdir		= fuse_rmdir,
     .rename		= fuse_rename,
+    .open		= fuse_open,
+    .read		= fuse_read,
     .write		= fuse_write,
-    .read		= fuse_read
-//    .access		= fuse_access,
-//    .readlink	= fuse_readlink,
-//    .mknod		= fuse_mknod,
-//    .link		= fuse_link,
-//    .chmod		= fuse_chmod,
-//    .chown		= fuse_chown,
-//    .statfs		= fuse_statfs,
 
-//	#ifdef HAVE_SETXATTR
-//		.setxattr	= fuse_setxattr,
-//		.getxattr	= fuse_getxattr,
-//		.listxattr	= fuse_listxattr,
-//		.removexattr= fuse_removexattr,
-//	#endif
+	#ifdef HAVE_SETXATTR
+		.setxattr	= fuse_setxattr,
+		.getxattr	= fuse_getxattr,
+		.listxattr	= fuse_listxattr,
+		.removexattr= fuse_removexattr,
+	#endif
 };
+
+
 
 
 

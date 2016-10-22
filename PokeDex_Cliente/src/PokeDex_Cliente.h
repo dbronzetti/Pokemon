@@ -29,16 +29,16 @@ t_list * obtenerDirectorio(char* path);
 #endif /* POKEDEX_CLIENTE_H_ */
 
 //Librerias y estructuras pra el FUSE
-#include <asm-generic/errno-base.h>
-#include <bits/socket_type.h>
 #include <fuse/fuse.h>
+#include <fuse/fuse_common.h>
 #include <fuse/fuse_compat.h>
-#include <netinet/in.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <time.h>
 
 #define FUSE_USE_VERSION 26
-#define DIRECTORIO_RAIZ "/"
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -63,7 +63,7 @@ t_list * obtenerDirectorio(char* path);
 #endif
 
 #define PATHLEN_MAX 1024
-
+#define DIRECTORIO_RAIZ "/"
 
 //#include "cache.c"
 
@@ -72,8 +72,17 @@ static char cached_mountpoint[PATHLEN_MAX+1] ={ '\0' };
 static int save_dir;
 
 #ifdef NEVER
-//TODO ver que pasa aca
-#endif
 
 static char *local=".";
+static inline const char *rel(const char *path)
+{
+  if(strcmp(path,"/")==0)
+    return local;
+  else
+    return (path+1);
+}
+#endif
+
+const char *full(const char *path); /* Anade un punto de montaje */;//Esto da un warning no importa!
+
 // Fin de cosillas para el FUSE
