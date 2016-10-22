@@ -7,7 +7,6 @@
 #include "Entrenador.h"
 
 int socketMapa = 0;
-int llegoMsj = 0;
 t_queue* colaDeObjetivos;
 enum_messages turno;
 char* posicionPokenest;
@@ -18,6 +17,7 @@ int main(int argc, char **argv) {
 	char *pokedex = string_new();
 	pthread_t hiloSignal; //un hio para detectar la signals que se le envia
 	pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
+	pthread_mutex_init(&turnoMutex, NULL);
 	int ganoMapa;
 
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
@@ -60,7 +60,6 @@ int main(int argc, char **argv) {
 
 	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
 
-
 	i = 0;
 	for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
 		char* mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
@@ -86,7 +85,6 @@ int main(int argc, char **argv) {
 
 			pthread_join(hiloSignal, NULL);
 			pthread_join(hiloEscuchar, NULL);
-
 
 		} else {
 			log_error(logEntrenador,
@@ -273,7 +271,6 @@ void desconectarse() {
 	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
 	sleep(1); //dormimos un segundo para darle tiempo al mapa de cerrar el socket correctamente y no joder el select.
 	close(socketMapa);
-	exit(0);
 }
 
 void jugar() {
@@ -281,40 +278,48 @@ void jugar() {
 	while (queue_size(colaDeObjetivos)) //mientras queden objetivos se sigue jugando en el mapa
 	{
 		char* objetivoActual;
-		if (llegoMsj!=0) {
+		pthread_mutex_lock(&turnoMutex);
+		if (turno != SIN_MENSAJE) {
 			switch (turno) {
 			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
 				log_info(logEntrenador, "Trainer send the id of the pokenest");
 				objetivoActual = queue_pop(colaDeObjetivos);
 				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
-				llegoMsj = 0;
+				log_info(logEntrenador, "Conocer: Se manda: %s",
+						objetivoActual);
+
 				break;
 			}
 
 			case CONOCER: {	// no se hace nada...
 				log_info(logEntrenador, "Trainer receive the position");
-		//		sendClientMessage(&socketMapa, posicionPokenest, IR);
-				llegoMsj = 0;
+				//		sendClientMessage(&socketMapa, posicionPokenest, IR);
+
 				break;
 			}
 
 			case LLEGO: {	// si llegamos le pedimos que lo capture
-				log_info(logEntrenador, "Trainer ask to Mapa capture the pokemon");
+				log_info(logEntrenador,
+						"Trainer ask to Mapa capture the pokemon");
 				sendClientMessage(&socketMapa, objetivoActual, CAPTURAR);
-				llegoMsj = 0;
+
 				break;
 			}
 
-			case MOVETE: {	// si estamos yendo a la pokenest le pedimos seguir moviendonos
-				log_info(logEntrenador, "Trainer ask to mapa to move to the pokenest");
+			case MOVETE: {// si estamos yendo a la pokenest le pedimos seguir moviendonos
+				log_info(logEntrenador,
+						"Trainer ask to mapa to move to the pokenest");
 				sendClientMessage(&socketMapa, objetivoActual, IR);
-				llegoMsj = 0;
+				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
+
 				break;
 			}
 
 			}
+			turno = SIN_MENSAJE;
 
 		}
+		pthread_mutex_unlock(&turnoMutex);
 
 	}
 
@@ -347,7 +352,8 @@ void recibirMsjs() {
 			//Receive message using the size read before
 			memcpy(&messageSize, messageRcv, sizeof(int));
 			messageRcv = realloc(messageRcv, messageSize);
-			receivedBytes = receiveMessage(&socketMapa, messageRcv, messageSize);
+			receivedBytes = receiveMessage(&socketMapa, messageRcv,
+					messageSize);
 
 			//starting handshake with client connected
 			t_Mensaje *message = malloc(sizeof(t_Mensaje));
@@ -358,8 +364,9 @@ void recibirMsjs() {
 			switch (message->tipo) {
 			case LIBRE: { //msj que envia el mapa para indicar que comenzo un turno libre
 				log_info(logEntrenador, "New action begins", message->mensaje);
-				llegoMsj = 1;
+				pthread_mutex_lock(&turnoMutex);
 				turno = LIBRE;
+				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
 
@@ -367,8 +374,9 @@ void recibirMsjs() {
 				log_info(logEntrenador,
 						"New action begins: trainer came to pokenest: %s\n",
 						message->mensaje);
-				llegoMsj = 1;
+				pthread_mutex_lock(&turnoMutex);
 				turno = LLEGO;
+				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
 
@@ -376,8 +384,9 @@ void recibirMsjs() {
 				log_info(logEntrenador,
 						"New action begins: the position of the pokenest is: %s\n",
 						message->mensaje);
-				llegoMsj = 1;
+				pthread_mutex_lock(&turnoMutex);
 				turno = CONOCER;
+				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
 
@@ -385,8 +394,9 @@ void recibirMsjs() {
 				log_info(logEntrenador,
 						"New action begins: trainer has not yet reached his position: %s\n",
 						message->mensaje);
-				llegoMsj = 1;
+				pthread_mutex_lock(&turnoMutex);
 				turno = MOVETE;
+				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
 
@@ -404,11 +414,13 @@ void recibirMsjs() {
 					"The client went down while receiving! - Please check the client '%d' is down!\n",
 					socketMapa);
 			close(socketMapa);
+			break;
 		} else {
 			log_error(logEntrenador,
 					"Error - No able to received - Error receiving from socket '%d', with error: %d\n",
 					socketMapa, errno);
 			close(socketMapa);
+			break;
 		}
 	}
 }
