@@ -49,7 +49,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 	else
 	{
 		//@TODO: Esta funcion llama al socket y pide el bloque
-		osada_file nodo = obtener_bloque_archivo(path);
+		osada_file* nodo = obtenerTablaDeArchivos(path);
 		if (nodo != NULL)
 		{
 			if (nodo.state == 1)
@@ -78,12 +78,13 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 	(void) offset;
 
 	int i;
-	osada_file* nodos = obtenerTablaDeArchivos(path);
+	t_list* nodos = obtenerTablaDeArchivos(path);
 
 	if(nodos!=NULL){
-		for (i = 0; i < 1024; i++) 		{
-			if ((nodos[i].state != 0)){
-				filler(buffer, nodos[i].fname, NULL, 0);
+		for (i = 0; i < nodos->elements_count; i++) 		{
+			osada_file nodo = list_get(nodos,i);
+			if ((nodo.state != 0)){
+				filler(buffer, nodo.fname, NULL, 0);
 			}
 		}
 	}else{
