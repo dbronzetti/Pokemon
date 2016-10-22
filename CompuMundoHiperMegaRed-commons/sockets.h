@@ -45,15 +45,16 @@ typedef enum{
 } enum_messages;
 
 typedef enum{
-	READ=0,
-	CREATE_FILE,
-	WRITE_FILE,
-	MODIFY_FILE,
-	DELETE_FILE,
-	CREATE_DIR,
-	CREATE_SUBDIR,
-	DELETE_DIR,
-	RENAME_FILE
+	FUSE_INIT=0,
+    FUSE_GETATTR,
+    FUSE_RMDIR,
+    FUSE_READDIR,
+    FUSE_UNLINK,
+    FUSE_OPEN,
+    FUSE_MKDIR,
+    FUSE_RENAME,
+    FUSE_WRITE,
+    FUSE_READ
 } enum_FUSEOperations;
 
 typedef struct{

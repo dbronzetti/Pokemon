@@ -33,12 +33,6 @@ static void *fuse_init(void)
   return NULL;
 }
 
-t_list* obtenerTablaDeArchivos(char* path){
-	t_list* resultado;
-
-	return resultado;
-}
-
 static int fuse_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
@@ -138,9 +132,28 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 
 static int fuse_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
-	osada_file nodos = obtener_bloque_archivo(path);
+		int exitCode = EXIT_FAILURE; //DEFAULT Failure
 
-	//@TODO: ver implementacion.
+		//0) Send Fuse Operations
+		exitCode = sendMessage(&socketPokeServer, (void*)FUSE_READ , sizeof(enum_FUSEOperations));
+
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+
+		//Receive message size
+		int messageSize = 0;
+		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+
+		if (receivedBytes > 0){
+			char *messageRcv = malloc(sizeof(messageSize));
+			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+			memcpy(buf, messageRcv, messageSize);
+		}
+
 	return 0;
 }
 
@@ -172,7 +185,7 @@ static struct fuse_operations xmp_oper = {
     .mkdir		= fuse_mkdir,
     .rename		= fuse_rename,
     .write		= fuse_write,
-    .read		= fuse_read,
+    .read		= fuse_read
 //    .access		= fuse_access,
 //    .readlink	= fuse_readlink,
 //    .mknod		= fuse_mknod,
@@ -181,12 +194,12 @@ static struct fuse_operations xmp_oper = {
 //    .chown		= fuse_chown,
 //    .statfs		= fuse_statfs,
 
-	#ifdef HAVE_SETXATTR
-		.setxattr	= fuse_setxattr,
-		.getxattr	= fuse_getxattr,
-		.listxattr	= fuse_listxattr,
-		.removexattr= fuse_removexattr,
-	#endif
+//	#ifdef HAVE_SETXATTR
+//		.setxattr	= fuse_setxattr,
+//		.getxattr	= fuse_getxattr,
+//		.listxattr	= fuse_listxattr,
+//		.removexattr= fuse_removexattr,
+//	#endif
 };
 
 
@@ -309,6 +322,9 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 t_list * obtenerDirectorio(char* path){
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	t_list *listaBloques = list_create();
+
+	//0) Send Fuse Operations
+	exitCode = sendMessage(&socketPokeServer, (void*)FUSE_READDIR , sizeof(enum_FUSEOperations));
 
 	string_append(&path, "\0");
 	//1) send path length (+1 due to \0)
