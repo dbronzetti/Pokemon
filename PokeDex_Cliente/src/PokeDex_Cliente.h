@@ -17,12 +17,14 @@
 
 int PORT;
 char *IP_SERVER;
+int socketPokeServer = 0;
 
 //Logger
 t_log* logPokeCliente;
 
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
+t_list * obtenerDirectorio(char* path);
 
 #endif /* POKEDEX_CLIENTE_H_ */
 

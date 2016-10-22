@@ -78,7 +78,7 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 	(void) offset;
 
 	int i;
-	t_list* nodos = obtenerTablaDeArchivos(path);
+	t_list* nodos = obtenerDirectorio(path);
 
 	if(nodos!=NULL){
 		for (i = 0; i < nodos->elements_count; i++) 		{
@@ -192,7 +192,6 @@ static struct fuse_operations xmp_oper = {
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *disco = string_new();
-	int socketPokeServer = 0;
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
@@ -305,5 +304,28 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 	return exitcode;
 }
 
+t_list * obtenerDirectorio(char* path){
+	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+	t_list *listaBloques = list_create();
 
+	string_append(&path, "\0");
+	//1) send path length (+1 due to \0)
+	int pathLength = strlen(path) + 1;
+	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+	//2) send path
+	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+
+	//Receive message size
+	int messageSize = 0;
+	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+
+	if (receivedBytes > 0){
+		char *messageRcv = malloc(sizeof(messageSize));
+		receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+		deserializeListaBloques(listaBloques,messageRcv);
+	}
+
+	return listaBloques;
+
+}
 
