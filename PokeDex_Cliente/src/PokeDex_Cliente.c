@@ -52,13 +52,13 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 		osada_file* nodo = obtenerTablaDeArchivos(path);
 		if (nodo != NULL)
 		{
-			if (nodo.state == 1)
+			if (nodo->state == 1)
 			{
 				stbuf->st_mode = S_IFREG | 0777;
 				stbuf->st_nlink = 1;
-				stbuf->st_size = nodo.file_size;
+				stbuf->st_size = nodo->file_size;
 			}
-			else if (nodo.state == 2)
+			else if (nodo->state == 2)
 			{
 				stbuf->st_mode = S_IFDIR | 0777;
 				stbuf->st_nlink = 1;
@@ -82,9 +82,9 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 
 	if(nodos!=NULL){
 		for (i = 0; i < nodos->elements_count; i++) 		{
-			osada_file nodo = list_get(nodos,i);
-			if ((nodo.state != 0)){
-				filler(buffer, nodo.fname, NULL, 0);
+			osada_file *nodo = list_get(nodos,i);
+			if ((nodo->state != 0)){
+				filler(buffer, nodo->fname, NULL, 0);
 			}
 		}
 	}else{

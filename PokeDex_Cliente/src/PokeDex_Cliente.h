@@ -1,3 +1,4 @@
+/*
  * PokeDex_Cliente.h
  *
  *  Created on: 30/9/2016
@@ -31,7 +32,6 @@ int connectTo(enum_processes processToConnect, int *socketClient);
 #include <fuse/fuse.h>
 #include <fuse/fuse_compat.h>
 #include <netinet/in.h>
-#include <osada.h>
 #include <stddef.h>
 #include <sys/stat.h>
 
@@ -70,6 +70,8 @@ static char cached_mountpoint[PATHLEN_MAX+1] ={ '\0' };
 static int save_dir;
 
 #ifdef NEVER
+//TODO ver que pasa aca
+#endif
 
 static char *local=".";
 // Fin de cosillas para el FUSE
