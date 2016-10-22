@@ -367,8 +367,6 @@ void processMessageReceived(void *parameter) {
 			}
 
 			case CONOCER: {
-				log_info(logMapa, "Trainer want to know the position of: '%s'",
-						message->mensaje);
 				char id_pokemon = message->mensaje[0];
 
 				pthread_mutex_lock(&setEntrenadoresMutex);
@@ -377,21 +375,36 @@ void processMessageReceived(void *parameter) {
 				entrenador->pokemonD = id_pokemon;
 				entrenador->accion = CONOCER;
 				entrenador->mandoMsj = 1;
+				log_info(logMapa,
+						"Trainer: '%c' want to know the position of: '%s'",
+						entrenador->simbolo, message->mensaje);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
 
 				break;
 			}
 
 			case IR: {
-				log_info(logMapa, "Trainer want to go to: '%s'",
-						message->mensaje);
 
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
 						(void*) buscarPorSocket);
-//				entrenador->pokemonD = id_pokemon;
 				entrenador->accion = IR;
 				entrenador->mandoMsj = 1;
+				log_info(logMapa, "Trainer want: '%c' to go to: '%s'",
+						entrenador->simbolo, message->mensaje);
+				pthread_mutex_unlock(&setEntrenadoresMutex);
+
+				break;
+			}
+
+			case CAPTURAR: {
+				pthread_mutex_lock(&setEntrenadoresMutex);
+				t_entrenador* entrenador = list_find(listaDeEntrenadores,
+						(void*) buscarPorSocket);
+				entrenador->accion = CAPTURAR;
+				entrenador->mandoMsj = 1;
+				log_info(logMapa, "Trainer: '%c' want to capture: '%s'",
+						entrenador->simbolo, message->mensaje);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
 
 				break;
@@ -402,9 +415,8 @@ void processMessageReceived(void *parameter) {
 						"Message not allowed. Invalid message '%s' tried to send to MAPA",
 						getProcessString(message->tipo));
 
-				log_error(logMapa,
-						"Se recibio: %s y: %d",
-						message->mensaje, message->tipo);
+				log_error(logMapa, "Se recibio: %s y: %d", message->mensaje,
+						message->tipo);
 
 				close(serverData->socketClient);
 				free(serverData);
@@ -643,13 +655,13 @@ void planificar() {
 
 				sleep(5);
 
-				log_info(logMapa, "Action: %d of trainer : %c", i,
+				log_info(logMapa, "Action: %d of trainer : '%c'", i,
 						entrenador->simbolo);
 
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				if (entrenador->pokemonD == '/') { //sino busca ninguno por el momento le preguntamos cual quiera buscar (movimiento libre)
 					sendClientMessage(&entrenador->socket, "ASD", LIBRE); //no hace falta enviar un string solo un enum, por eso pongo "ASD"
-					log_info(logMapa, "The trainer:%c has free action ",
+					log_info(logMapa, "Trainer: '%c' has free action ",
 							entrenador->simbolo);
 				}
 				pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -662,7 +674,7 @@ void planificar() {
 
 						entrenador->seEstaMoviendo = 0; // si ya llego a la posicion no se esta moviendo mas
 
-						log_info(logMapa, "The trainer:%c came to the pokenest",
+						log_info(logMapa, "Trainer: '%c' came to the pokenest",
 								entrenador->simbolo);
 					}
 				}
@@ -671,7 +683,7 @@ void planificar() {
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				if (entrenador->seEstaMoviendo) { // le pedimos que se mueva
 					log_info(logMapa,
-							"Trainer:%c has not yet reached his position",
+							"Trainer: '%c' has not yet reached his position",
 							entrenador->simbolo);
 					sendClientMessage(&entrenador->socket, "cualquiercosa",
 							MOVETE);
@@ -711,7 +723,7 @@ void planificar() {
 							pthread_mutex_unlock(&setEntrenadoresMutex);
 
 							log_info(logMapa,
-									"Map send the position to the trainer:%c",
+									"Map send the position to the trainer: '%c'",
 									entrenador->simbolo);
 							estaEnAccion = 0;
 							break;
@@ -723,30 +735,49 @@ void planificar() {
 							estaEnAccion = 0;
 							entrenador->mandoMsj = 0;
 							log_info(logMapa,
-									"Trainer: %c, moves to x: %d, y: %d ",
+									"Trainer: '%c', moves to x: %d, y: %d ",
 									entrenador->simbolo, entrenador->pos_x,
 									entrenador->pos_y);
 							break;
 						}
 
 						case CAPTURAR: {
-
 							bool buscarPokenestPorId(t_pokenest* pokenest) {
 								return (pokenest->metadata.id
 										== entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
 							}
 
+							bool unaFuncionDeMierdaQueDevuelveTrue(
+									t_pokenest* pokenest) {
+								return true;
+							}
+
 							pthread_mutex_lock(&listaDePokenestMutex);
 							t_pokenest* pokenest = list_find(listaDePokenest,
 									(void*) buscarPokenestPorId);
+
+							//aca deberia haber un if para saber si la lista esta vacia para que entre en deadlock pero por ahora suponemos el camino positivo y lo captura bien :D
 							t_pokemon* pokemon = list_remove_by_condition(
-									pokenest->listaDePokemones, (void*) true); //saca al primero que encuentra
+									pokenest->listaDePokemones,
+									(void*) unaFuncionDeMierdaQueDevuelveTrue); //saca al primero que encuentra
 							pthread_mutex_unlock(&listaDePokenestMutex);
 
 							pthread_mutex_lock(&setEntrenadoresMutex);
 							list_add(entrenador->listaDePokemonesCapturados,
 									pokemon);
+
+							log_info(logMapa,
+									"Trainer: '%c' capture the pokemon: '%c' SUCCESSFUL",
+									entrenador->simbolo, entrenador->pokemonD);
+
+							pthread_mutex_lock(&itemsMutex);
+							restarRecurso(items, entrenador->pokemonD);
+							nivel_gui_dibujar(items, "Test");
+							pthread_mutex_unlock(&itemsMutex);
+
 							entrenador->pokemonD = '/';
+							entrenador->posD_x = -1;
+							entrenador->posD_y = -1;
 							entrenador->mandoMsj = 0;
 							pthread_mutex_unlock(&setEntrenadoresMutex);
 							estaEnAccion = 0;

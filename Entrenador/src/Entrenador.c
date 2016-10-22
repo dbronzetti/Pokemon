@@ -310,7 +310,7 @@ void jugar() {
 				log_info(logEntrenador,
 						"Trainer ask to mapa to move to the pokenest");
 				sendClientMessage(&socketMapa, objetivoActual, IR);
-				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
+//				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
 
 				break;
 			}
