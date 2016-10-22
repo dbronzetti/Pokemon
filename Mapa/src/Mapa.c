@@ -135,7 +135,6 @@ void startServerProg() {
 					if (i == socketServer) {
 						// handle new connections
 						newClients(&socketServer, &master, &fdmax);
-
 					} else {
 						// handle data from a client
 						//Receive message size
@@ -346,7 +345,7 @@ void processMessageReceived(void *parameter) {
 		} else {
 
 			bool buscarPorSocket(t_entrenador* entrenador) {
-				return (entrenador->socket = serverData->socketClient);
+				return (entrenador->socket == serverData->socketClient);
 			}
 
 			switch (message->tipo) {
@@ -633,7 +632,7 @@ void planificar() {
 			for (i = 0; i < metadataMapa.quantum; i++) {
 				int estaEnAccion = 1;
 
-				//sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
+		//		sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
 
 				sleep(5);
 
