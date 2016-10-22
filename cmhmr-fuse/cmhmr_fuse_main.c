@@ -596,7 +596,7 @@ static struct fuse_operations xmp_oper = {
 
 
 
-int mainMock(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 int rc;
 

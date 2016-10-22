@@ -16,7 +16,7 @@
 #include "commons/log.h"
 
 t_log* logPokeDexServer;
-int PORT;
+int PORT=0;
 
 // Estructuras
 typedef struct {

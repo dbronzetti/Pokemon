@@ -4,16 +4,22 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../Serializable.c \
 ../cmhmr_fuse_main.c \
-../mockPodexCliente.c 
+../mockPodexCliente.c \
+../protocoloCliente.c 
 
 OBJS += \
+./Serializable.o \
 ./cmhmr_fuse_main.o \
-./mockPodexCliente.o 
+./mockPodexCliente.o \
+./protocoloCliente.o 
 
 C_DEPS += \
+./Serializable.d \
 ./cmhmr_fuse_main.d \
-./mockPodexCliente.d 
+./mockPodexCliente.d \
+./protocoloCliente.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
