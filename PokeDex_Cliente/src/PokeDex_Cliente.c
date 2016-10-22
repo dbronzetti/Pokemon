@@ -33,6 +33,11 @@ static void *fuse_init(void)
   return NULL;
 }
 
+t_list* obtenerTablaDeArchivos(char* path){
+	t_list* resultado;
+
+	return resultado;
+}
 
 static int fuse_getattr(const char *path, struct stat *stbuf)
 {
@@ -45,27 +50,25 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 	{
 		stbuf->st_mode = S_IFDIR | 0777;
 		stbuf->st_nlink = 2;
-	}
-	else
-	{
+	} else 	{
+
 		//@TODO: Esta funcion llama al socket y pide el bloque
-		osada_file* nodo = obtenerTablaDeArchivos(path);
-		if (nodo != NULL)
-		{
-			if (nodo.state == 1)
-			{
-				stbuf->st_mode = S_IFREG | 0777;
-				stbuf->st_nlink = 1;
-				stbuf->st_size = nodo.file_size;
+		t_list* nodos =  obtenerTablaDeArchivos(path);
+		int i;
+		if(nodos!=NULL){
+			for (i = 0; i < nodos->elements_count; i++) {
+				osada_file nodo = list_get(nodos,i);
+				if (nodo.state == 1){
+					stbuf->st_mode = S_IFREG | 0777;
+					stbuf->st_nlink = 1;
+					stbuf->st_size = nodo.file_size;
+				}
+				else if (nodo.state == 2) {
+					stbuf->st_mode = S_IFDIR | 0777;
+					stbuf->st_nlink = 1;
+				}
 			}
-			else if (nodo.state == 2)
-			{
-				stbuf->st_mode = S_IFDIR | 0777;
-				stbuf->st_nlink = 1;
-			}
-		}
-		else
-		{
+		} else {
 			res = -ENOENT;
 		}
 	}
