@@ -5,6 +5,32 @@
  */
 
 #include "PokeDex_Cliente.h"
+/***************************************** inicio joel ********************************/
+osada_file* obtenerTablaDeArchivos(char * path){
+	osada_file *tablaDeArchivo = malloc(TAMANIO_TABLA_DE_ARCHIVOS);
+	return tablaDeArchivo;
+}
+
+int  borrarArchivo (path){
+	return 0;
+};
+
+int directorioBorrar(char *path){
+	return 0;
+};
+
+int crearDirectorio(char *path){
+	return 0;
+};
+
+int renombrarArchivo(char* oldname,char* newName){
+	return 0;
+};
+
+long int enviarArchivo(char* path,off_t offset){
+	return 0;
+};
+/***************************************** fin joel ********************************/
 
 const char *full(const char *path) /* Anade un punto de montaje */
 {
