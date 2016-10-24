@@ -10,6 +10,18 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
+	int archivoID = obtenerIDDelArchivo("challenge.bin");
+	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
+
+	inicializarOSADA(archivoID);
+	obtenerHeader();
+	setearConstantesDePosicionDeOsada();
+
+	obtenerBitmap();
+
+    obtenerTablaDeArchivos();
+
+
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
 	//get parameter
@@ -175,7 +187,7 @@ void handShake(void *parameter) {
 
 void processMessageReceived(void *parameter){
 	t_serverData *serverData = (t_serverData*) parameter;
-
+	t_list* lista = list_create();
 	while(1){
 		//Receive message size
 		int messageSize = 0;
@@ -192,8 +204,11 @@ void processMessageReceived(void *parameter){
 
 			message = "pikachu2\0";
 			printf("Envio: %s\n",message);
-
-			sendMessage(&serverData->socketClient, message, 9);
+			lista=crearArbolAPartirDelPadre(65535);
+			printf("Paso el crearArbolAPartirDelPadre: \n");
+			char *mensajeOsada=serializeListaBloques(lista);
+			sendMessage(&serverData->socketClient, mensajeOsada, strlen(mensajeOsada));
+			printf("Paso el sendMessage: \n");
 			//Receive process from which the message is going to be interpreted
 
 			/*

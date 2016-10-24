@@ -660,7 +660,7 @@ t_dictionary *crearArbolDeDirectoriosHijos(osada_file *tablaDeArchivo, t_diction
 	return dictionaryDirRoot;
 }
 /*********************************************************************************************************/
-void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre ){
+void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list* lista){
 
 
 
@@ -673,6 +673,7 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre ){
 		printf("lastmod_: %i\n", archivo->lastmod);
 		printf("first_block_: %i\n", archivo->first_block);
 		printf("Termina reconocerArchivosParaArbol %i ****************\n", pos);
+		list_add(lista, archivo);
 	}
 
 }
@@ -690,12 +691,15 @@ void reconocerDirectorioPadre(osada_file *archivo, int pos, int padre){
 	}
 }
 
-void crearArbolAPartirDelPadre(osada_file *tablaDeArchivo, int padre){
+t_list* crearArbolAPartirDelPadre(int padre){
 	int pos=0;
+	t_list* lista = list_create();
 
 	for (pos=0; pos <= 2047; pos++){
-		reconocerArchivosParaArbol(&tablaDeArchivo[pos], pos, padre);
+		reconocerArchivosParaArbol(&TABLA_DE_ARCHIVOS[pos], pos, padre, lista);
 	}
+
+	return lista;
 
 }
 

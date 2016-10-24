@@ -8,6 +8,14 @@
 /***************************************** inicio joel ********************************/
 osada_file* obtenerTablaDeArchivos(char * path){
 	osada_file *tablaDeArchivo = malloc(TAMANIO_TABLA_DE_ARCHIVOS);
+	int messageSize = 0;
+	sendMessage(&socketPokeServer, "HOLA", 4);
+	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize, sizeof(messageSize));
+	//if ( receivedBytes > 0 ){
+		//printf("tamaño mensaje : %d\n",messageSize);
+		//char* message= malloc(messageSize);
+		//receivedBytes = receiveMessage(&socketPokeServer, message, messageSize);
+	//}
 	return tablaDeArchivo;
 }
 

@@ -72,6 +72,7 @@ void setearConstantesDePosicionDeOsada();
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento);
 osada_block_pointer buscarArchivo(char *nombre);
+t_list* crearArbolAPartirDelPadre(int padre);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER= 0;
 static int TAMANIO_DEL_BITMAP= 0;

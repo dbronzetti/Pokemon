@@ -24,14 +24,14 @@ int main(int argc, char *argv[]){
 	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
 	//contarBloques(osada, osadaHeaderFile, bitMap);
-	crearUnArchivo("hola mundo\n", 128,"hola.tx\0");
+	//crearUnArchivo("hola mundo\n", 128,"hola.tx\0");
 
 	//dameTodosLosDirectorios(tablaDeArchivo);
-	dameTodosLosArchivosRegulares();
+	//dameTodosLosArchivosRegulares();
 	//dameTodosLosBorrados(tablaDeArchivo);
 	//dameTodosLosOtrosEstados(tablaDeArchivo);
 
-	//crearArbolAPartirDelPadre(tablaDeArchivo, 65535);
+	crearArbolAPartirDelPadre(65535);
 
 	//t_list unaLista = crearArbolAPartirDelPadre(tablaDeArchivo, 0); //METER TODO EN UNA LISTA, SERIALIZAR E ENVIAR
 	//char *altoPaquete = serializeListaBloques(unaLista);

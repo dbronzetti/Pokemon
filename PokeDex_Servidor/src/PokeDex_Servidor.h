@@ -13,7 +13,9 @@
 #include <errno.h>
 #include <pthread.h>
 #include "sockets.h"
+#include "osada.h"
 #include "commons/log.h"
+#include "commons/collections/list.h"
 
 t_log* logPokeDexServer;
 int PORT=0;
