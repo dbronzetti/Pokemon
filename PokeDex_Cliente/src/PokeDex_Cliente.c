@@ -229,6 +229,8 @@ int main(int argc, char **argv) {
 	char *disco = string_new();
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
+	char *el_fuse;
+
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
 	//get parameter
@@ -239,6 +241,8 @@ int main(int argc, char **argv) {
 		if (strcmp(argv[i], "-d") == 0) {
 			disco = argv[i + 1];
 			printf("El disco a trabajar: '%s'\n", disco);
+
+
 		}
 
 		//check log file parameter
@@ -253,10 +257,16 @@ int main(int argc, char **argv) {
 	//getting environment variable for connecting to server
 	IP_SERVER = getenv("POKEIP");
 	PORT = atoi(getenv("POKEPORT"));
-
+	printf("%s\n",IP_SERVER);
+	printf("%i\n",PORT);
 	exitCode = connectTo(POKEDEX_SERVIDOR, &socketPokeServer);
+	printf("%i\n",exitCode);
 	if (exitCode == EXIT_SUCCESS) {
 		log_info(logPokeCliente, "POKEDEX_CLIENTE connected to POKEDEX_SERVIDOR successfully\n");
+		printf("argv: %s\n", argv);
+		printf("argc: %i\n", argc);
+
+		return fuse_main(argc, argv, &xmp_oper, NULL);
 
 	} else {
 		log_error(logPokeCliente,"No server available - shutting down proces!!\n");
@@ -282,8 +292,9 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 			break;
 		}
 	}
+	printf("- openClientConnection -\n");
 	exitcode = openClientConnection(ip, port, socketClient);
-
+printf("exitcode: %i\n",exitcode);
 	//If exitCode == 0 the client could connect to the server
 	if (exitcode == EXIT_SUCCESS) {
 
