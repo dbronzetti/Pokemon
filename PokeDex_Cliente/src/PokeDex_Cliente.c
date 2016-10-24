@@ -7,16 +7,27 @@
 #include "PokeDex_Cliente.h"
 /***************************************** inicio joel ********************************/
 osada_file* obtenerTablaDeArchivos(char * path){
-	osada_file *tablaDeArchivo = malloc(TAMANIO_TABLA_DE_ARCHIVOS);
+	//osada_file *tablaDeArchivo = malloc(TAMANIO_TABLA_DE_ARCHIVOS);
+	osada_file *tablaDeArchivo2 = malloc(64);
 	int messageSize = 0;
-	sendMessage(&socketPokeServer, "HOLA", 4);
-	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize, sizeof(messageSize));
+	sendMessage(&socketPokeServer, path, 4);
+	t_list* lista = list_create();
+	//int receivedBytes = receiveMessage(&socketPokeServer, &messageSize, sizeof(messageSize));
 	//if ( receivedBytes > 0 ){
 		//printf("tamaño mensaje : %d\n",messageSize);
+		char* message= malloc(64);
+		printf("entro receivedBytes\n");
+		receiveMessage(&socketPokeServer, message, 64);
+		printf("entro deserializeListaBloques\n");
+		deserializeListaBloques(lista, message);
+		printf("TERMINO deserializeListaBloques\n");
+		printf("lista2->elements_count: %i\n",	lista->elements_count);
+		tablaDeArchivo2 = list_get(lista, 0);
+		printf("tablaDeArchivo2: %s\n", &tablaDeArchivo2->fname);
 		//char* message= malloc(messageSize);
 		//receivedBytes = receiveMessage(&socketPokeServer, message, messageSize);
 	//}
-	return tablaDeArchivo;
+	return tablaDeArchivo2;
 }
 
 int  borrarArchivo (path){
@@ -94,6 +105,11 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 				stbuf->st_mode = S_IFDIR | 0777;
 				stbuf->st_nlink = 1;
 			}
+			else if (nodo->state == 2)
+			{
+				stbuf->st_mode = S_IFDIR | 0777;
+				stbuf->st_nlink = 1;
+			}
 		} else {
 			res = -ENOENT;
 		}
@@ -107,18 +123,34 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 	(void) offset;
 
 	int i;
-	t_list* nodos = obtenerDirectorio(path);
+	//t_list* nodos = obtenerDirectorio(path);
+	char* message= malloc(64);
+	printf("fuse_readdir - INICIO\n");
+	osada_file *tablaDeArchivo2 = malloc(64);
+	sendMessage(&socketPokeServer, path, 4);
+	t_list* lista = list_create();
+	receiveMessage(&socketPokeServer, message, 64);
+	deserializeListaBloques(lista, message);
+	//tablaDeArchivo2 = list_get(lista, 0);
+	printf("lista2->elements_count: %i\n",	lista->elements_count);
+	//printf("fuse_readdir - tablaDeArchivo2: %s\n", &tablaDeArchivo2->fname);
+	//if(nodos!=NULL){
+		//for (i = 0; i < nodos->elements_count; i++)
+		for (i = 0; i < lista->elements_count; i++) 	{
 
-	if(nodos!=NULL){
-		for (i = 0; i < nodos->elements_count; i++) 		{
-			osada_file *nodo = list_get(nodos,i);
-			if ((nodo->state != 0)){
-				filler(buffer, nodo->fname, NULL, 0);
-			}
+			//osada_file *nodo = list_get(nodos,i);
+			//if ((nodo->state != 0)){
+				//filler(buffer, nodo->fname, NULL, 0);
+			osada_file *tablaDeArchivo2 = malloc(64);
+			tablaDeArchivo2 = list_get(lista, i);
+			printf("&tablaDeArchivo2->fname: %s\n",	&tablaDeArchivo2->fname);
+			//if ((tablaDeArchivo2->state != 0)){
+				filler(buffer, &tablaDeArchivo2->fname, NULL, 0);
+			//}
 		}
-	}else{
-		return -ENOENT;
-	}
+	//}else{
+	//	return -ENOENT;
+	//}
 
 	return 0;
 }

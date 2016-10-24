@@ -188,10 +188,12 @@ void handShake(void *parameter) {
 void processMessageReceived(void *parameter){
 	t_serverData *serverData = (t_serverData*) parameter;
 	t_list* lista = list_create();
+	t_list* lista2 = list_create();
+	osada_file *tablaDeArchivo2= malloc(64);
 	while(1){
 		//Receive message size
 		int messageSize = 0;
-
+		int i=0;
 		//Get Payload size
 		int receivedBytes = receiveMessage(&serverData->socketClient, &messageSize, sizeof(messageSize));
 
@@ -199,15 +201,35 @@ void processMessageReceived(void *parameter){
 
 			printf("tamaño mensaje : %d\n",messageSize);
 			char* message= malloc(messageSize);
-			receivedBytes = receiveMessage(&serverData->socketClient, message, messageSize);
-			printf("mensaje : %s\n",message);
 
-			message = "pikachu2\0";
-			printf("Envio: %s\n",message);
 			lista=crearArbolAPartirDelPadre(65535);
 			printf("Paso el crearArbolAPartirDelPadre: \n");
+			printf("lista->elements_count: %i\n",lista->elements_count);
+			for (i = 0; i < lista->elements_count; i++) 	{
+				osada_file *tablaDeArchivo2 = malloc(64);
+				tablaDeArchivo2 = list_get(lista, i);
+				printf("lista - &tablaDeArchivo2->fname: %s\n",	&tablaDeArchivo2->fname);
+			}
+
 			char *mensajeOsada=serializeListaBloques(lista);
-			sendMessage(&serverData->socketClient, mensajeOsada, strlen(mensajeOsada));
+			//printf("mensajeOsada: %s\n", mensajeOsada);
+			deserializeListaBloques(lista2, mensajeOsada);
+			//tablaDeArchivo2 = list_get(lista2, 0);
+			printf("lista2->elements_count: %i\n",lista2->elements_count);
+			for (i = 0; i < lista2->elements_count; i++) 	{
+				osada_file *tablaDeArchivo2 = malloc(64);
+				tablaDeArchivo2 = list_get(lista2, i);
+				printf("lista2 - &tablaDeArchivo2->fname: %s\n",	&tablaDeArchivo2->fname);
+			}
+
+			printf("tablaDeArchivo2: %s\n", &tablaDeArchivo2->fname);
+			printf("lista2->elements_count: %i\n", lista2->elements_count);
+			printf("lista2->elements_count*64: %i\n", lista2->elements_count*64);
+			printf("mensajeOsada: %s\n", mensajeOsada);
+
+
+			sendMessage(&serverData->socketClient, mensajeOsada, 64);
+			//sendMessage(&serverData->socketClient, mensajeOsada, sizeof(mensajeOsada));
 			printf("Paso el sendMessage: \n");
 			//Receive process from which the message is going to be interpreted
 

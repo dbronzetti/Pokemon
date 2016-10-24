@@ -665,7 +665,8 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list*
 
 
 	if (archivo->parent_directory == padre){
-		printf("EMPIEZA reconocerArchivosParaArbol %i: ****************\n", pos);
+		/*
+		 printf("EMPIEZA reconocerArchivosParaArbol %i: ****************\n", pos);
 		printf("state_: %c\n", archivo->state);
 		printf("parent_directory_: %i\n", archivo->parent_directory);
 		printf("fname_: %s\n", &archivo->fname);
@@ -673,6 +674,7 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list*
 		printf("lastmod_: %i\n", archivo->lastmod);
 		printf("first_block_: %i\n", archivo->first_block);
 		printf("Termina reconocerArchivosParaArbol %i ****************\n", pos);
+		*/
 		list_add(lista, archivo);
 	}
 
