@@ -325,32 +325,50 @@ void processMessageReceived(void *parameter) {
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
 						(void*) buscarPorSocket);
 
-//				if(entrenador->estaEnTurno){ //si llega a estar en turno no lo borramos sino que le ponemos un flag para que despues planificador lo borre
-//					entrenador->accion = DESCONECTAR;
-//				}
+				if (entrenador->estaEnTurno == false) { //si no esta en turno lo borramos normal
 
-				char simboloDelEntrenador = entrenador->simbolo;
+					char simboloDelEntrenador = entrenador->simbolo;
 
-				pthread_mutex_unlock(&setEntrenadoresMutex);
-				log_error(logMapa,
-						"Trainer: '%c' want to  disconnect in socket: %d",
-						simboloDelEntrenador, serverData->socketClient); //disculpen mi ingles is very dificcul
+					pthread_mutex_unlock(&setEntrenadoresMutex);
+					log_error(logMapa,
+							"Trainer: '%c' want to  disconnect in socket: %d",
+							simboloDelEntrenador, serverData->socketClient); //disculpen mi ingles is very dificcul
 
-				log_info(logMapa, "Deleting trainer: '%c'",
-						simboloDelEntrenador);
-				eliminarEntrenador(simboloDelEntrenador);
-				log_info(logMapa, "Trainer: '%c' deleted SUCCESSFUL",
-						simboloDelEntrenador);
+					log_info(logMapa, "Deleting trainer: '%c'",
+							simboloDelEntrenador);
+					eliminarEntrenador(simboloDelEntrenador);
+					log_info(logMapa, "Trainer: '%c' deleted SUCCESSFUL",
+							simboloDelEntrenador);
 
-				int socketFD = serverData->socketClient;
-				close(serverData->socketClient); // bye!
-				free(messageRcv);
+					int socketFD = serverData->socketClient;
+					close(serverData->socketClient); // bye!
+					free(messageRcv);
 
-				pthread_mutex_lock(&setFDmutex);
-				FD_CLR(serverData->socketClient, serverData->masterFD); // remove from master set
-				pthread_mutex_unlock(&setFDmutex);
-				log_error(logMapa, "Socket: %d  disconected SUCCESSFUL",
-						socketFD);
+					pthread_mutex_lock(&setFDmutex);
+					FD_CLR(serverData->socketClient, serverData->masterFD); // remove from master set
+					pthread_mutex_unlock(&setFDmutex);
+					log_error(logMapa, "Socket: %d  disconected SUCCESSFUL",
+							socketFD);
+				} else {
+
+					log_error(logMapa,
+							"Trainer '%c' want to disconnect in socket: '%d' on the turn",
+							entrenador->simbolo, entrenador->socket);
+					int socketFD = entrenador->socket;
+					entrenador->accion = DESCONECTAR;
+					entrenador->socket = -1;
+					entrenador->pokemonD = '0';
+					pthread_mutex_unlock(&setEntrenadoresMutex);
+
+					close(serverData->socketClient); // bye!
+					free(messageRcv);
+
+					pthread_mutex_lock(&setFDmutex);
+					FD_CLR(serverData->socketClient, serverData->masterFD); // remove from master set
+					log_error(logMapa, "Socket: %d  disconected SUCCESSFUL",
+							socketFD);
+					pthread_mutex_unlock(&setFDmutex);
+				}
 			}
 
 			pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -632,11 +650,9 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 			nuevoEntrenador->pos_y);
 	pthread_mutex_unlock(&itemsMutex);
 
-
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	list_add(listaDeEntrenadores, nuevoEntrenador);
 	pthread_mutex_unlock(&setEntrenadoresMutex);
-
 
 	pthread_mutex_lock(&colaDeListosMutex);
 	queue_push(colaDeListos, nuevoEntrenador);
@@ -675,29 +691,30 @@ void planificar() {
 
 		while (queue_size(colaDeListos) != 0) {
 			int i;
+			char simbolo;
+
+			bool buscarPorSimbolo(t_entrenador* entrenadorDeLaLista) {
+				return (entrenadorDeLaLista->simbolo == simbolo);
+			}
 
 			pthread_mutex_lock(&colaDeListosMutex);
 			t_entrenador* entrenador = queue_pop(colaDeListos);
-			entrenador->estaEnTurno = 1;
-			pthread_mutex_unlock(&colaDeListosMutex);
+			simbolo = entrenador->simbolo;
+			if (list_any_satisfy(listaDeEntrenadores,
+					(void*) buscarPorSimbolo)) { //hacemos un if por si sacamos un entrenador que se desconecto
+				entrenador->estaEnTurno = 1;
+				pthread_mutex_unlock(&colaDeListosMutex);
 
-			log_info(logMapa, "Begins the turn of trainer: %c",
-					entrenador->simbolo);
+				log_info(logMapa, "Begins the turn of trainer: %c",
+						entrenador->simbolo);
 
-			char simbolo = entrenador->simbolo;
+				for (i = 0; i < metadataMapa.quantum; i++) {
+					int estaEnAccion = 1;
 
-			for (i = 0; i < metadataMapa.quantum; i++) {
-				int estaEnAccion = 1;
+//				pthread_mutex_lock(&setEntrenadoresMutex);
 
-				bool buscarPorSimbolo(t_entrenador* entrenador) {
-					return (entrenador->simbolo == simbolo);
-				}
-
-				pthread_mutex_lock(&setEntrenadoresMutex);
-
-				if (list_any_satisfy(listaDeEntrenadores,
-						(void*) buscarPorSimbolo)) { //hacemos un if por si se desconecto
-					pthread_mutex_unlock(&setEntrenadoresMutex);
+//hacemos un if por si se desconecto
+//					pthread_mutex_unlock(&setEntrenadoresMutex);
 
 					//		sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
 
@@ -706,8 +723,6 @@ void planificar() {
 					log_info(logMapa, "Action: %d of trainer : '%c'", i,
 							entrenador->simbolo);
 
-
-
 					pthread_mutex_lock(&setEntrenadoresMutex);
 					if (entrenador->pokemonD == '/') { //sino busca ninguno por el momento le preguntamos cual quiera buscar (movimiento libre)
 						sendClientMessage(&entrenador->socket, "ASD", LIBRE); //no hace falta enviar un string solo un enum, por eso pongo "ASD"
@@ -715,8 +730,6 @@ void planificar() {
 								entrenador->simbolo);
 					}
 					pthread_mutex_unlock(&setEntrenadoresMutex);
-
-
 
 					pthread_mutex_lock(&setEntrenadoresMutex);
 					if (entrenador->posD_x != -1) {
@@ -733,8 +746,6 @@ void planificar() {
 						}
 					}
 					pthread_mutex_unlock(&setEntrenadoresMutex);
-
-
 
 					pthread_mutex_lock(&setEntrenadoresMutex);
 
@@ -847,86 +858,106 @@ void planificar() {
 								break;
 							}
 
+							case DESCONECTAR: { //por si se desconecta en medio del turno
+								char simbolo = entrenador->simbolo; // guardamos el simbolo en esta variable para poder logearlo
+								log_info(logMapa, "Deleting trainer: '%c'",
+										simbolo);
+								eliminarEntrenador(simbolo);
+							log_info(logMapa, "Trainer: '%c' deleted SUCCESSFUL",simbolo);
+							i = metadataMapa.quantum;
+							estaEnAccion = 0;
+									break;
+								}
+								}
 							}
 						}
+//				} else pthread_mutex_unlock(&setEntrenadoresMutex);
+
 					}
-				} else pthread_mutex_unlock(&setEntrenadoresMutex);
+
+					pthread_mutex_lock(&setEntrenadoresMutex);
+					if (list_any_satisfy(listaDeEntrenadores,
+							(void*) buscarPorSimbolo)) {
+						pthread_mutex_unlock(&setEntrenadoresMutex);
+
+						log_info(logMapa,
+								"End of the turn, trainer: %c goes to colaDeBloqueados",
+								entrenador->simbolo);
+						pthread_mutex_lock(&colaDeBloqueadosMutex);
+						entrenador->estaEnTurno = 0;
+						queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
+						pthread_mutex_unlock(&colaDeBloqueadosMutex);
+					} else
+						pthread_mutex_unlock(&setEntrenadoresMutex);
+				} else
+					pthread_mutex_unlock(&setEntrenadoresMutex);
+
+				pthread_mutex_lock(&colaDeBloqueadosMutex);
+				pthread_mutex_lock(&colaDeListosMutex);
+				if (queue_size(colaDeBloqueados) != 0
+						&& queue_size(colaDeListos) == 0) {
+
+					t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
+					queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
+
+					log_info(logMapa, "Trainer: %c goes to colaDeListos",
+							entrenador->simbolo);
+				}
+				pthread_mutex_unlock(&colaDeListosMutex);
+				pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
 			}
 
-//			log_info(logMapa,
-//					"End of the turn, trainer: %c goes to colaDeBloqueados",
-//					entrenador->simbolo);
-			pthread_mutex_lock(&colaDeBloqueadosMutex);
-			entrenador->estaEnTurno = 0;
-			queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
-			pthread_mutex_unlock(&colaDeBloqueadosMutex);
 		}
 
-		pthread_mutex_lock(&colaDeBloqueadosMutex);
-		pthread_mutex_lock(&colaDeListosMutex);
-		if (queue_size(colaDeBloqueados) != 0
-				&& queue_size(colaDeListos) == 0) {
+	}
 
-			t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
-			queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
-
-//			log_info(logMapa, "Trainer: %c goes to colaDeListos",
-//					entrenador->simbolo);
+	void moverEntrenador(t_entrenador* entrenador) { //esto esta medio para el orto despues lo tengo que arreglar (en sentido de requerimento del enunciado, funcionar funciona barbaro)
+		if (entrenador->pos_x > entrenador->posD_x) { // si esta arriba de la posicion x que desea le bajamos uno.
+			entrenador->pos_x--;
+			pthread_mutex_lock(&itemsMutex);
+			MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+					entrenador->pos_y);
+			nivel_gui_dibujar(items, "Test");
+			pthread_mutex_unlock(&itemsMutex);
 		}
-		pthread_mutex_unlock(&colaDeListosMutex);
-		pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
+		if (entrenador->pos_x < entrenador->posD_x) { //si esta abajo de la posicion x que desea le subimos uno.
+			entrenador->pos_x++;
+			pthread_mutex_lock(&itemsMutex);
+			MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+					entrenador->pos_y);
+			nivel_gui_dibujar(items, "Test");
+			pthread_mutex_unlock(&itemsMutex);
+		}
+
+		if (entrenador->pos_y > entrenador->posD_y) { // si esta arriba de la posicion y que desea le bajamos uno.
+			entrenador->pos_y--;
+			pthread_mutex_lock(&itemsMutex);
+			MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+					entrenador->pos_y);
+			nivel_gui_dibujar(items, "Test");
+			pthread_mutex_unlock(&itemsMutex);
+		}
+
+		if (entrenador->pos_y < entrenador->posD_y) { //si esta abajo de la posicion y que desea le subimos uno.
+			entrenador->pos_y++;
+			pthread_mutex_lock(&itemsMutex);
+			MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+					entrenador->pos_y);
+			nivel_gui_dibujar(items, "Test");
+			pthread_mutex_unlock(&itemsMutex);
+		}
+		return;
 	}
 
-}
-
-void moverEntrenador(t_entrenador* entrenador) { //esto esta medio para el orto despues lo tengo que arreglar (en sentido de requerimento del enunciado, funcionar funciona barbaro)
-	if (entrenador->pos_x > entrenador->posD_x) { // si esta arriba de la posicion x que desea le bajamos uno.
-		entrenador->pos_x--;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, "Test");
-		pthread_mutex_unlock(&itemsMutex);
-	}
-
-	if (entrenador->pos_x < entrenador->posD_x) { //si esta abajo de la posicion x que desea le subimos uno.
-		entrenador->pos_x++;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, "Test");
-		pthread_mutex_unlock(&itemsMutex);
-	}
-
-	if (entrenador->pos_y > entrenador->posD_y) { // si esta arriba de la posicion y que desea le bajamos uno.
-		entrenador->pos_y--;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, "Test");
-		pthread_mutex_unlock(&itemsMutex);
-	}
-
-	if (entrenador->pos_y < entrenador->posD_y) { //si esta abajo de la posicion y que desea le subimos uno.
-		entrenador->pos_y++;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, "Test");
-		pthread_mutex_unlock(&itemsMutex);
-	}
-	return;
-}
-
-char* convertirPosicionesAString(int posX, int posY) {
-	char* posXstr = "a";
-	char* posYstr = "b";
+	char* convertirPosicionesAString(int posX, int posY) {
+		char* posXstr = "a";
+		char* posYstr = "b";
 //	sprintf(posXstr, "%d", posX);
 //	sprintf(posYstr, "%d", posY);
 
-	return string_from_format("%s,%s", posXstr, posYstr);
+		return string_from_format("%s,%s", posXstr, posYstr);
 
-}
+	}
 
