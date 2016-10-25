@@ -10,6 +10,9 @@ int socketMapa = 0;
 t_queue* colaDeObjetivos;
 enum_messages turno;
 char* posicionPokenest;
+char* rutaMetadata;
+char* rutaDirDeBill;
+char* mapaActual;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
@@ -44,8 +47,10 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	char* rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
+	rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
 			pokedex, entrenador);
+
+	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill");
 
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
 			rutaMetadata);
@@ -62,7 +67,7 @@ int main(int argc, char **argv) {
 
 	i = 0;
 	for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
-		char* mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
+		mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
 		char** objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
 		colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola de objetivos actuales donde cada elemento es un char
@@ -247,7 +252,6 @@ void recibirSignal() {
 	while (1) {
 		signal(SIGUSR1, sumarVida);
 		signal(SIGTERM, restarVida);
-		signal(SIGINT, desconectarse);
 	}
 }
 
@@ -312,6 +316,16 @@ void jugar() {
 				sendClientMessage(&socketMapa, objetivoActual, IR);
 //				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
 
+				break;
+			}
+
+			case CAPTURADO: { // si se capturo ok hay que copiar el archivito metadata en el dir de bill
+				FILE *archivoMetadataPokemon;
+
+				char* rutaMetadataPokemon = string_from_format("%s/metadata%s.dat",
+						rutaDirDeBill, objetivoActual);
+//				archivoMetadataPokemon = fopen(rutaMetadataPokemon);
+//				char* rutaMedataPokemonMapa = string_from_format()
 				break;
 			}
 
@@ -396,6 +410,15 @@ void recibirMsjs() {
 						message->mensaje);
 				pthread_mutex_lock(&turnoMutex);
 				turno = MOVETE;
+				pthread_mutex_unlock(&turnoMutex);
+				break;
+			}
+
+			case CAPTURADO: { //msj que envia si fue capturado OK !!
+				log_info(logEntrenador,
+						"Trainer captured the pokemon SUCCESSFUL");
+				pthread_mutex_lock(&turnoMutex);
+				turno = CAPTURADO;
 				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}

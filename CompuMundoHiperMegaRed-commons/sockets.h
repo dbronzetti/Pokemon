@@ -41,7 +41,8 @@ typedef enum{
 	DESCONECTAR,
 	MOVETE,
 	LLEGO,
-	LIBRE
+	LIBRE,
+	CAPTURADO
 } enum_messages;
 
 typedef enum{

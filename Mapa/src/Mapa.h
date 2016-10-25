@@ -42,6 +42,8 @@ pthread_mutex_t colaDeListosMutex;
 pthread_mutex_t colaDeBloqueadosMutex;
 pthread_mutex_t itemsMutex;
 pthread_mutex_t listaDePokenestMutex;
+pthread_mutex_t setRecibirMsj;
+pthread_mutex_t borradoDeEntrenadores;
 
 
 // Estructuras
@@ -73,7 +75,7 @@ typedef struct {
 	enum_messages accion; //accion que pretende hacer (conocer pokenest, moverse, etc)
 	char pokemonD; //pokemon deseado por el entrenador;
 	t_list* listaDePokemonesCapturados;
-	int mandoMsj;
+	int estaEnTurno;
 	int seEstaMoviendo;
 } t_entrenador;
 
