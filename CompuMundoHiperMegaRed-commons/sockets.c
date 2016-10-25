@@ -363,13 +363,11 @@ char *serializeListaBloques(t_list* listaASerializar) {
 	return nuevoElementoSerializado;
 }
 
-void deserializeListaBloques(t_list* listaBloques, char* listaSerializada){
+void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int cantidadDeElementos){
 	int offset = 0;
 
 	//Getting element count
-	int cantidadDeElementos = 0;
-	memcpy(&cantidadDeElementos, listaSerializada, sizeof(listaBloques->elements_count));
-	offset += sizeof(listaBloques->elements_count);
+	offset += sizeof(cantidadDeElementos);
 
 	int i;
 	for(i=0; i < cantidadDeElementos; i++){

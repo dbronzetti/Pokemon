@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <errno.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -12,7 +13,6 @@
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <commons/collections/dictionary.h>
-
 
 #define OSADA_BLOCK_SIZE 64
 #define OSADA_FILENAME_LENGTH 17

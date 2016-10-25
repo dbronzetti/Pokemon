@@ -6,9 +6,6 @@
  */
 
 #include "osada.h"
-#include <errno.h>
-#include <commons/string.h>
-
 
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento){
 	printf("iniciio guardarEnOsada2\n");

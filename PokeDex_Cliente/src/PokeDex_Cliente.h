@@ -24,7 +24,7 @@ t_log* logPokeCliente;
 
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
-t_list * obtenerDirectorio(char* path);
+t_list * obtenerDirectorio(char* path, enum_FUSEOperations fuseOperation);
 
 #endif /* POKEDEX_CLIENTE_H_ */
 

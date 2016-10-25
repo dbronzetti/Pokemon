@@ -187,22 +187,75 @@ void handShake(void *parameter) {
 
 void processMessageReceived(void *parameter){
 	t_serverData *serverData = (t_serverData*) parameter;
+
 	t_list* lista = list_create();
-	t_list* lista2 = list_create();
-	osada_file *tablaDeArchivo2= malloc(64);
+	/*t_list* lista2 = list_create();
+	osada_file *tablaDeArchivo2= malloc(64);*/
 	while(1){
-		//Receive message size
-		int messageSize = 0;
-		int i=0;
-		//Get Payload size
-		int receivedBytes = receiveMessage(&serverData->socketClient, &messageSize, sizeof(messageSize));
+		//0) Receive FUSE Operation
+		enum_FUSEOperations FUSEOperation;
+		int receivedBytes = receiveMessage(&serverData->socketClient, &FUSEOperation, sizeof(enum_FUSEOperations));
 
 		if ( receivedBytes > 0 ){
 
-			printf("tamaño mensaje : %d\n",messageSize);
-			char* message= malloc(messageSize);
+			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
 
-			lista=crearArbolAPartirDelPadre(65535);
+			switch (FUSEOperation){
+			case FUSE_READDIR:{
+				log_info(logPokeDexServer, "Processing FUSE_READDIR message");
+				int pathLength = 0;
+				//1) Receive path length
+				receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+				char *path = malloc(pathLength);
+				//2) Receive path
+				receiveMessage(&serverData->socketClient, &path, pathLength);
+				log_info(logPokeDexServer, "Message size received : %s\n",path);
+
+				//TODO get padre from path received for passing it to crearArbolAPartirDelPadre
+
+				lista = crearArbolAPartirDelPadre(65535);
+				printf("Paso el crearArbolAPartirDelPadre: \n");
+				printf("lista->elements_count: %i\n",lista->elements_count);
+
+				char *mensajeOsada = serializeListaBloques(lista);
+				int messageSize = strlen(mensajeOsada); //lista->elements_count * sizeof(osada_file); TODO solucion en caso de que no funcione el strlen
+				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+
+				break;
+			}
+			case FUSE_GETATTR:{
+				log_info(logPokeDexServer, "Processing FUSE_GETATTR message");
+				int pathLength = 0;
+				//1) Receive path length
+				receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+				char *path = malloc(pathLength);
+				//2) Receive path
+				receiveMessage(&serverData->socketClient, &path, sizeof(pathLength));
+				log_info(logPokeDexServer, "Message size received : %s\n",path);
+
+				lista = crearArbolAPartirDelPadre(65535);
+				printf("Paso el crearArbolAPartirDelPadre: \n");
+				printf("lista->elements_count: %i\n",lista->elements_count);
+
+				char *mensajeOsada = serializeListaBloques(lista);
+				int messageSize = strlen(mensajeOsada);
+				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+
+				break;
+			}
+			default:{
+				log_error(logPokeDexServer,"Invalid operation received '%d'", FUSEOperation);
+				close(serverData->socketClient);
+				free(serverData);
+				break;
+			}
+			}
+
+/*			char* message= malloc(messageSize);
+
+//			lista=crearArbolAPartirDelPadre(65535);
 			printf("Paso el crearArbolAPartirDelPadre: \n");
 			printf("lista->elements_count: %i\n",lista->elements_count);
 			for (i = 0; i < lista->elements_count; i++) 	{
@@ -233,26 +286,8 @@ void processMessageReceived(void *parameter){
 			printf("Paso el sendMessage: \n");
 			//Receive process from which the message is going to be interpreted
 
-			/*
-			enum_processes fromProcess;
-			receivedBytes = receiveMessage(&serverData->socketClient, &fromProcess, sizeof(fromProcess));
-
-			log_info(logPokeDexServer, "\n\nMessage size received from process '%s' in socket cliente '%d': %d\n",getProcessString(fromProcess), serverData->socketClient, messageSize);
-
-			switch (fromProcess){
-				case POKEDEX_CLIENTE:{
-					log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
-					//processPOKEDEXClienteMessages
-					break;
-				}
-				default:{
-					log_error(logPokeDexServer,"Process not allowed to connect - Invalid process '%s' send a message to MAPA", getProcessString(fromProcess));
-					close(serverData->socketClient);
-					free(serverData);
-					break;
-				}
-			}
 			*/
+
 		}else if (receivedBytes == 0 ){
 			//The client is down when bytes received are 0
 			log_error(logPokeDexServer,"The client went down while receiving! - Please check the client '%d' is down!", serverData->socketClient);

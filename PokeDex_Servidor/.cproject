@@ -32,6 +32,7 @@
 								</option>
 								<option id="gnu.c.compiler.option.include.files.2062613749" name="Include files (-include)" superClass="gnu.c.compiler.option.include.files" valueType="includeFiles">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CompuMundoHiperMegaRed-commons/sockets.c}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CompuMundoHiperMegaRed-commons/osada.c}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1770102046" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
