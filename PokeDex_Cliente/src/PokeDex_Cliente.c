@@ -379,7 +379,7 @@ t_list * obtenerDirectorio(char* path, enum_FUSEOperations fuseOperation){
 	int pathLength = strlen(path) + 1;
 	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
 	//2) send path
-	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+	exitCode = sendMessage(&socketPokeServer, &path , strlen(path) + 1 );
 
 	//Receive element Count
 	int elementCount = 0;

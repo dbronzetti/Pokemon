@@ -219,7 +219,7 @@ void processMessageReceived(void *parameter){
 				printf("lista->elements_count: %i\n",lista->elements_count);
 
 				char *mensajeOsada = serializeListaBloques(lista);
-				int messageSize = strlen(mensajeOsada); //lista->elements_count * sizeof(osada_file); TODO solucion en caso de que no funcione el strlen
+				int messageSize = lista->elements_count * sizeof(osada_file); //lista->elements_count * sizeof(osada_file); TODO solucion en caso de que no funcione el strlen
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
 				break;
@@ -240,7 +240,7 @@ void processMessageReceived(void *parameter){
 				printf("lista->elements_count: %i\n",lista->elements_count);
 
 				char *mensajeOsada = serializeListaBloques(lista);
-				int messageSize = strlen(mensajeOsada);
+				int messageSize = lista->elements_count * sizeof(osada_file);
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
 				break;

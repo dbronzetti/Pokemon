@@ -355,7 +355,7 @@ char *serializeListaBloques(t_list* listaASerializar) {
 	for (i = 0; i < listaASerializar->elements_count; i++) {
 		//get the element from the list by index
 		unaPosicion = list_get(listaASerializar,i);
-
+		printf("unaPosicion: %s\n", unaPosicion->fname);
 		//serialize the element to the buffer
 		nuevoElementoSerializado = serializeBloque(unaPosicion, nuevoElementoSerializado, &offset);
 	}
