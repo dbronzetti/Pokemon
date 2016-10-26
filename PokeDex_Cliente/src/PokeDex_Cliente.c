@@ -173,7 +173,7 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 static int fuse_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 		int exitCode = EXIT_FAILURE; //DEFAULT Failure
-
+		log_info(logPokeCliente, "****************fuse_read****************\n");
 		//0) Send Fuse Operations
 		exitCode = sendMessage(&socketPokeServer, (void*)FUSE_READ , sizeof(enum_FUSEOperations));
 
@@ -181,16 +181,20 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		//1) send path length (+1 due to \0)
 		int pathLength = strlen(path) + 1;
 		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", &pathLength);
 		//2) send path
 		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
 
 		//Receive message size
 		int messageSize = 0;
 		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+		log_info(logPokeCliente, "fuse_read - receiveMessage: %s\n", &messageSize);
 
 		if (receivedBytes > 0){
 			char *messageRcv = malloc(sizeof(messageSize));
 			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+			log_info(logPokeCliente, "fuse_read - messageRcv: %s\n", &messageRcv);
 			memcpy(buf, messageRcv, messageSize);
 		}
 
@@ -309,7 +313,7 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 	}
 	printf("- openClientConnection -\n");
 	exitcode = openClientConnection(ip, port, socketClient);
-printf("exitcode: %i\n",exitcode);
+	printf("exitcode: %i\n",exitcode);
 	//If exitCode == 0 the client could connect to the server
 	if (exitcode == EXIT_SUCCESS) {
 

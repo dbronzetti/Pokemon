@@ -217,10 +217,10 @@ void processMessageReceived(void *parameter){
 				t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 
 				printf("Paso el crearArbolAPartirDelPadre: \n");
-				printf("lista->elements_count: %i\n",lista->elements_count);
+				printf("lista->elements_count: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
 
 				int messageSize = 0;
-				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+				char *mensajeOsada = serializeListaBloques(conjuntoDeBloquesDelArchivo, &messageSize);
 
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 

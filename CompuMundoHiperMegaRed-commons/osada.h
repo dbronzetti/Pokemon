@@ -75,20 +75,20 @@ osada_block_pointer buscarArchivo(char *nombre);
 t_list* crearArbolAPartirDelPadre(int padre);
 t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques);
 
-static int TAMANIO_QUE_OCUPA_EL_HEADER= 0;
-static int TAMANIO_DEL_BITMAP= 0;
-static int TAMANIO_TABLA_DE_ARCHIVOS= 0;
-static int TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION= 0;
-static int TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION_EN_BLOQUES = 0;
-static int TAMANIO_QUE_OCUPA_EL_BLOQUE_DE_DATOS = 0;
-static int TAMANIO_DEL_ARCHIVO_OSADA_EN_BYTES = 0;
+static int TAMANIO_QUE_OCUPA_EL_HEADER;
+static int TAMANIO_DEL_BITMAP;
+static int TAMANIO_TABLA_DE_ARCHIVOS;
+static int TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION;
+static int TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION_EN_BLOQUES;
+static int TAMANIO_QUE_OCUPA_EL_BLOQUE_DE_DATOS;
+static int TAMANIO_DEL_ARCHIVO_OSADA_EN_BYTES;
 
-static int DESDE_PARA_BLOQUE_DE_DATOS= 0;
-static int DESDE_PARA_BITMAP= 0;//LO QUE OCUPA EL HEADER
-static int DESDE_PARA_TABLA_DE_ARCHIVOS = 0;
-static int DESDE_PARA_TABLA_ASIGNACION = 0;
-static int BYTES_LIBRES = 0;
-static int BYTES_OCUPADOS = 0;
+static int DESDE_PARA_BLOQUE_DE_DATOS;
+static int DESDE_PARA_BITMAP;//LO QUE OCUPA EL HEADER
+static int DESDE_PARA_TABLA_DE_ARCHIVOS;
+static int DESDE_PARA_TABLA_ASIGNACION;
+static int BYTES_LIBRES;
+static int BYTES_OCUPADOS;
 
 static unsigned char *OSADA;
 static osada_header *HEADER;
