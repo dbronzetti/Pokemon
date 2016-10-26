@@ -16,7 +16,7 @@ int directorioBorrar(char *path){
 };
 
 int crearDirectorio(char *path){
-	return 0;
+	return 1;
 };
 
 int renombrarArchivo(char* oldname,char* newName){
@@ -65,7 +65,13 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 	{
 		stbuf->st_mode = S_IFDIR | 0777;
 		stbuf->st_nlink = 2;
-	} else 	{
+	} else if (strcmp(path, "holis")== 0)
+	{
+		printf("CARPETA HOLIS\n");
+		stbuf->st_mode = S_IFDIR | 0777;
+		stbuf->st_nlink = 2;
+	}
+	else 	{
 
 		//@TODO: Esta funcion llama al socket y pide el bloque
 		t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
@@ -146,7 +152,7 @@ static int fuse_rmdir(const char* path){
 static int fuse_mkdir(const char* path){
 
 	int resultado = crearDirectorio(path);
-
+	printf("********************************* fuse_mkdir *********************\n");
 	if (resultado!=0)	{
 		printf("[Error_Fuse] mkdir(%s)\n", path);
 		return 1;
@@ -158,7 +164,7 @@ static int fuse_mkdir(const char* path){
 static int fuse_unlink(const char* path)
 {
 	int resultado = borrarArchivo (path);
-
+	printf("********************************* fuse_unlink *********************\n");
 	if (resultado!=0)	{
 			printf("[Error_Fuse] unlink(%s)\n", path);
 			return 1;
@@ -168,6 +174,7 @@ static int fuse_unlink(const char* path)
 }
 
 static int fuse_open(const char *path, struct fuse_file_info *fi) {
+	printf("********************************* fuse_open *********************\n");
     return 0;
 }
 
@@ -205,12 +212,14 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 static int fuse_write(const char* path, const char* buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 	long int bytes_escritos = 0;
+	printf("********************************* fuse_write *********************\n");
 	bytes_escritos = enviarArchivo(path,offset);
 	return bytes_escritos;
 }
 
 static int fuse_rename (const char *oldname, const char *newName){
 	int resultado = renombrarArchivo(oldname,newName);
+	printf("********************************* fuse_rename *********************\n");
 	if (resultado!=0)	{
 			printf("[Error_Fuse] rename(%s,%s)\n", oldname,newName);
 			return 1;
