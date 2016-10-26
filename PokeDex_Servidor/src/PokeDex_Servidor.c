@@ -209,7 +209,7 @@ void processMessageReceived(void *parameter){
 				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 				char *path = malloc(pathLength);
 				//2) Receive path
-				receiveMessage(&serverData->socketClient, &path, pathLength);
+				receiveMessage(&serverData->socketClient, path, pathLength);
 				log_info(logPokeDexServer, "Message size received : %s\n",path);
 
 				//TODO get padre from path received for passing it to crearArbolAPartirDelPadre
@@ -218,8 +218,8 @@ void processMessageReceived(void *parameter){
 				printf("Paso el crearArbolAPartirDelPadre: \n");
 				printf("lista->elements_count: %i\n",lista->elements_count);
 
-				char *mensajeOsada = serializeListaBloques(lista);
-				int messageSize = strlen(mensajeOsada); //lista->elements_count * sizeof(osada_file); TODO solucion en caso de que no funcione el strlen
+				int messageSize = 0;
+				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
 				break;
@@ -232,15 +232,16 @@ void processMessageReceived(void *parameter){
 				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 				char *path = malloc(pathLength);
 				//2) Receive path
-				receiveMessage(&serverData->socketClient, &path, sizeof(pathLength));
+				receiveMessage(&serverData->socketClient, path, pathLength);
 				log_info(logPokeDexServer, "Message size received : %s\n",path);
 
 				lista = crearArbolAPartirDelPadre(65535);
 				printf("Paso el crearArbolAPartirDelPadre: \n");
 				printf("lista->elements_count: %i\n",lista->elements_count);
 
-				char *mensajeOsada = serializeListaBloques(lista);
-				int messageSize = strlen(mensajeOsada);
+				int messageSize = 0;
+				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
 				break;

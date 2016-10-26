@@ -341,15 +341,15 @@ void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize){
 
 }
 
-char *serializeListaBloques(t_list* listaASerializar) {
-	int offset = 0;
+char *serializeListaBloques(t_list* listaASerializar,int *offset) {
 	char *nuevoElementoSerializado;
 	osada_file* unaPosicion;
+	*offset = 0;
 
 	//Request more memory for the quantity of elements to be serialized
 	nuevoElementoSerializado = malloc(sizeof(listaASerializar->elements_count));
 	memcpy(nuevoElementoSerializado, &listaASerializar->elements_count, sizeof(listaASerializar->elements_count));
-	offset += sizeof(listaASerializar->elements_count);
+	*offset += sizeof(listaASerializar->elements_count);
 
 	int i;
 	for (i = 0; i < listaASerializar->elements_count; i++) {
@@ -357,7 +357,7 @@ char *serializeListaBloques(t_list* listaASerializar) {
 		unaPosicion = list_get(listaASerializar,i);
 
 		//serialize the element to the buffer
-		nuevoElementoSerializado = serializeBloque(unaPosicion, nuevoElementoSerializado, &offset);
+		nuevoElementoSerializado = serializeBloque(unaPosicion, nuevoElementoSerializado, offset);
 	}
 
 	return nuevoElementoSerializado;
