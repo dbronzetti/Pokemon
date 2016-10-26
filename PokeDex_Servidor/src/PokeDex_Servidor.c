@@ -209,7 +209,7 @@ void processMessageReceived(void *parameter){
 				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 				char *path = malloc(pathLength);
 				//2) Receive path
-				receiveMessage(&serverData->socketClient, &path, pathLength);
+				receiveMessage(&serverData->socketClient, path, pathLength);
 				log_info(logPokeDexServer, "Message size received : %s\n",path);
 
 				//TODO get padre from path received for passing it to crearArbolAPartirDelPadre
@@ -232,7 +232,7 @@ void processMessageReceived(void *parameter){
 				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 				char *path = malloc(pathLength);
 				//2) Receive path
-				receiveMessage(&serverData->socketClient, &path, sizeof(pathLength));
+				receiveMessage(&serverData->socketClient, path, pathLength);
 				log_info(logPokeDexServer, "Message size received : %s\n",path);
 
 				lista = crearArbolAPartirDelPadre(65535);
@@ -241,7 +241,9 @@ void processMessageReceived(void *parameter){
 
 				char *mensajeOsada = serializeListaBloques(lista);
 				int messageSize = lista->elements_count * sizeof(osada_file);
+				log_info(logPokeDexServer, "POR HACER SEND\n");
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+				log_info(logPokeDexServer, "HIZO SEND\n");
 
 				break;
 			}

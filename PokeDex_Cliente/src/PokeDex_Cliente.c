@@ -71,16 +71,19 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 		t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
 		int i;
 		if (listaNodo->elements_count >= 1 ){
+			log_info(logPokeCliente, "FUSE_GETATTR -listaNodo->elements_count: %i\n", listaNodo->elements_count);
 			for (i = 0; i < listaNodo->elements_count; i++){
 
 				osada_file *nodo =list_get(listaNodo,i);
-				if (nodo->state == 1)
+				log_info(logPokeCliente, "FUSE_GETATTR - nodo->fname: %s\n", nodo->fname);
+				log_info(logPokeCliente, "FUSE_GETATTR - nodo->state: %c\n", nodo->state);
+				if (nodo->state == REGULAR)
 				{
 					stbuf->st_mode = S_IFREG | 0777;
 					stbuf->st_nlink = 1;
 					stbuf->st_size = nodo->file_size;
 				}
-				else if (nodo->state == 2)
+				else if (nodo->state == DIRECTORY)
 				{
 					stbuf->st_mode = S_IFDIR | 0777;
 					stbuf->st_nlink = 1;
@@ -101,28 +104,15 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 
 	int i;
 	t_list* nodos = obtenerDirectorio(path, FUSE_READDIR);
-	/*char* message= malloc(64);
-	printf("fuse_readdir - INICIO\n");
-	osada_file *tablaDeArchivo2 = malloc(64);
-	sendMessage(&socketPokeServer, path, 4);
-	t_list* lista = list_create();
-	receiveMessage(&socketPokeServer, message, 64);
-	deserializeListaBloques(lista, message);
-	//tablaDeArchivo2 = list_get(lista, 0);
-	printf("lista2->elements_count: %i\n",	lista->elements_count);
-	//printf("fuse_readdir - tablaDeArchivo2: %s\n", &tablaDeArchivo2->fname);*/
-	if(nodos!=NULL){
-		for (i = 0; i < nodos->elements_count; i++){
-		//for (i = 0; i < lista->elements_count; i++) 	{
 
+	if(nodos!=NULL){
+		log_info(logPokeCliente, "FUSE_READDIR - listaNodo->elements_count: %i\n", nodos->elements_count);
+		for (i = 0; i < nodos->elements_count; i++){
 			osada_file *nodo = list_get(nodos,i);
-			if ((nodo->state != 0)){
+			printf("NODE: %s\n", nodo->fname);
+			if ((nodo->state != DELETED)){
 				filler(buffer, nodo->fname, NULL, 0);
-			//osada_file *tablaDeArchivo2 = malloc(64);
-			//tablaDeArchivo2 = list_get(lista, i);
-			//printf("&tablaDeArchivo2->fname: %s\n",	&tablaDeArchivo2->fname);
-			//if ((tablaDeArchivo2->state != 0)){
-				//filler(buffer, &tablaDeArchivo2->fname, NULL, 0);
+
 			}
 		}
 	}else{
@@ -268,7 +258,7 @@ int main(int argc, char **argv) {
 			printf("Log File: '%s'\n", logFile);
 		}
 	}
-
+	logFile="logpokedexcliente";
 	logPokeCliente = log_create(logFile, "POKEDEX_CLIENTE", 0, LOG_LEVEL_TRACE);
 
 	//getting environment variable for connecting to server
@@ -373,25 +363,28 @@ t_list * obtenerDirectorio(char* path, enum_FUSEOperations fuseOperation){
 
 	//0) Send Fuse Operations
 	exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
-
+	log_info(logPokeCliente, "fuseOperation: %s\n", &fuseOperation);
 	string_append(&path, "\0");
 	//1) send path length (+1 due to \0)
 	int pathLength = strlen(path) + 1;
 	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+	log_info(logPokeCliente, "pathLength: %i\n", pathLength);
 	//2) send path
 	exitCode = sendMessage(&socketPokeServer, &path , strlen(path) + 1 );
+	log_info(logPokeCliente, "path: %s\n", path);
 
 	//Receive element Count
 	int elementCount = 0;
 	int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
-
+	log_info(logPokeCliente, "elementCount: %i\n", elementCount);
 	if (receivedBytes > 0){
 		int messageSize = elementCount * sizeof(osada_file);
 		char *messageRcv = malloc(messageSize);
 		receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+		log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
 		deserializeListaBloques(listaBloques,messageRcv,elementCount);
 	}
-
+	log_info(logPokeCliente, "*********************************\n");
 	return listaBloques;
 
 }
