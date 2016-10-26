@@ -86,7 +86,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 				else if (nodo->state == DIRECTORY)
 				{
 					stbuf->st_mode = S_IFDIR | 0777;
-					stbuf->st_nlink = 1;
+					stbuf->st_nlink = 2;
 				}
 			}
 		} else {
@@ -110,8 +110,13 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 		for (i = 0; i < nodos->elements_count; i++){
 			osada_file *nodo = list_get(nodos,i);
 			printf("NODE: %s\n", nodo->fname);
-			if ((nodo->state != DELETED)){
+			if ((nodo->state == DIRECTORY)){
 				filler(buffer, nodo->fname, NULL, 0);
+
+			}
+
+			if ((nodo->state == REGULAR)){
+					filler(buffer, nodo->fname, NULL , 0);
 
 			}
 		}

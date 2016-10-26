@@ -218,8 +218,9 @@ void processMessageReceived(void *parameter){
 				printf("Paso el crearArbolAPartirDelPadre: \n");
 				printf("lista->elements_count: %i\n",lista->elements_count);
 
-				char *mensajeOsada = serializeListaBloques(lista);
-				int messageSize = lista->elements_count * sizeof(osada_file); //lista->elements_count * sizeof(osada_file); TODO solucion en caso de que no funcione el strlen
+				int messageSize = 0;
+				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
 				break;
@@ -239,9 +240,9 @@ void processMessageReceived(void *parameter){
 				printf("Paso el crearArbolAPartirDelPadre: \n");
 				printf("lista->elements_count: %i\n",lista->elements_count);
 
-				char *mensajeOsada = serializeListaBloques(lista);
-				int messageSize = lista->elements_count * sizeof(osada_file);
-				log_info(logPokeDexServer, "POR HACER SEND\n");
+				int messageSize = 0;
+				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+
 				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 				log_info(logPokeDexServer, "HIZO SEND\n");
 

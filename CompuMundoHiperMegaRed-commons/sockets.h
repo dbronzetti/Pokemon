@@ -86,7 +86,7 @@ void deserializeHandShake(t_MessageGenericHandshake *value, char *bufferReceived
 int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaje); //Envia un string + un enum que dice que tipo de msj es.
 void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize);
 void deserializeClientMessage(t_Mensaje *value, char *bufferReceived);
-char *serializeListaBloques(t_list* listaASerializar);
+char *serializeListaBloques(t_list* listaASerializar, int *offset);
 void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int cantidadDeElementos);
 char *serializeBloque(osada_file* unaPosicion, char* value, int *offset);
 void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *offset);
