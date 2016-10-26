@@ -6,7 +6,7 @@
 
 #include "PokeDex_Cliente.h"
 /***************************************** inicio joel ********************************/
-
+//joel
 int  borrarArchivo (path){
 	return 0;
 };

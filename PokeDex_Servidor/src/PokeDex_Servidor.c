@@ -5,7 +5,7 @@
  */
 
 #include "PokeDex_Servidor.h"
-
+//joel
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
