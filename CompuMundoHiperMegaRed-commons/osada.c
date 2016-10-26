@@ -6,6 +6,9 @@
  */
 
 #include "osada.h"
+#include <errno.h>
+#include <commons/string.h>
+
 
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento){
 	printf("iniciio guardarEnOsada2\n");
@@ -237,12 +240,12 @@ void _iterarBloques(int bloque){
 
 
 
-t_list *crearPosicionesDeBloquesParaUnArchivo(int *arrayTabla, int numeroBloques){
+t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
 	int elProximo = 0;
 	t_list *proximo = list_create();
 
 	list_add(proximo, numeroBloques);
-	while ((elProximo = arrayTabla[numeroBloques]) != -1){
+	while ((elProximo = ARRAY_TABLA_ASIGNACION[numeroBloques]) != -1){
 		list_add(proximo, elProximo);
 		numeroBloques = elProximo;
 
@@ -662,8 +665,7 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list*
 
 
 	if (archivo->parent_directory == padre){
-		/*
-		 printf("EMPIEZA reconocerArchivosParaArbol %i: ****************\n", pos);
+		printf("EMPIEZA reconocerArchivosParaArbol %i: ****************\n", pos);
 		printf("state_: %c\n", archivo->state);
 		printf("parent_directory_: %i\n", archivo->parent_directory);
 		printf("fname_: %s\n", &archivo->fname);
@@ -671,7 +673,6 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list*
 		printf("lastmod_: %i\n", archivo->lastmod);
 		printf("first_block_: %i\n", archivo->first_block);
 		printf("Termina reconocerArchivosParaArbol %i ****************\n", pos);
-		*/
 		list_add(lista, archivo);
 	}
 

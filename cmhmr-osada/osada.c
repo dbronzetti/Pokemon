@@ -240,12 +240,12 @@ void _iterarBloques(int bloque){
 
 
 
-t_list *crearPosicionesDeBloquesParaUnArchivo(int *arrayTabla, int numeroBloques){
+t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
 	int elProximo = 0;
 	t_list *proximo = list_create();
 
 	list_add(proximo, numeroBloques);
-	while ((elProximo = arrayTabla[numeroBloques]) != -1){
+	while ((elProximo = ARRAY_TABLA_ASIGNACION[numeroBloques]) != -1){
 		list_add(proximo, elProximo);
 		numeroBloques = elProximo;
 

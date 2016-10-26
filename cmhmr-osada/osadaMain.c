@@ -57,8 +57,8 @@ int main(int argc, char *argv[]){
 	//osada_block_pointer posicion = buscarArchivo("hola.tx\0");
 	//printf("posicion del primer bloque: %i\n", posicion);
 
-	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, posicion);
-	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(tablaDeAsignacion, 31216);
+	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(31216);
 
 	//verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
 

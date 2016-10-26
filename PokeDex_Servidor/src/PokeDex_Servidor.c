@@ -201,6 +201,34 @@ void processMessageReceived(void *parameter){
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
 
 			switch (FUSEOperation){
+			case FUSE_READ:{
+				log_info(logPokeDexServer, "Processing FUSE_READ message");
+
+				int pathLength = 0;
+				//1) Receive path length
+				receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+				char *path = malloc(pathLength);
+				//2) Receive path
+				receiveMessage(&serverData->socketClient, path, pathLength);
+				log_info(logPokeDexServer, "Message size received : %s\n",path);
+
+				osada_block_pointer posicion = buscarArchivo("README.txt\0");
+				t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+
+				printf("Paso el crearArbolAPartirDelPadre: \n");
+				printf("lista->elements_count: %i\n",lista->elements_count);
+
+				int messageSize = 0;
+				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+
+				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+
+				break;
+
+
+				break;
+			}
 			case FUSE_READDIR:{
 				log_info(logPokeDexServer, "Processing FUSE_READDIR message");
 				int pathLength = 0;

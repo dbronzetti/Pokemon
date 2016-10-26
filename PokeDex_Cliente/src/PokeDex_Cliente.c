@@ -75,16 +75,19 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 			for (i = 0; i < listaNodo->elements_count; i++){
 
 				osada_file *nodo =list_get(listaNodo,i);
-				log_info(logPokeCliente, "FUSE_GETATTR - nodo->fname: %s\n", nodo->fname);
-				log_info(logPokeCliente, "FUSE_GETATTR - nodo->state: %c\n", nodo->state);
+
 				if (nodo->state == REGULAR)
 				{
+					log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->fname: %s\n", nodo->fname);
+					log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: %c\n", nodo->state);
 					stbuf->st_mode = S_IFREG | 0777;
 					stbuf->st_nlink = 1;
 					stbuf->st_size = nodo->file_size;
 				}
 				else if (nodo->state == DIRECTORY)
 				{
+					log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->fname: %s\n", nodo->fname);
+					log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: %c\n", nodo->state);
 					stbuf->st_mode = S_IFDIR | 0777;
 					stbuf->st_nlink = 2;
 				}

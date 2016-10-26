@@ -73,6 +73,7 @@ void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamania
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento);
 osada_block_pointer buscarArchivo(char *nombre);
 t_list* crearArbolAPartirDelPadre(int padre);
+t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER= 0;
 static int TAMANIO_DEL_BITMAP= 0;
