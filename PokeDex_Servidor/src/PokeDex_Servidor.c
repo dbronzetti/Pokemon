@@ -10,16 +10,17 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
-	obtenerHeader();
+	obtenerHeader();\
+
 	setearConstantesDePosicionDeOsada();
 
 	obtenerBitmap();
-
     obtenerTablaDeArchivos();
+    obtenerTablaDeAsignacion();
 
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
@@ -201,6 +202,23 @@ void processMessageReceived(void *parameter){
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
 
 			switch (FUSEOperation){
+				case FUSE_MKDIR:{
+					log_info(logPokeDexServer, "Processing FUSE_READ message");
+
+					int pathLength = 0;
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+					//2) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message size received : %s\n",path);
+
+					crearUnArchivo("hola mundo\n", 128,"hola.txt\0");
+
+					sendMessage(&serverData->socketClient, "bien\0" , strlen("bien\0"));
+					break;
+				}
 				case FUSE_READ:{
 					log_info(logPokeDexServer, "Processing FUSE_READ message");
 
@@ -215,14 +233,40 @@ void processMessageReceived(void *parameter){
 
 					osada_block_pointer posicion = buscarArchivo("README.txt\0");
 					t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+					//verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
+
+					int i;
+					//char *contenido = malloc(OSADA_BLOCK_SIZE * conjuntoDeBloquesDelArchivo->elements_count + 1);
+					char *string = string_new();
+					log_info(logPokeDexServer, "ENTRA EN EL FOR DE BLOQUES\n");
+					memcpy(string, &conjuntoDeBloquesDelArchivo->elements_count, sizeof(int));
+					for (i = 0; i < conjuntoDeBloquesDelArchivo->elements_count; i++) {
+						char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+						int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
+						bloque2 = bloque2 * 64;
+						int i;
+						memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
+						log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);
+
+						//bloqueDeDatos[OSADA_BLOCK_SIZE + 1] = '\0';
+						string_append(&string, bloqueDeDatos);
+						//printf("%s", bloqueDeDatos);
+						//free(bloqueDeDatos);
+
+					}
+					//string_append(&string, "\0");
+					log_info(logPokeDexServer, "string: %s\n", string);
 
 					printf("Paso el crearArbolAPartirDelPadre: \n");
 					printf("lista->elements_count: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
 
 					int messageSize = 0;
-					char *mensajeOsada = serializeListaBloques(conjuntoDeBloquesDelArchivo, &messageSize);
+					//char *mensajeOsada = serializeListaBloques(conjuntoDeBloquesDelArchivo, &messageSize);
+					printf("memcpy \n");
+				//this will tell to PokeDexCliente that the message is going to contain only 1 OSADA_FILE
+					printf("despues sendMessage :%s\n", string);
 
-					sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+					sendMessage(&serverData->socketClient, string , strlen(string));
 
 					break;
 				}
@@ -236,6 +280,7 @@ void processMessageReceived(void *parameter){
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
+
 
 					//get padre from path received for passing it to crearArbolAPartirDelPadre
 					int posBloquePadre = obtener_bloque_padre(path);

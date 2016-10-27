@@ -559,7 +559,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname){
 		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
 		prepararBloquesDeDatos(listado, contenido);
-		escribirEnLaTablaDeArchivos(666, tamanio,fname,list_get(listado, 0));
+		escribirEnLaTablaDeArchivos(65535, tamanio,fname,list_get(listado, 0));
 	}
 
 

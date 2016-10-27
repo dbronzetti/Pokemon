@@ -88,7 +88,9 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 				stbuf->st_mode = S_IFDIR | 0777;
 				stbuf->st_nlink = 2;
 			}
-		}else{
+
+		}
+		else{
 			res = -ENOENT;
 		}
 
@@ -138,16 +140,41 @@ static int fuse_rmdir(const char* path){
 	return resultado;
 }
 
-static int fuse_mkdir(const char* path){
+static int fuse_mkdir(const char* path, mode_t mode){
 
-	int resultado = crearDirectorio(path);
+	//int resultado = crearDirectorio(path);
 	printf("********************************* fuse_mkdir *********************\n");
-	if (resultado!=0)	{
-		printf("[Error_Fuse] mkdir(%s)\n", path);
-		return 1;
-	}
+	//if (resultado!=0)	{
+		//printf("[Error_Fuse] mkdir(%s)\n", path);
+		//return 1;
+	//}
+    mode = S_IFDIR | 0777;
+	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+	log_info(logPokeCliente, "****************fuse_read****************\n");
+	//0) Send Fuse Operations
+	enum_FUSEOperations operacion = FUSE_MKDIR;
+	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
-	return resultado;
+	string_append(&path, "\0");
+	//1) send path length (+1 due to \0)
+	int pathLength = strlen(path) + 1;
+	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+	log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
+	//2) send path
+	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+	log_info(logPokeCliente, "fuse_read - path: %s\n", path);
+
+	//Receive message size
+	int elementCount = -1;
+	int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+	log_info(logPokeCliente, "fuse_read - elementCount: %i\n", elementCount);
+
+	if (receivedBytes > 0){
+		}
+
+	return 0;
+
+
 }
 
 static int fuse_unlink(const char* path)
@@ -172,30 +199,32 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		int exitCode = EXIT_FAILURE; //DEFAULT Failure
 		log_info(logPokeCliente, "****************fuse_read****************\n");
 		//0) Send Fuse Operations
-		exitCode = sendMessage(&socketPokeServer, (void*)FUSE_READ , sizeof(enum_FUSEOperations));
+		enum_FUSEOperations operacion = FUSE_READ;
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
 		string_append(&path, "\0");
 		//1) send path length (+1 due to \0)
 		int pathLength = strlen(path) + 1;
 		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", &pathLength);
+		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
 		//2) send path
 		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
 		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
 
 		//Receive message size
-		int messageSize = 0;
-		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-		log_info(logPokeCliente, "fuse_read - receiveMessage: %s\n", &messageSize);
+		int elementCount = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+		log_info(logPokeCliente, "fuse_read - elementCount: %i\n", elementCount);
 
 		if (receivedBytes > 0){
-			char *messageRcv = malloc(sizeof(messageSize));
-			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-			log_info(logPokeCliente, "fuse_read - messageRcv: %s\n", &messageRcv);
-			memcpy(buf, messageRcv, messageSize);
+			int messageSize = elementCount * OSADA_BLOCK_SIZE;
+			char *messageRcv = malloc(512);
+			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,512);
+			log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
+			memcpy(buf, messageRcv, 512);
 		}
 
-	return 0;
+	return 512;
 }
 
 static int fuse_write(const char* path, const char* buf, size_t size, off_t offset, struct fuse_file_info *fi)
