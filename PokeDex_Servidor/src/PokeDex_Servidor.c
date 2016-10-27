@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -201,87 +201,99 @@ void processMessageReceived(void *parameter){
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
 
 			switch (FUSEOperation){
-			case FUSE_READ:{
-				log_info(logPokeDexServer, "Processing FUSE_READ message");
+				case FUSE_READ:{
+					log_info(logPokeDexServer, "Processing FUSE_READ message");
 
-				int pathLength = 0;
-				//1) Receive path length
-				receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
-				char *path = malloc(pathLength);
-				//2) Receive path
-				receiveMessage(&serverData->socketClient, path, pathLength);
-				log_info(logPokeDexServer, "Message size received : %s\n",path);
+					int pathLength = 0;
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+					//2) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-				osada_block_pointer posicion = buscarArchivo("README.txt\0");
-				t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+					osada_block_pointer posicion = buscarArchivo("README.txt\0");
+					t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 
-				printf("Paso el crearArbolAPartirDelPadre: \n");
-				printf("lista->elements_count: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
+					printf("Paso el crearArbolAPartirDelPadre: \n");
+					printf("lista->elements_count: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
 
-				int messageSize = 0;
-				char *mensajeOsada = serializeListaBloques(conjuntoDeBloquesDelArchivo, &messageSize);
+					int messageSize = 0;
+					char *mensajeOsada = serializeListaBloques(conjuntoDeBloquesDelArchivo, &messageSize);
 
-				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+					sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
-				break;
+					break;
+				}
+				case FUSE_READDIR:{
+					log_info(logPokeDexServer, "Processing FUSE_READDIR message");
+					int pathLength = 0;
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+					//2) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
+					//TODO get padre from path received for passing it to crearArbolAPartirDelPadre
 
-				break;
-			}
-			case FUSE_READDIR:{
-				log_info(logPokeDexServer, "Processing FUSE_READDIR message");
-				int pathLength = 0;
-				//1) Receive path length
-				receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
-				char *path = malloc(pathLength);
-				//2) Receive path
-				receiveMessage(&serverData->socketClient, path, pathLength);
-				log_info(logPokeDexServer, "Message size received : %s\n",path);
+					lista = crearArbolAPartirDelPadre(65535);
+					printf("Paso el crearArbolAPartirDelPadre: \n");
+					printf("lista->elements_count: %i\n",lista->elements_count);
 
-				//TODO get padre from path received for passing it to crearArbolAPartirDelPadre
+					int messageSize = 0;
+					char *mensajeOsada = serializeListaBloques(lista, &messageSize);
 
-				lista = crearArbolAPartirDelPadre(65535);
-				printf("Paso el crearArbolAPartirDelPadre: \n");
-				printf("lista->elements_count: %i\n",lista->elements_count);
+					sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
-				int messageSize = 0;
-				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+					break;
+				}
+				case FUSE_GETATTR:{
+					log_info(logPokeDexServer, "Processing FUSE_GETATTR message");
+					int pathLength = 0;
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+					//2) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+					int posArchivo = buscarBloqueArchivo(path);
+					//int posArchivo = obtener_bloque_archivo(path);//TODO ver de adaptar esta funcion para que funcione igual a buscarBloqueArchivo()
 
-				break;
-			}
-			case FUSE_GETATTR:{
-				log_info(logPokeDexServer, "Processing FUSE_GETATTR message");
-				int pathLength = 0;
-				//1) Receive path length
-				receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-				log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
-				char *path = malloc(pathLength);
-				//2) Receive path
-				receiveMessage(&serverData->socketClient, path, pathLength);
-				log_info(logPokeDexServer, "Message size received : %s\n",path);
+					int elementCount;
+					char *mensajeOsada = malloc(sizeof(elementCount));
+					int messageSize = sizeof(elementCount);
 
-				lista = crearArbolAPartirDelPadre(65535);
-				printf("Paso el crearArbolAPartirDelPadre: \n");
-				printf("lista->elements_count: %i\n",lista->elements_count);
+					if (posArchivo != -666){
+						osada_file bloqueArchivo = TABLA_DE_ARCHIVOS[posArchivo];
 
-				int messageSize = 0;
-				char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+						printf("Paso el buscarArchivo: \n");
+						printf("File Name: %s\n",bloqueArchivo.fname);
+						elementCount = 1;
+						memcpy(mensajeOsada, &elementCount, sizeof(elementCount));//this will tell to PokeDexCliente that the message is going to contain only 1 OSADA_FILE
+						mensajeOsada = serializeBloque(&bloqueArchivo, mensajeOsada, &messageSize);
 
-				sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
-				log_info(logPokeDexServer, "HIZO SEND\n");
+					}else{
+						elementCount = 0;
+						memcpy(mensajeOsada, &elementCount, sizeof(elementCount));//this will tell to PokeDexCliente that the message is going to contain 0 OSADA_FILE because the file was not found
+					}
 
-				break;
-			}
-			default:{
-				log_error(logPokeDexServer,"Invalid operation received '%d'", FUSEOperation);
-				close(serverData->socketClient);
-				free(serverData);
-				break;
-			}
+					sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+
+					log_info(logPokeDexServer, "HIZO SEND\n");
+
+					break;
+				}
+				default:{
+					log_error(logPokeDexServer,"Invalid operation received '%d'", FUSEOperation);
+					close(serverData->socketClient);
+					free(serverData);
+					break;
+				}
 			}
 
 /*			char* message= malloc(messageSize);

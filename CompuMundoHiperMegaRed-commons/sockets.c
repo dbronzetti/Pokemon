@@ -367,7 +367,6 @@ void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int c
 	int offset = 0;
 
 	//Getting element count
-	//offset += sizeof(cantidadDeElementos);
 	printf("deserializeListaBloques - cantidadDeElementos: %i\n", cantidadDeElementos);
 
 	int i;

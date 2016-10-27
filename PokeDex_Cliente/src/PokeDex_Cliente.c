@@ -57,53 +57,45 @@ static void *fuse_init(void)
 static int fuse_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
-	path = full(path);
-	printf("[Fuse] getattr(%s)\n", path);
+	int length_value = strlen(path) - 1;//en caso de usar la funcion armar_vector_path en el osada se debe comentar esta linea
+	char* path_without_brackets = string_substring(path, 1, length_value);//en caso de usar la funcion armar_vector_path en el osada se debe comentar esta linea
+	//path = full(path);
+	//printf("[Fuse] getattr(%s)\n", path);
 	memset(stbuf, 0, sizeof(struct stat));
 
-	if (strcmp(path, DIRECTORIO_RAIZ) == 0)
-	{
+	if (strcmp(path, DIRECTORIO_RAIZ) == 0){
 		stbuf->st_mode = S_IFDIR | 0777;
 		stbuf->st_nlink = 2;
-	} else if (strcmp(path, "holis")== 0)
-	{
-		printf("CARPETA HOLIS\n");
-		stbuf->st_mode = S_IFDIR | 0777;
-		stbuf->st_nlink = 2;
-	}
-	else 	{
+	}else {
 
 		//@TODO: Esta funcion llama al socket y pide el bloque
-		t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
-		int i;
-		if (listaNodo->elements_count >= 1 ){
+		t_list* listaNodo = obtenerDirectorio(path_without_brackets, FUSE_GETATTR);
+		//t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
+		if (listaNodo->elements_count == 1 ){// listaNodo->elements_count SIEMPRE va a ser 1, porque el servidor solo manda 1 elemento
 			log_info(logPokeCliente, "FUSE_GETATTR -listaNodo->elements_count: %i\n", listaNodo->elements_count);
-			for (i = 0; i < listaNodo->elements_count; i++){
+			osada_file *nodo =list_get(listaNodo,0);
 
-				osada_file *nodo =list_get(listaNodo,i);
-
-				if (nodo->state == REGULAR)
-				{
-					log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->fname: %s\n", nodo->fname);
-					log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: %c\n", nodo->state);
-					log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: %i\n", nodo->file_size);
-					stbuf->st_mode = S_IFREG | 0777;
-					stbuf->st_nlink = 1;
-					stbuf->st_size = nodo->file_size;
-				}
-				else if (nodo->state == DIRECTORY)
-				{
-					log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->fname: %s\n", nodo->fname);
-					log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: %c\n", nodo->state);
-					stbuf->st_mode = S_IFDIR | 0777;
-					stbuf->st_nlink = 2;
-				}else{
-					res = -ENOENT;
-				}
+			if (nodo->state == REGULAR)
+			{
+				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->fname: %s\n", nodo->fname);
+				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: %c\n", nodo->state);
+				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: %i\n", nodo->file_size);
+				stbuf->st_mode = S_IFREG | 0777;
+				stbuf->st_nlink = 1;
+				stbuf->st_size = nodo->file_size;
 			}
+			else if (nodo->state == DIRECTORY)
+			{
+				log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->fname: %s\n", nodo->fname);
+				log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: %c\n", nodo->state);
+				stbuf->st_mode = S_IFDIR | 0777;
+				stbuf->st_nlink = 2;
+			}
+		}else{
+			res = -ENOENT;
 		}
 
-	}//(strcmp(path, DIRECTORIO_RAIZ) == 0)
+	}
 
 	return res;
 }
@@ -379,7 +371,7 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 	return exitcode;
 }
 
-t_list * obtenerDirectorio(char* path, enum_FUSEOperations fuseOperation){
+t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation){
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	t_list *listaBloques = list_create();
 
@@ -392,14 +384,14 @@ t_list * obtenerDirectorio(char* path, enum_FUSEOperations fuseOperation){
 	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
 	log_info(logPokeCliente, "pathLength: %i\n", pathLength);
 	//2) send path
-	exitCode = sendMessage(&socketPokeServer, &path , strlen(path) + 1 );
+	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
 	log_info(logPokeCliente, "path: %s\n", path);
 
 	//Receive element Count
-	int elementCount = 0;
+	int elementCount = -1;
 	int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
 	log_info(logPokeCliente, "elementCount: %i\n", elementCount);
-	if (receivedBytes > 0){
+	if (receivedBytes > 0 && elementCount > 0){
 		int messageSize = elementCount * sizeof(osada_file);
 		char *messageRcv = malloc(messageSize);
 		receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
