@@ -261,8 +261,7 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					int posArchivo = buscarBloqueArchivo(path);
-					//int posArchivo = obtener_bloque_archivo(path);//TODO ver de adaptar esta funcion para que funcione igual a buscarBloqueArchivo()
+					int posArchivo = obtener_bloque_archivo(path);
 
 					int elementCount;
 					char *mensajeOsada = malloc(sizeof(elementCount));

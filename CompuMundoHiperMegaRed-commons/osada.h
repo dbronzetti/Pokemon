@@ -72,8 +72,8 @@ void setearConstantesDePosicionDeOsada();
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento);
 osada_block_pointer buscarArchivo(char *nombre);
-int buscarBloqueArchivo(char *nombre);
-osada_block_pointer devolverBloqueArchivo(osada_file tablaDeArchivo, char *nombre);
+char**  armar_vector_path(const char* text);
+int obtener_bloque_archivo(const char* path);
 t_list* crearArbolAPartirDelPadre(int padre);
 t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques);
 

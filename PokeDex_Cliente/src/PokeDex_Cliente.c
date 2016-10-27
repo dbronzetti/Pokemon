@@ -57,8 +57,6 @@ static void *fuse_init(void)
 static int fuse_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
-	int length_value = strlen(path) - 1;//en caso de usar la funcion armar_vector_path en el osada se debe comentar esta linea
-	char* path_without_brackets = string_substring(path, 1, length_value);//en caso de usar la funcion armar_vector_path en el osada se debe comentar esta linea
 	//path = full(path);
 	//printf("[Fuse] getattr(%s)\n", path);
 	memset(stbuf, 0, sizeof(struct stat));
@@ -68,9 +66,8 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_nlink = 2;
 	}else {
 
-		//@TODO: Esta funcion llama al socket y pide el bloque
-		t_list* listaNodo = obtenerDirectorio(path_without_brackets, FUSE_GETATTR);
-		//t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
+		//Esta funcion llama al socket y pide el bloque
+		t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
 		if (listaNodo->elements_count == 1 ){// listaNodo->elements_count SIEMPRE va a ser 1, porque el servidor solo manda 1 elemento
 			log_info(logPokeCliente, "FUSE_GETATTR -listaNodo->elements_count: %i\n", listaNodo->elements_count);
 			osada_file *nodo =list_get(listaNodo,0);

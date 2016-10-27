@@ -295,45 +295,7 @@ osada_block_pointer buscarArchivo(char *nombre){
 	return posicion;
 }
 
-int buscarBloqueArchivo(char *nombre){
-	int pos=0;
-	int posicion = -666;
-
-	for (pos=0; pos <= 2047; pos++){
-		if ((devolverBloqueArchivo(TABLA_DE_ARCHIVOS[pos],  nombre)) != -666){
-			return pos;
-		};
-	}
-	return posicion;
-}
-
-osada_block_pointer devolverBloqueArchivo(osada_file tablaDeArchivo, char *nombre){
-	char *nac;
-	char *n;
-	nac = string_duplicate(&tablaDeArchivo.fname);
-	n = string_duplicate(nombre);
-	string_trim(&nac);
-	string_trim(&n);
-
-	if (tablaDeArchivo.state != DELETED && strcmp(nac, n) == 0){
-		free(nac);
-		free(n);
-		printf("state_: %c\n", tablaDeArchivo.state);
-		printf("parent_directory_: %i\n", tablaDeArchivo.parent_directory);
-		printf("fname_: %s\n",&tablaDeArchivo.fname);
-		printf("file_size_: %i\n",tablaDeArchivo.file_size);
-		printf("lastmod_: %i\n", tablaDeArchivo.lastmod);
-		printf("first_block_: %i\n",tablaDeArchivo.first_block);
-
-		return tablaDeArchivo.first_block;
-	}
-
-	free(nac);
-	free(n);
-	return -666;
-}
-
-char**  armar_vector_path(char* text)
+char**  armar_vector_path(const char* text)
 {
     int length_value = strlen(text) - 1;
     char* value_without_brackets = string_substring(text, 1, length_value);
@@ -349,7 +311,7 @@ int obtener_bloque_archivo(const char* path)
 {
    char** vector_path = armar_vector_path(path);
 
-   int parent_dir = 0;
+   int parent_dir = 65535;
    int pos_archivo = -666;
 
    int j;
@@ -357,11 +319,11 @@ int obtener_bloque_archivo(const char* path)
 
    while (vector_path[i] != NULL)
    {
-	   for (j=0;j<1024;j++)
+	   for (j=0;j<2047;j++)
 	   {
-		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
+		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir) && (TABLA_DE_ARCHIVOS[j].state != DELETED))
 		   {
-			   parent_dir = j + 1;
+			   parent_dir = j;
 			   pos_archivo = j;
 			   break;
 		   }
@@ -369,7 +331,7 @@ int obtener_bloque_archivo(const char* path)
 	   i++;
    }
 
-   if (j == 1024)
+   if (j == 2047)
    {
 	   return -666;
    }
