@@ -237,9 +237,9 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					//TODO get padre from path received for passing it to crearArbolAPartirDelPadre
-
-					lista = crearArbolAPartirDelPadre(65535);
+					//get padre from path received for passing it to crearArbolAPartirDelPadre
+					int posBloquePadre = obtener_bloque_padre(path);
+					lista = crearArbolAPartirDelPadre(posBloquePadre);
 					printf("Paso el crearArbolAPartirDelPadre: \n");
 					printf("lista->elements_count: %i\n",lista->elements_count);
 

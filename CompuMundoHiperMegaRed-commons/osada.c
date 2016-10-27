@@ -338,6 +338,40 @@ int obtener_bloque_archivo(const char* path)
    return pos_archivo;
 }
 
+int obtener_bloque_padre (const char* path)
+{
+	char** vector_path = armar_vector_path(path);
+	char *file_name = strrchr (path, '/') + 1;
+
+	int parent_dir = 65535;
+
+	if ( strcmp (file_name, strrchr(path, '/')) !=0 )
+	{
+		int i = 0;
+		while (vector_path[i] != NULL)
+		{
+			int j;
+			for (j = 0; j < 2047; j++)
+			{
+				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
+				{
+					if ((i == 0) && (parent_dir == 65535))
+					{
+						parent_dir = j;
+					}
+					if ((i > 0) && (parent_dir != 0))
+					{
+						parent_dir = j;
+					}
+				}
+			}
+			i++;
+		}
+	}
+
+	return parent_dir;
+}
+
 
 int noEsVacio(int tamanio){
 	return tamanio !=0;
