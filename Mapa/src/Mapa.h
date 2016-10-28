@@ -23,7 +23,6 @@
 #include <nivel.h>
 #include <curses.h>
 
-
 t_log* logMapa;
 t_metadataMapa metadataMapa;
 DIR *dipPokenest;
@@ -45,7 +44,6 @@ pthread_mutex_t listaDePokenestMutex;
 pthread_mutex_t setRecibirMsj;
 pthread_mutex_t borradoDeEntrenadores;
 
-
 // Estructuras
 typedef struct {
 	int socketServer;
@@ -63,6 +61,7 @@ typedef struct {
 	int nivel;
 	char id;
 	char* tipo;
+	char* nombre;
 } t_pokemon;
 
 typedef struct {
@@ -83,12 +82,12 @@ typedef struct {
 void startServerProg();
 void newClients(int *socketServer, fd_set *master, int *fdmax);
 void handShake(void *parameter);
-void processMessageReceived (void *parameter);
+void processMessageReceived(void *parameter);
 
 // Funciones
 int recorrerdirDePokenest(char* rutaDirPokenest); //Se encarga de recorrer las carpetas que esta dentro de la pokenest (pikachu,bulbasaur,charmander,etc...)
-int recorrerCadaPokenest(char* rutaDeUnaPokenest); //Se encarga de recorrer lo que esta ADENTRO de las carpetas pokenest (pikachu001,pikachu002,metadata.dat,etc..)
-t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
+int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest); //Se encarga de recorrer lo que esta ADENTRO de las carpetas pokenest (pikachu001,pikachu002,metadata.dat,etc..)
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest, char* nombreDeLaPokenest);
 int levantarNivelDelPokemon(char* rutaDelPokemon);
 void dibujarMapa();
 void crearEntrenadorYDibujar(char simbolo, int socket);

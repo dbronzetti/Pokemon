@@ -25,6 +25,7 @@ typedef struct {
 
 typedef struct {
 	char* tipo;
+	char* nombrePokenest;
 	int pos_x;
 	int pos_y;
 	char id;

@@ -13,14 +13,17 @@ char* posicionPokenest;
 char* rutaMetadata;
 char* rutaDirDeBill;
 char* mapaActual;
+char* pokemonCapturado;
+char *pokedex;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *entrenador = string_new();
-	char *pokedex = string_new();
+	pokedex = string_new();
 	pthread_t hiloSignal; //un hio para detectar la signals que se le envia
 	pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
 	pthread_mutex_init(&turnoMutex, NULL);
+	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
 	int ganoMapa;
 
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
@@ -320,12 +323,16 @@ void jugar() {
 			}
 
 			case CAPTURADO: { // si se capturo ok hay que copiar el archivito metadata en el dir de bill
-				FILE *archivoMetadataPokemon;
+				char* rutaMetadataPokemon = string_from_format(
+						"%s/metadata%s.dat", rutaDirDeBill, pokemonCapturado); //armamos la ruta de donde se va a copiar el archivo metadata del pokemon capturado :)
+				puts(rutaMetadataPokemon);
+				char* rutaMedataPokemonMapa = string_from_format(
+						"%s/Mapas/%s/Pokenest/%s/metadata.dat", pokedex, mapaActual,
+						pokemonCapturado); //armamos la ruta del archivo metadata que vamos a copiar
+				puts(rutaMedataPokemonMapa);
+				log_info(logEntrenador, "Trainer has captured: %s",pokemonCapturado);
+				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
 
-				char* rutaMetadataPokemon = string_from_format("%s/metadata%s.dat",
-						rutaDirDeBill, objetivoActual);
-//				archivoMetadataPokemon = fopen(rutaMetadataPokemon);
-//				char* rutaMedataPokemonMapa = string_from_format()
 				break;
 			}
 
@@ -417,6 +424,11 @@ void recibirMsjs() {
 			case CAPTURADO: { //msj que envia si fue capturado OK !!
 				log_info(logEntrenador,
 						"Trainer captured the pokemon SUCCESSFUL");
+				pthread_mutex_lock(&pokemonCapturadoMutex);
+				puts(message->mensaje);
+				pokemonCapturado = message->mensaje;
+				pthread_mutex_unlock(&pokemonCapturadoMutex);
+
 				pthread_mutex_lock(&turnoMutex);
 				turno = CAPTURADO;
 				pthread_mutex_unlock(&turnoMutex);
@@ -448,3 +460,21 @@ void recibirMsjs() {
 	}
 }
 
+void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
+
+	FILE *fp_org, *fp_dest;
+	char c;
+
+	if (!(fp_org = fopen(archivoOrigen, "rt"))
+			|| !(fp_dest = fopen(archivoDestino, "wt"))) {
+		perror("Error de apertura de ficheros");
+		exit(EXIT_FAILURE);
+	}
+
+	while ((c = fgetc(fp_org)) != EOF && !ferror(fp_org) && !ferror(fp_dest))
+		fputc(c, fp_dest);
+
+	fclose(fp_org);
+	fclose(fp_dest);
+
+}

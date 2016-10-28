@@ -22,6 +22,7 @@ t_log* logEntrenador;
 
 //Mutex
 pthread_mutex_t turnoMutex;
+pthread_mutex_t pokemonCapturadoMutex;
 
 //Metadata
 t_metadataEntrenador metadataEntrenador;
