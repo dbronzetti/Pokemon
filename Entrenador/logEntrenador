@@ -1,0 +1,327 @@
+[INFO] 16:11:37:820 ENTRENADOR/(2854:2854): Conectado a MAPA - Messsage: The server has accepted your connection!
+
+[INFO] 16:11:37:820 ENTRENADOR/(2854:2854): ENTRENADOR connected to MAPA successfully
+
+[INFO] 16:11:42:895 ENTRENADOR/(2854:2856): New action begins
+[INFO] 16:11:42:895 ENTRENADOR/(2854:2854): Trainer send the id of the pokenest
+[INFO] 16:11:42:896 ENTRENADOR/(2854:2854): Conocer: Se manda: P
+[INFO] 16:11:42:916 ENTRENADOR/(2854:2856): New action begins: the position of the pokenest is: a,b
+
+[INFO] 16:11:42:916 ENTRENADOR/(2854:2854): Trainer receive the position
+[INFO] 16:11:47:923 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:11:47:934 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:11:52:957 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:11:52:983 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:11:57:2 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:11:58:18 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:12:03:51 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:12:03:51 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:12:08:83 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:12:08:83 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:12:13:99 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:12:13:101 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:12:18:115 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:12:18:115 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:12:23:134 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:12:23:135 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:12:28:154 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:12:28:154 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:12:33:175 ENTRENADOR/(2854:2856): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:12:33:189 ENTRENADOR/(2854:2854): Trainer ask to mapa to move to the pokenest
+[INFO] 16:20:40:195 ENTRENADOR/(3412:3412): Conectado a MAPA - Messsage: The server has accepted your connection!
+
+[INFO] 16:20:40:195 ENTRENADOR/(3412:3412): ENTRENADOR connected to MAPA successfully
+
+[INFO] 16:20:45:238 ENTRENADOR/(3412:3414): New action begins
+[INFO] 16:20:45:238 ENTRENADOR/(3412:3412): Trainer send the id of the pokenest
+[INFO] 16:20:45:238 ENTRENADOR/(3412:3412): Conocer: Se manda: P
+[INFO] 16:20:45:249 ENTRENADOR/(3412:3414): New action begins: the position of the pokenest is: a,b
+
+[INFO] 16:20:45:255 ENTRENADOR/(3412:3412): Trainer receive the position
+[INFO] 16:20:50:269 ENTRENADOR/(3412:3414): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:20:50:269 ENTRENADOR/(3412:3412): Trainer ask to mapa to move to the pokenest
+[INFO] 16:20:55:287 ENTRENADOR/(3412:3414): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:20:55:289 ENTRENADOR/(3412:3412): Trainer ask to mapa to move to the pokenest
+[INFO] 16:21:00:302 ENTRENADOR/(3412:3414): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:21:00:302 ENTRENADOR/(3412:3412): Trainer ask to mapa to move to the pokenest
+[INFO] 16:21:05:318 ENTRENADOR/(3412:3414): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:21:05:318 ENTRENADOR/(3412:3412): Trainer ask to mapa to move to the pokenest
+[INFO] 16:21:10:345 ENTRENADOR/(3412:3414): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:21:10:346 ENTRENADOR/(3412:3412): Trainer ask to mapa to move to the pokenest
+[INFO] 16:21:15:365 ENTRENADOR/(3412:3414): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:21:15:365 ENTRENADOR/(3412:3412): Trainer ask to mapa to move to the pokenest
+[ERROR] 16:21:16:258 ENTRENADOR/(3412:3414): The client went down while receiving! - Please check the client '4' is down!
+
+[INFO] 16:22:49:301 ENTRENADOR/(3719:3719): Conectado a MAPA - Messsage: The server has accepted your connection!
+
+[INFO] 16:22:49:301 ENTRENADOR/(3719:3719): ENTRENADOR connected to MAPA successfully
+
+[INFO] 16:22:54:348 ENTRENADOR/(3719:3721): New action begins
+[INFO] 16:22:54:348 ENTRENADOR/(3719:3719): Trainer send the id of the pokenest
+[INFO] 16:22:54:349 ENTRENADOR/(3719:3719): Conocer: Se manda: P
+[INFO] 16:22:54:360 ENTRENADOR/(3719:3721): New action begins: the position of the pokenest is: a,b
+
+[INFO] 16:22:54:366 ENTRENADOR/(3719:3719): Trainer receive the position
+[INFO] 16:22:59:368 ENTRENADOR/(3719:3721): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:22:59:368 ENTRENADOR/(3719:3719): Trainer ask to mapa to move to the pokenest
+[INFO] 16:23:04:389 ENTRENADOR/(3719:3721): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:23:04:389 ENTRENADOR/(3719:3719): Trainer ask to mapa to move to the pokenest
+[ERROR] 16:23:05:338 ENTRENADOR/(3719:3721): The client went down while receiving! - Please check the client '4' is down!
+
+[ERROR] 16:23:40:161 ENTRENADOR/(4147:4147): I'm not able to connect to the server! - My socket is: '4'
+
+[ERROR] 16:23:40:161 ENTRENADOR/(4147:4147): No server available - shutting down proces!!
+
+[INFO] 16:24:15:262 ENTRENADOR/(4162:4162): Conectado a MAPA - Messsage: The server has accepted your connection!
+
+[INFO] 16:24:15:263 ENTRENADOR/(4162:4162): ENTRENADOR connected to MAPA successfully
+
+[INFO] 16:24:20:306 ENTRENADOR/(4162:4164): New action begins
+[INFO] 16:24:20:326 ENTRENADOR/(4162:4162): Trainer send the id of the pokenest
+[INFO] 16:24:20:327 ENTRENADOR/(4162:4162): Conocer: Se manda: P
+[INFO] 16:24:20:335 ENTRENADOR/(4162:4164): New action begins: the position of the pokenest is: a,b
+
+[INFO] 16:24:20:342 ENTRENADOR/(4162:4162): Trainer receive the position
+[INFO] 16:24:25:354 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:24:25:383 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:24:30:406 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:24:30:441 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:24:35:470 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:24:35:491 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:24:40:511 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:24:40:511 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:24:45:524 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:24:45:549 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:24:50:578 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:24:50:584 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:24:55:596 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:24:55:596 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:00:610 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:00:636 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:05:658 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:05:689 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:10:703 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:10:704 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:15:721 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:15:738 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:20:778 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:20:778 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:25:814 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:25:838 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:30:865 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:30:865 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:35:907 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:35:933 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:40:976 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:40:981 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:46:17 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:46:17 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:51:36 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:51:36 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:25:56:59 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:25:56:66 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:26:01:84 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:26:01:105 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:26:06:145 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:26:06:145 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:26:11:175 ENTRENADOR/(4162:4164): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:26:11:175 ENTRENADOR/(4162:4162): Trainer ask to mapa to move to the pokenest
+[INFO] 16:26:16:207 ENTRENADOR/(4162:4164): New action begins: trainer came to pokenest: ASD
+
+[INFO] 16:26:16:207 ENTRENADOR/(4162:4162): Trainer ask to Mapa capture the pokemon
+[INFO] 16:26:16:224 ENTRENADOR/(4162:4164): Trainer captured the pokemon SUCCESSFUL
+[INFO] 16:26:16:244 ENTRENADOR/(4162:4162): Trainer has captured: 
+[INFO] 16:30:15:637 ENTRENADOR/(4703:4703): Conectado a MAPA - Messsage: The server has accepted your connection!
+
+[INFO] 16:30:15:638 ENTRENADOR/(4703:4703): ENTRENADOR connected to MAPA successfully
+
+[INFO] 16:30:20:696 ENTRENADOR/(4703:4705): New action begins
+[INFO] 16:30:20:706 ENTRENADOR/(4703:4703): Trainer send the id of the pokenest
+[INFO] 16:30:20:706 ENTRENADOR/(4703:4703): Conocer: Se manda: P
+[INFO] 16:30:20:714 ENTRENADOR/(4703:4705): New action begins: the position of the pokenest is: a,b
+
+[INFO] 16:30:20:731 ENTRENADOR/(4703:4703): Trainer receive the position
+[INFO] 16:30:25:729 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:30:25:735 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:30:30:751 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:30:30:751 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:30:35:765 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:30:35:765 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:30:40:780 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:30:40:781 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:30:45:796 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:30:45:796 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:30:50:821 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:30:50:825 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:30:55:847 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:30:55:848 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:00:869 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:00:869 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:05:885 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:05:885 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:10:899 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:10:899 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:15:919 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:15:919 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:20:958 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:21:9 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:26:38 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:26:68 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:31:83 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:31:98 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:36:123 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:36:154 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:41:187 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:41:188 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:46:207 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:46:208 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:31:51:257 ENTRENADOR/(4703:4705): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:31:51:257 ENTRENADOR/(4703:4703): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:04:506 ENTRENADOR/(5198:5198): Conectado a MAPA - Messsage: The server has accepted your connection!
+
+[INFO] 16:39:04:506 ENTRENADOR/(5198:5198): ENTRENADOR connected to MAPA successfully
+
+[INFO] 16:39:09:549 ENTRENADOR/(5198:5200): New action begins
+[INFO] 16:39:09:568 ENTRENADOR/(5198:5198): Trainer send the id of the pokenest
+[INFO] 16:39:09:568 ENTRENADOR/(5198:5198): Conocer: Se manda: P
+[INFO] 16:39:09:580 ENTRENADOR/(5198:5200): New action begins: the position of the pokenest is: a,b
+
+[INFO] 16:39:09:590 ENTRENADOR/(5198:5198): Trainer receive the position
+[INFO] 16:39:14:587 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:14:598 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:19:619 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:19:622 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:24:635 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:24:635 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:29:653 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:29:659 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:34:679 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:34:683 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:39:711 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:39:723 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:44:744 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:44:744 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:49:755 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:49:755 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:54:777 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:54:789 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:39:59:805 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:39:59:806 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:04:822 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:04:832 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:09:848 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:09:848 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:14:868 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:14:868 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:19:895 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:19:895 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:24:917 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:24:937 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:29:961 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:29:965 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:34:982 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:34:5 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:40:21 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:40:22 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:45:37 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:45:37 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:50:49 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:50:56 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:40:55:71 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:40:55:96 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:41:00:123 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:41:00:140 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest
+[INFO] 16:41:05:185 ENTRENADOR/(5198:5200): New action begins: trainer came to pokenest: ASD
+
+[INFO] 16:41:05:186 ENTRENADOR/(5198:5198): Trainer ask to Mapa capture the pokemon
+[INFO] 16:41:05:216 ENTRENADOR/(5198:5200): Trainer captured the pokemon SUCCESSFUL
+[INFO] 16:41:05:235 ENTRENADOR/(5198:5198): Trainer has captured: Pikachu
+[INFO] 16:41:10:216 ENTRENADOR/(5198:5200): New action begins
+[INFO] 16:41:10:216 ENTRENADOR/(5198:5198): Trainer send the id of the pokenest
+[INFO] 16:41:10:216 ENTRENADOR/(5198:5198): Conocer: Se manda: B
+[INFO] 16:41:10:220 ENTRENADOR/(5198:5200): New action begins: the position of the pokenest is: a,b
+
+[INFO] 16:41:10:220 ENTRENADOR/(5198:5198): Trainer receive the position
+[INFO] 16:41:15:230 ENTRENADOR/(5198:5200): New action begins: trainer has not yet reached his position: cualquiercosa
+
+[INFO] 16:41:15:230 ENTRENADOR/(5198:5198): Trainer ask to mapa to move to the pokenest

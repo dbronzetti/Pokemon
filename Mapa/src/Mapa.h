@@ -87,7 +87,7 @@ void processMessageReceived(void *parameter);
 // Funciones
 int recorrerdirDePokenest(char* rutaDirPokenest); //Se encarga de recorrer las carpetas que esta dentro de la pokenest (pikachu,bulbasaur,charmander,etc...)
 int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest); //Se encarga de recorrer lo que esta ADENTRO de las carpetas pokenest (pikachu001,pikachu002,metadata.dat,etc..)
-t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest, char* nombreDeLaPokenest);
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest, const char* nombreDeLaPokenest);
 int levantarNivelDelPokemon(char* rutaDelPokemon);
 void dibujarMapa();
 void crearEntrenadorYDibujar(char simbolo, int socket);

@@ -1,0 +1,176 @@
+[INFO] 16:38:59:883 MAPA/(5192:5192): Directorio de la metadata del mapa 'Ciudad Paleta': '/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/pokedex/Mapas/Ciudad Paleta/metadata.dat'
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 16:38:59:883 MAPA/(5192:5192): Tiempo de checkeo de deadlock: 10000
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): Batalla: 1
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): Algoritmo: RR
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): Quantum: 3
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): Retardo: 500
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): IP: 127.0.0.1
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): Puerto: 5001
+
+[INFO] 16:38:59:883 MAPA/(5192:5192): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 16:38:59:883 MAPA/(5192:5192): crearArchivoMetadataPokenest: Bulbasaur
+[INFO] 16:38:59:884 MAPA/(5192:5192): [DEBUG]: Pokenest de Bulbasaur y hay 2
+[INFO] 16:38:59:884 MAPA/(5192:5192): crearArchivoMetadataPokenest: Squirtle
+[INFO] 16:38:59:884 MAPA/(5192:5192): [DEBUG]: Pokenest de Squirtle y hay 8
+[INFO] 16:38:59:884 MAPA/(5192:5192): crearArchivoMetadataPokenest: Pikachu
+[INFO] 16:38:59:884 MAPA/(5192:5192): [DEBUG]: Pokenest de Pikachu y hay 2
+[INFO] 16:38:59:884 MAPA/(5192:5192): crearArchivoMetadataPokenest: Charmander
+[INFO] 16:38:59:885 MAPA/(5192:5192): [DEBUG]: Pokenest de Charmander y hay 2
+[INFO] 16:38:59:885 MAPA/(5192:5192): [EN EL MAIN]: Pokenest encontrada nombre: 'Pikachu', tipo: 'Electrico' a.
+[INFO] 16:38:59:885 MAPA/(5192:5192): Bienvenido al mapa
+[INFO] 16:39:01:905 MAPA/(5192:5195): SocketServer: 4
+[INFO] 16:39:01:905 MAPA/(5192:5195): the server is opened
+[INFO] 16:39:04:494 MAPA/(5192:5195): The was received a connection in socket: 5.
+[INFO] 16:39:04:494 MAPA/(5192:5195): Message from 'ENTRENADOR': The process 'ENTRENADOR' is trying to connect you!
+[INFO] 16:39:04:494 MAPA/(5192:5195): Ha ingresado un nuevo ENTRENADOR
+[INFO] 16:39:04:495 MAPA/(5192:5195): The client '5' has received SUCCESSFULLY the handshake message
+[INFO] 16:39:04:540 MAPA/(5192:5284): Creating new trainer: @
+[INFO] 16:39:04:541 MAPA/(5192:5284): Trainer:@ created SUCCESSFUL
+[INFO] 16:39:04:541 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:39:09:544 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:39:09:544 MAPA/(5192:5196): Trainer: '@' has free action 
+[INFO] 16:39:09:580 MAPA/(5192:5262): [DENTRO DEL HILO DE CONEXION]: Pokenest encontrada nombre: 'Pikachu', tipo: 'Electrico'.
+[INFO] 16:39:09:580 MAPA/(5192:5262): Trainer: '@' want to know the position of: 'P'
+[INFO] 16:39:09:580 MAPA/(5192:5196): [DENTRO DEL HILO PLANIFICADOR]: El nombre de la pokenest es: 'Pikachu' , su tipo es 'Electrico'
+[INFO] 16:39:09:580 MAPA/(5192:5196): Map send the position to the trainer: '@'
+[INFO] 16:39:14:584 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:39:14:584 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:14:608 MAPA/(5192:5252): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:14:610 MAPA/(5192:5196): Trainer: '@', moves to x: 2, y: 2 
+[INFO] 16:39:19:611 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:39:19:612 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:19:626 MAPA/(5192:5318): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:19:627 MAPA/(5192:5196): Trainer: '@', moves to x: 3, y: 3 
+[INFO] 16:39:19:627 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:39:19:627 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:39:19:627 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:39:24:627 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:39:24:627 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:24:640 MAPA/(5192:5238): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:24:646 MAPA/(5192:5196): Trainer: '@', moves to x: 4, y: 4 
+[INFO] 16:39:29:649 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:39:29:649 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:29:668 MAPA/(5192:5251): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:29:669 MAPA/(5192:5196): Trainer: '@', moves to x: 5, y: 5 
+[INFO] 16:39:34:671 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:39:34:671 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:34:689 MAPA/(5192:5308): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:34:690 MAPA/(5192:5196): Trainer: '@', moves to x: 6, y: 6 
+[INFO] 16:39:34:690 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:39:34:690 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:39:34:690 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:39:39:695 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:39:39:695 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:39:736 MAPA/(5192:5261): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:39:736 MAPA/(5192:5196): Trainer: '@', moves to x: 7, y: 7 
+[INFO] 16:39:44:739 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:39:44:739 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:44:746 MAPA/(5192:5330): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:44:746 MAPA/(5192:5196): Trainer: '@', moves to x: 8, y: 8 
+[INFO] 16:39:49:748 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:39:49:748 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:49:768 MAPA/(5192:5236): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:49:769 MAPA/(5192:5196): Trainer: '@', moves to x: 9, y: 9 
+[INFO] 16:39:49:769 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:39:49:769 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:39:49:769 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:39:54:770 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:39:54:770 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:54:795 MAPA/(5192:5269): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:54:796 MAPA/(5192:5196): Trainer: '@', moves to x: 10, y: 10 
+[INFO] 16:39:59:798 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:39:59:798 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:39:59:811 MAPA/(5192:5312): Trainer want: '@' to go to: 'P'
+[INFO] 16:39:59:815 MAPA/(5192:5196): Trainer: '@', moves to x: 11, y: 11 
+[INFO] 16:40:04:817 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:40:04:818 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:04:838 MAPA/(5192:5315): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:04:839 MAPA/(5192:5196): Trainer: '@', moves to x: 12, y: 12 
+[INFO] 16:40:04:839 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:40:04:839 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:40:04:839 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:40:09:842 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:40:09:842 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:09:854 MAPA/(5192:5230): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:09:855 MAPA/(5192:5196): Trainer: '@', moves to x: 13, y: 13 
+[INFO] 16:40:14:857 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:40:14:857 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:14:878 MAPA/(5192:5273): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:14:878 MAPA/(5192:5196): Trainer: '@', moves to x: 14, y: 14 
+[INFO] 16:40:19:884 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:40:19:884 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:19:906 MAPA/(5192:5206): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:19:907 MAPA/(5192:5196): Trainer: '@', moves to x: 15, y: 15 
+[INFO] 16:40:19:907 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:40:19:907 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:40:19:907 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:40:24:913 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:40:24:913 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:24:947 MAPA/(5192:5316): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:24:948 MAPA/(5192:5196): Trainer: '@', moves to x: 16, y: 16 
+[INFO] 16:40:29:952 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:40:29:952 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:29:970 MAPA/(5192:5332): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:29:971 MAPA/(5192:5196): Trainer: '@', moves to x: 17, y: 17 
+[INFO] 16:40:34:973 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:40:34:973 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:35:11 MAPA/(5192:5280): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:35:12 MAPA/(5192:5196): Trainer: '@', moves to x: 18, y: 18 
+[INFO] 16:40:35:12 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:40:35:12 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:40:35:12 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:40:40:17 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:40:40:17 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:40:23 MAPA/(5192:5300): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:40:26 MAPA/(5192:5196): Trainer: '@', moves to x: 19, y: 18 
+[INFO] 16:40:45:31 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:40:45:31 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:45:40 MAPA/(5192:5223): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:45:42 MAPA/(5192:5196): Trainer: '@', moves to x: 20, y: 18 
+[INFO] 16:40:50:44 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:40:50:45 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:50:65 MAPA/(5192:5243): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:50:65 MAPA/(5192:5196): Trainer: '@', moves to x: 21, y: 18 
+[INFO] 16:40:50:65 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:40:50:65 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:40:50:65 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:40:55:66 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:40:55:66 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:40:55:105 MAPA/(5192:5222): Trainer want: '@' to go to: 'P'
+[INFO] 16:40:55:106 MAPA/(5192:5196): Trainer: '@', moves to x: 22, y: 18 
+[INFO] 16:41:00:115 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:41:00:115 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:41:00:151 MAPA/(5192:5267): Trainer want: '@' to go to: 'P'
+[INFO] 16:41:00:151 MAPA/(5192:5196): Trainer: '@', moves to x: 23, y: 18 
+[INFO] 16:41:05:155 MAPA/(5192:5196): Action: 2 of trainer : '@'
+[INFO] 16:41:05:156 MAPA/(5192:5196): Trainer: '@' came to the pokenest
+[INFO] 16:41:05:205 MAPA/(5192:5290): Trainer: '@' want to capture: 'P'
+[INFO] 16:41:05:206 MAPA/(5192:5196): El pokemon deseado es P
+[INFO] 16:41:05:206 MAPA/(5192:5196): EL NOMBRE DEL POKEMON ES: Pikachu y su simbolo: P
+[INFO] 16:41:05:206 MAPA/(5192:5196): Trainer: 'P' capture the pokemon: 'Pikachu' SUCCESSFUL
+[INFO] 16:41:05:206 MAPA/(5192:5196): Trainer: '@' capture the pokemon: 'P' SUCCESSFUL
+[INFO] 16:41:05:206 MAPA/(5192:5196): Pikachu
+[INFO] 16:41:05:206 MAPA/(5192:5196): P
+[INFO] 16:41:05:206 MAPA/(5192:5196): End of the turn, trainer: @ goes to colaDeBloqueados
+[INFO] 16:41:05:206 MAPA/(5192:5196): Trainer: @ goes to colaDeListos
+[INFO] 16:41:05:206 MAPA/(5192:5196): Begins the turn of trainer: @
+[INFO] 16:41:10:212 MAPA/(5192:5196): Action: 0 of trainer : '@'
+[INFO] 16:41:10:212 MAPA/(5192:5196): Trainer: '@' has free action 
+[INFO] 16:41:10:219 MAPA/(5192:5227): [DENTRO DEL HILO DE CONEXION]: Pokenest encontrada nombre: 'Pikachu', tipo: 'Electrico'.
+[INFO] 16:41:10:219 MAPA/(5192:5227): Trainer: '@' want to know the position of: 'B'
+[INFO] 16:41:10:220 MAPA/(5192:5196): [DENTRO DEL HILO PLANIFICADOR]: El nombre de la pokenest es: 'Bulbasaur' , su tipo es 'Hoja'
+[INFO] 16:41:10:220 MAPA/(5192:5196): Map send the position to the trainer: '@'
+[INFO] 16:41:15:223 MAPA/(5192:5196): Action: 1 of trainer : '@'
+[INFO] 16:41:15:223 MAPA/(5192:5196): Trainer: '@' has not yet reached his position
+[INFO] 16:41:15:235 MAPA/(5192:5320): Trainer want: '@' to go to: 'B'
+[INFO] 16:41:15:236 MAPA/(5192:5196): Trainer: '@', moves to x: 24, y: 17 
+[ERROR] 16:41:15:780 MAPA/(5192:5293): Trainer '@' want to disconnect in socket: '5' on the turn
+[ERROR] 16:41:15:780 MAPA/(5192:5293): Socket: 5  disconected SUCCESSFUL

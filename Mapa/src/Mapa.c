@@ -611,12 +611,16 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 }
 
 t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest,
-		char* nombreDeLaPokenest) {
+		const char* nombreDeLaPokenest) {
 	t_config* metadata;
 	metadata = config_create(rutaMetadataPokenest);
+	char *nombresito = string_new();
 	t_metadataPokenest metadataPokenest;
+	log_info(logMapa, "crearArchivoMetadataPokenest: %s",nombreDeLaPokenest);
 
-	metadataPokenest.nombrePokenest = nombreDeLaPokenest;
+	 string_append(&nombresito, nombreDeLaPokenest);
+
+	metadataPokenest.nombrePokenest = nombresito;
 	metadataPokenest.tipo = config_get_string_value(metadata, "Tipo");
 	metadataPokenest.id = config_get_string_value(metadata, "Identificador")[0];
 
