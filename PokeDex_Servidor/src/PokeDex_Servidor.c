@@ -202,6 +202,23 @@ void processMessageReceived(void *parameter){
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
 
 			switch (FUSEOperation){
+			case FUSE_MKNOD:{
+					log_info(logPokeDexServer, "Processing FUSE_MKNOD message");
+
+					int pathLength = 0;
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+					//2) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message size received : %s\n",path);
+
+					crearUnArchivo("hola mundo\n", 128,"hola.txt\0");
+
+					sendMessage(&serverData->socketClient, "bien\0" , strlen("bien\0"));
+					break;
+				}
 				case FUSE_MKDIR:{
 					log_info(logPokeDexServer, "Processing FUSE_READ message");
 

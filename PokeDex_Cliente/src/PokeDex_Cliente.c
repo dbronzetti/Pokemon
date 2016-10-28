@@ -246,6 +246,42 @@ static int fuse_rename (const char *oldname, const char *newName){
 	return resultado;
 
 }
+static int fuse_mknod(const char *path, mode_t mode, dev_t rdev)
+{
+	//int resultado = crearDirectorio(path);
+		printf("********************************* fuse_mkdir *********************\n");
+		//if (resultado!=0)	{
+			//printf("[Error_Fuse] mkdir(%s)\n", path);
+			//return 1;
+		//}
+	    mode = S_IFDIR | 0777;
+		int exitCode = EXIT_FAILURE; //DEFAULT Failure
+		log_info(logPokeCliente, "****************fuse_read****************\n");
+		//0) Send Fuse Operations
+		enum_FUSEOperations operacion = FUSE_MKNOD;
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
+
+		//Receive message size
+		int elementCount = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+		log_info(logPokeCliente, "fuse_read - elementCount: %i\n", elementCount);
+
+		if (receivedBytes > 0){
+			}
+
+		return 0;
+
+
+}
 
 static struct fuse_operations xmp_oper = {
     .init       = fuse_init,
@@ -258,6 +294,7 @@ static struct fuse_operations xmp_oper = {
     .open		= fuse_open,
     .read		= fuse_read,
     .write		= fuse_write,
+	.mknod		= fuse_mknod,
 
 	#ifdef HAVE_SETXATTR
 		.setxattr	= fuse_setxattr,
