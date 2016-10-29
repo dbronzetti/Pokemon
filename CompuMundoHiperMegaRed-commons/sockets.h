@@ -52,6 +52,7 @@ typedef enum{
     FUSE_READDIR,
     FUSE_UNLINK,
     FUSE_OPEN,
+	FUSE_CREATE,
     FUSE_MKDIR,
 	FUSE_MKNOD,
     FUSE_RENAME,
