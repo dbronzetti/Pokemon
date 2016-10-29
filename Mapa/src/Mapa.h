@@ -100,4 +100,5 @@ void moverEntrenador(t_entrenador* entrenador);
 void calcularCantidadMovimientos(t_entrenador* entrenador);
 void ordenarColaEntrenadores();
 void planificarSRDF();
+void ejecutarAccionEntrenador (t_entrenador* entrenador, int estaEnAccion, int i);
 #endif /* MAPA_H_ */
