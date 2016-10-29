@@ -53,10 +53,11 @@ typedef enum{
     FUSE_UNLINK,
     FUSE_OPEN,
     FUSE_MKDIR,
+	FUSE_MKNOD,
     FUSE_RENAME,
     FUSE_WRITE,
     FUSE_READ,
-	FUSE_MKNOD
+	FUSE_END
 } enum_FUSEOperations;
 
 typedef struct{

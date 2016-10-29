@@ -5,28 +5,162 @@
  */
 
 #include "PokeDex_Cliente.h"
-/***************************************** inicio joel ********************************/
-//joel
-int  borrarArchivo (path){
-	return 0;
+
+int  borrarArchivo (const char* path){
+		int exitCode = EXIT_FAILURE; //DEFAULT Failure
+		int resultado = 1;
+		t_list *listaBloques = list_create();
+		enum_FUSEOperations fuseOperation =  FUSE_UNLINK;
+
+		//0) Send Fuse Operations
+		exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
+		log_info(logPokeCliente, "fuseOperation: %s\n", &fuseOperation);
+		string_append(&path, "\0");
+
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+
+		log_info(logPokeCliente, "pathLength: %i\n", pathLength);
+
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "path: %s\n", path);
+
+		//Receive element Count
+		int elementCount = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+
+		log_info(logPokeCliente, "elementCount: %i\n", elementCount);
+		if (receivedBytes > 0 && elementCount > 0){
+			int messageSize = elementCount * sizeof(osada_file);
+			char *messageRcv = malloc(messageSize);
+			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+			resultado = atoi(messageRcv);
+			log_info(logPokeCliente, "messageRcv: %d\n", resultado);
+		}
+		log_info(logPokeCliente, "*********************************\n");
+		return resultado;
 };
 
 int directorioBorrar(char *path){
-	return 0;
+	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+			int resultado = 1;
+			t_list *listaBloques = list_create();
+			enum_FUSEOperations fuseOperation =  FUSE_UNLINK;
+
+			//0) Send Fuse Operations
+			exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
+			log_info(logPokeCliente, "fuseOperation: %s\n", &fuseOperation);
+			string_append(&path, "\0");
+
+			//1) send path length (+1 due to \0)
+			int pathLength = strlen(path) + 1;
+			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+
+			log_info(logPokeCliente, "pathLength: %i\n", pathLength);
+
+			//2) send path
+			exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+			log_info(logPokeCliente, "path: %s\n", path);
+
+			//Receive element Count
+			int elementCount = -1;
+			int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+
+			log_info(logPokeCliente, "elementCount: %i\n", elementCount);
+			if (receivedBytes > 0 && elementCount > 0){
+				int messageSize = elementCount * sizeof(osada_file);
+				char *messageRcv = malloc(messageSize);
+				receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+				resultado = atoi(messageRcv);
+				log_info(logPokeCliente, "messageRcv: %d\n", resultado);
+			}
+			log_info(logPokeCliente, "*********************************\n");
+			return resultado;
 };
 
 int crearDirectorio(char *path){
-	return 1;
+	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+			int resultado = 1;
+			t_list *listaBloques = list_create();
+			enum_FUSEOperations fuseOperation =  FUSE_MKDIR;
+
+			//0) Send Fuse Operations
+			exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
+			log_info(logPokeCliente, "fuseOperation: %s\n", &fuseOperation);
+			string_append(&path, "\0");
+
+			//1) send path length (+1 due to \0)
+			int pathLength = strlen(path) + 1;
+			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+
+			log_info(logPokeCliente, "pathLength: %i\n", pathLength);
+
+			//2) send path
+			exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+			log_info(logPokeCliente, "path: %s\n", path);
+
+			//Receive element Count
+			int elementCount = -1;
+			int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+
+			log_info(logPokeCliente, "elementCount: %i\n", elementCount);
+			if (receivedBytes > 0 && elementCount > 0){
+				int messageSize = elementCount * sizeof(osada_file);
+				char *messageRcv = malloc(messageSize);
+				receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+				resultado = atoi(messageRcv);
+				log_info(logPokeCliente, "messageRcv: %d\n", resultado);
+			}
+			log_info(logPokeCliente, "*********************************\n");
+			return resultado;
 };
 
 int renombrarArchivo(char* oldname,char* newName){
-	return 0;
+	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+			int resultado = 1;
+			t_list *listaBloques = list_create();
+			enum_FUSEOperations fuseOperation =  FUSE_RENAME;
+
+			//0) Send Fuse Operations
+			exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
+			log_info(logPokeCliente, "fuseOperation: %s\n", &fuseOperation);
+			string_append(&oldname, "\0");
+
+			//1) send path length (+1 due to \0)
+			int pathLength = strlen(oldname) + 1;
+			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+
+			log_info(logPokeCliente, "pathLength: %i\n", pathLength);
+
+			//2) send path ORIGINAL
+			exitCode = sendMessage(&socketPokeServer, oldname , strlen(oldname) + 1 );
+			log_info(logPokeCliente, "path: %s\n", oldname);
+
+			//2.1) send path RENOMBRADO
+			exitCode = sendMessage(&socketPokeServer, newName , strlen(newName) + 1 );
+			log_info(logPokeCliente, "path: %s\n", newName);
+
+			//Receive element Count
+			int elementCount = -1;
+			int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+
+			log_info(logPokeCliente, "elementCount: %i\n", elementCount);
+			if (receivedBytes > 0 && elementCount > 0){
+				int messageSize = elementCount * sizeof(osada_file);
+				char *messageRcv = malloc(messageSize);
+				receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+				resultado = atoi(messageRcv);
+				log_info(logPokeCliente, "messageRcv: %d\n", resultado);
+			}
+			log_info(logPokeCliente, "*********************************\n");
+			return resultado;
 };
 
 long int enviarArchivo(char* path,off_t offset){
 	return 0;
 };
-/***************************************** fin joel ********************************/
 
 const char *full(const char *path) /* Anade un punto de montaje */
 {
@@ -259,6 +393,7 @@ static int fuse_mknod(const char *path, mode_t mode, dev_t rdev)
 		log_info(logPokeCliente, "****************fuse_read****************\n");
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_MKNOD;
+
 		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
 		string_append(&path, "\0");
