@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -202,9 +202,33 @@ void processMessageReceived(void *parameter){
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
 
 			switch (FUSEOperation){
-			case FUSE_MKNOD:{
-					log_info(logPokeDexServer, "Processing FUSE_MKNOD message");
+				case FUSE_WRITE:{
+						log_info(logPokeDexServer, "Processing FUSE_WRITE message");
 
+						int pathLength = 0;
+						//1) Receive path length
+						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+						log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+						char *path = malloc(pathLength);
+						//2) Receive path
+						receiveMessage(&serverData->socketClient, path, pathLength);
+						log_info(logPokeDexServer, "Message size received : %s\n",path);
+						//3) Content size
+						int contentSize = 0;
+						receiveMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
+						log_info(logPokeDexServer, "Content size: %d", contentSize);
+						char *content = malloc(contentSize);
+						//4) Content path
+						receiveMessage(&serverData->socketClient, content, contentSize);
+						log_info(logPokeDexServer, "Message size received : %s\n",content);
+
+						crearUnArchivo(content, contentSize, path);
+
+						sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
+						break;
+				}
+				case FUSE_CREATE:{
+					log_info(logPokeDexServer, "Processing FUSE_CREATE message");
 					int pathLength = 0;
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -214,9 +238,15 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					crearUnArchivo("hola mundo\n", 128,"hola.txt\0");
+					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
+					int posBloquePadre = obtener_bloque_padre(path);
+					char *fname =  strrchr (path, '/') + 1;
+					log_info(logPokeDexServer, "escribirEnLaTablaDeArchivos");
+					escribirEnLaTablaDeArchivos(posBloquePadre, 0, fname, 666);
 
-					sendMessage(&serverData->socketClient, "bien\0" , strlen("bien\0"));
+					int exitCode = EXIT_SUCCESS;
+					sendMessage(&serverData->socketClient, &exitCode, sizeof(exitCode));
+
 					break;
 				}
 				case FUSE_MKDIR:{
@@ -263,11 +293,10 @@ void processMessageReceived(void *parameter){
 
 						int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
 						bloque2 *= 64;
-						int i;
 						memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
 						log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);
 
-						//bloqueDeDatos[OSADA_BLOCK_SIZE + 1] = '\0';
+						bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
 						string_append(&string, bloqueDeDatos);
 					}
 
@@ -349,41 +378,6 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 			}
-
-/*			char* message= malloc(messageSize);
-
-//			lista=crearArbolAPartirDelPadre(65535);
-			printf("Paso el crearArbolAPartirDelPadre: \n");
-			printf("lista->elements_count: %i\n",lista->elements_count);
-			for (i = 0; i < lista->elements_count; i++) 	{
-				osada_file *tablaDeArchivo2 = malloc(64);
-				tablaDeArchivo2 = list_get(lista, i);
-				printf("lista - &tablaDeArchivo2->fname: %s\n",	&tablaDeArchivo2->fname);
-			}
-
-			char *mensajeOsada=serializeListaBloques(lista);
-			//printf("mensajeOsada: %s\n", mensajeOsada);
-			deserializeListaBloques(lista2, mensajeOsada);
-			//tablaDeArchivo2 = list_get(lista2, 0);
-			printf("lista2->elements_count: %i\n",lista2->elements_count);
-			for (i = 0; i < lista2->elements_count; i++) 	{
-				osada_file *tablaDeArchivo2 = malloc(64);
-				tablaDeArchivo2 = list_get(lista2, i);
-				printf("lista2 - &tablaDeArchivo2->fname: %s\n",	&tablaDeArchivo2->fname);
-			}
-
-			printf("tablaDeArchivo2: %s\n", &tablaDeArchivo2->fname);
-			printf("lista2->elements_count: %i\n", lista2->elements_count);
-			printf("lista2->elements_count*64: %i\n", lista2->elements_count*64);
-			printf("mensajeOsada: %s\n", mensajeOsada);
-
-
-			sendMessage(&serverData->socketClient, mensajeOsada, 64);
-			//sendMessage(&serverData->socketClient, mensajeOsada, sizeof(mensajeOsada));
-			printf("Paso el sendMessage: \n");
-			//Receive process from which the message is going to be interpreted
-
-			*/
 
 		}else if (receivedBytes == 0 ){
 			//The client is down when bytes received are 0
