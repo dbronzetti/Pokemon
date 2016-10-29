@@ -346,19 +346,19 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
 
 		//Receive message size
-		int elementCount = -1;
-		int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
-		log_info(logPokeCliente, "fuse_read - elementCount: %i\n", elementCount);
+		int messageSize = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+		log_info(logPokeCliente, "fuse_read - MessageSize: %i\n", messageSize);
 
 		if (receivedBytes > 0){
-			int messageSize = elementCount * OSADA_BLOCK_SIZE;
-			char *messageRcv = malloc(512);
-			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,512);
+			char *messageRcv = malloc(messageSize);
+			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
 			log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
-			memcpy(buf, messageRcv, 512);
+			memcpy(buf, messageRcv, messageSize);
+			return messageSize;
 		}
 
-	return 512;
+	return 0;
 }
 
 static int fuse_write(const char* path, const char* buf, size_t size, off_t offset, struct fuse_file_info *fi)

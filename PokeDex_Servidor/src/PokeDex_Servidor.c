@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -257,33 +257,28 @@ void processMessageReceived(void *parameter){
 					char *string = string_new();
 					log_info(logPokeDexServer, "ENTRA EN EL FOR DE BLOQUES\n");
 					memcpy(string, &conjuntoDeBloquesDelArchivo->elements_count, sizeof(int));
+					char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+
 					for (i = 0; i < conjuntoDeBloquesDelArchivo->elements_count; i++) {
-						char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+
 						int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
-						bloque2 = bloque2 * 64;
+						bloque2 *= 64;
 						int i;
 						memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
 						log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);
 
 						//bloqueDeDatos[OSADA_BLOCK_SIZE + 1] = '\0';
 						string_append(&string, bloqueDeDatos);
-						//printf("%s", bloqueDeDatos);
-						//free(bloqueDeDatos);
-
 					}
-					//string_append(&string, "\0");
-					log_info(logPokeDexServer, "string: %s\n", string);
 
-					printf("Paso el crearArbolAPartirDelPadre: \n");
-					printf("lista->elements_count: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
+					free(bloqueDeDatos);
 
-					int messageSize = 0;
-					//char *mensajeOsada = serializeListaBloques(conjuntoDeBloquesDelArchivo, &messageSize);
-					printf("memcpy \n");
-				//this will tell to PokeDexCliente that the message is going to contain only 1 OSADA_FILE
-					printf("despues sendMessage :%s\n", string);
+					string_append(&string, "\0");
+					log_info(logPokeDexServer, "string to be sent for file '%s': %s\n", path, string);
 
-					sendMessage(&serverData->socketClient, string , strlen(string));
+					int messageSize = strlen(string) + 1; //+1 due to /0
+					sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
+					sendMessage(&serverData->socketClient, string , messageSize);
 
 					break;
 				}
@@ -298,12 +293,10 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-
 					//get padre from path received for passing it to crearArbolAPartirDelPadre
 					int posBloquePadre = obtener_bloque_padre(path);
 					lista = crearArbolAPartirDelPadre(posBloquePadre);
-					printf("Paso el crearArbolAPartirDelPadre: \n");
-					printf("lista->elements_count: %i\n",lista->elements_count);
+					log_info(logPokeDexServer,"lista->elements_count: %i\n",lista->elements_count);
 
 					int messageSize = 0;
 					char *mensajeOsada = serializeListaBloques(lista, &messageSize);
