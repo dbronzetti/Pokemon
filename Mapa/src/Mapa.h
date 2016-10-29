@@ -76,6 +76,7 @@ typedef struct {
 	t_list* listaDePokemonesCapturados;
 	int estaEnTurno;
 	int seEstaMoviendo;
+	int distancia;
 } t_entrenador;
 
 // Funciones de conexion
