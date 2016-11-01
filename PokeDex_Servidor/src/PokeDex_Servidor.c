@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -208,21 +208,22 @@ void processMessageReceived(void *parameter){
 						int pathLength = 0;
 						//1) Receive path length
 						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-						log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+						log_info(logPokeDexServer, "FUSE_WRITE - Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 						char *path = malloc(pathLength);
 						//2) Receive path
 						receiveMessage(&serverData->socketClient, path, pathLength);
-						log_info(logPokeDexServer, "Message size received : %s\n",path);
+						log_info(logPokeDexServer, "FUSE_WRITE - Message path received : %s\n",path);
 						//3) Content size
 						int contentSize = 0;
 						receiveMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
-						log_info(logPokeDexServer, "Content size: %d", contentSize);
+						log_info(logPokeDexServer, "FUSE_WRITE - Content size: %d", contentSize);
 						char *content = malloc(contentSize);
 						//4) Content path
 						receiveMessage(&serverData->socketClient, content, contentSize);
-						log_info(logPokeDexServer, "Message size received : %s\n",content);
+						log_info(logPokeDexServer, "FUSE_WRITE -Message content received : %s\n",content);
 
 						crearUnArchivo(content, contentSize, path);
+						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
 
 						sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
 						break;
@@ -240,9 +241,9 @@ void processMessageReceived(void *parameter){
 
 					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
 					int posBloquePadre = obtener_bloque_padre(path);
-					char *fname =  strrchr (path, '/') + 1;
+
 					log_info(logPokeDexServer, "escribirEnLaTablaDeArchivos");
-					escribirEnLaTablaDeArchivos(posBloquePadre, 0, fname, 666);
+					escribirEnLaTablaDeArchivos(posBloquePadre, 0, path, 666);
 
 					int exitCode = EXIT_SUCCESS;
 					sendMessage(&serverData->socketClient, &exitCode, sizeof(exitCode));
@@ -276,9 +277,9 @@ void processMessageReceived(void *parameter){
 					char *path = malloc(pathLength);
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
-					log_info(logPokeDexServer, "Message size received : %s\n",path);
+					log_info(logPokeDexServer, "Message path received : %s\n",path);
 
-					osada_block_pointer posicion = buscarArchivo("README.txt\0");
+					osada_block_pointer posicion = buscarArchivo(path);
 					t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 					//verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
 
