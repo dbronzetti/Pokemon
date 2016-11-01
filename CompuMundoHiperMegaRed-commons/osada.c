@@ -385,6 +385,9 @@ int elTamanioDelArchivoEntraEnElOsada(int tamanio){
 void escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block){
 	osada_file *tablaDeArchivo = obtenerTablaDeArchivos();
 	int k=0;
+	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
+	char *file_name = strrchr (fname, '/') + 1;
+	printf("file_name: %s\n", file_name);
 
 	for (k=0; k <= 2047; k++){
 		//printf("EN EL FOR\n");
@@ -392,20 +395,24 @@ void escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fnam
 			printf("EN EL if\n");
 				tablaDeArchivo[k].state = REGULAR;
 				printf("state\n");
-				tablaDeArchivo[k].parent_directory = parent_directory;
-				printf("parent_directory\n");
-				//printf("fname: %s\n", fname);
-				printf("sizeof(fname): %i\n", strlen(fname));
-				strcpy(tablaDeArchivo[k].fname, "\0");
-				strcat(tablaDeArchivo[k].fname, fname);
 
-				printf("fname: %s\n", fname);
+				tablaDeArchivo[k].parent_directory = parent_directory;
+				printf("parent_directory: %i\n",parent_directory);
+
+				//printf("fname: %s\n", fname);
+				printf("sizeof(fname): %i\n", strlen(file_name));
+				strcpy(tablaDeArchivo[k].fname, "\0");
+				strcat(tablaDeArchivo[k].fname, file_name);
+
+				printf("fname: %s\n", file_name);
 				tablaDeArchivo[k].file_size = file_size;
-				printf("file_size\n");
+				printf("file_size: %i\n",file_size);
 				tablaDeArchivo[k].lastmod = 0;
 				printf("lastmod\n");
+
 				tablaDeArchivo[k].first_block= first_block;
-				printf("first_block\n");
+				printf("first_block: %i\n",first_block);
+
 				break;
 
 		}
@@ -529,6 +536,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname){
 	int bloquePos;
 	int bloqueSig;
 
+
 	if(elTamanioDelArchivoEntraEnElOsada(tamanio) && noEsVacio(tamanio)){
 
 		cantidadDeBloquesParaGrabar = tamanio /64;
@@ -559,7 +567,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname){
 		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
 		prepararBloquesDeDatos(listado, contenido);
-		escribirEnLaTablaDeArchivos(65535, tamanio,fname,list_get(listado, 0));
+		//escribirEnLaTablaDeArchivos(65535, tamanio, fname, list_get(listado, 0));
 	}
 
 

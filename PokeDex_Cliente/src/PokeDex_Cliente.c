@@ -278,23 +278,27 @@ static int fuse_rmdir(const char* path){
 static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * fi){
 	int exitCode = -1; //DEFAULT Failure
 	log_info(logPokeCliente, "****************fuse_create****************\n");
-	//0) Send Fuse Operations
-	enum_FUSEOperations operacion = FUSE_CREATE;
-	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+	// diferente a .swx y swp
+	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
+		//0) Send Fuse Operations
+		enum_FUSEOperations operacion = FUSE_CREATE;
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
-	string_append(&path, "\0");
-	//1) send path length (+1 due to \0)
-	int pathLength = strlen(path) + 1;
-	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-	log_info(logPokeCliente, "fuse_create - pathLength: %i\n", pathLength);
-	//2) send path
-	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-	log_info(logPokeCliente, "fuse_create - path: %s\n", path);
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_create - pathLength: %i\n", pathLength);
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "fuse_create - path: %s\n", path);
 
-	//Receive message Status
-	int receivedBytes = receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
-	log_info(logPokeCliente, "fuse_create - MessageStatus: %i\n", exitCode);
-
+		//Receive message Status
+		int receivedBytes = receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
+		log_info(logPokeCliente, "fuse_create - MessageStatus: %i\n", exitCode);
+	}else{
+		exitCode=EXIT_SUCCESS;
+	}
 	return exitCode;
 }
 
@@ -338,18 +342,21 @@ static int fuse_mkdir(const char* path, mode_t mode){
 
 static int fuse_unlink(const char* path)
 {
-	int resultado = borrarArchivo (path);
+//	int resultado = borrarArchivo (path);
 	printf("********************************* fuse_unlink *********************\n");
+	log_info(logPokeCliente, "--------------------- fuse_unlink ------------ \n");
+	int resultado = 1;
 	if (resultado!=0)	{
 			printf("[Error_Fuse] unlink(%s)\n", path);
 			return 1;
-		}
+	}
 
 		return resultado;
 }
 
 static int fuse_open(const char *path, struct fuse_file_info *fi) {
 	printf("********************************* fuse_open *********************\n");
+	log_info(logPokeCliente, "--------------------- fuse_open ------------ \n");
     return 0;
 }
 
@@ -391,17 +398,24 @@ static int fuse_write(const char* path, const char* buf, size_t size, off_t offs
 	long int bytes_escritos = 0;
 	printf("********************************* fuse_write *********************\n");
 	//bytes_escritos = enviarArchivo(path,offset);
-
+	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
+	log_info(logPokeCliente, "fuse_write - buf: %s\n", buf);
+	log_info(logPokeCliente, "fuse_write - size: %i\n", size);
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	//0) Send Fuse Operations
 	enum_FUSEOperations operacion = FUSE_WRITE;
 
+	log_info(logPokeCliente, "fuse_write -  ENVIO MENSAJE\n");
 	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+	log_info(logPokeCliente, "fuse_write -  RECIBIO MENSAJE\n");
 
 	string_append(&path, "\0");
-	string_append(&buf, "\0");
+	log_info(logPokeCliente, "fuse_write -  &path: %s\n", path);
+	//string_append(&buf, "\0");
+	log_info(logPokeCliente, "fuse_write -  &buf: %s\n", buf);
 	//1) send path length (+1 due to \0)
 	int pathLength = strlen(path) + 1;
+	log_info(logPokeCliente, "fuse_write -  ENVIO MENSAJE: %i\n",pathLength);
 	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
 	log_info(logPokeCliente, "fuse_write - pathLength: %i\n", pathLength);
 	//2) send path
@@ -587,6 +601,7 @@ int connectTo(enum_processes processToConnect, int *socketClient) {
 	return exitcode;
 }
 
+//TODO CUANDO CREO UN ARCHIVO, LLAMA AL ATRIBUTO
 t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation){
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	t_list *listaBloques = list_create();
