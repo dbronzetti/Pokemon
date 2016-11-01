@@ -78,6 +78,7 @@ typedef struct {
 	int estaEnTurno;
 	int seEstaMoviendo;
 	int distancia;
+	int	seMovioEnX;
 } t_entrenador;
 
 // Funciones de conexion
@@ -97,9 +98,9 @@ bool igualarACaracterCondicion(void* paramatrer);
 void eliminarEntrenador(char simbolo);
 void planificar();
 char* convertirPosicionesAString(int posX, int posY);
-void moverEntrenador(t_entrenador* entrenador);
 void calcularCantidadMovimientos(t_entrenador* entrenador);
 void ordenarColaEntrenadores();
 void planificarSRDF();
 void ejecutarAccionEntrenador (t_entrenador* entrenador, int* i);
+void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX );
 #endif /* MAPA_H_ */

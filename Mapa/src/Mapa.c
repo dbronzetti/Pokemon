@@ -656,6 +656,7 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	nuevoEntrenador->pokemonD = '/'; //flag para representar que por el momento no busca ningun pokemon
 	nuevoEntrenador->listaDePokemonesCapturados = list_create();
 	nuevoEntrenador->seEstaMoviendo = 0;
+	nuevoEntrenador->seMovioEnX = 0;
 
 	//In function CrearPersonaje there is a list_add to items
 	pthread_mutex_lock(&itemsMutex);
@@ -783,43 +784,44 @@ void planificar() {
 
 }
 
-void moverEntrenador(t_entrenador* entrenador) { //esto esta medio para el orto despues lo tengo que arreglar (en sentido de requerimento del enunciado, funcionar funciona barbaro)
-	if (entrenador->pos_x > entrenador->posD_x) { // si esta arriba de la posicion x que desea le bajamos uno.
-		entrenador->pos_x--;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, mapa);
-		pthread_mutex_unlock(&itemsMutex);
+void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX ) { //le puse un millon de parametros para poder usarla despues como contador de distancia
+	if (*seMovioEnX) { //si ya se movio en x
+		if (*pos_y == posD_y) { //y ademas esta paralelo (en y) a su pokenest
+			if (*pos_x > posD_x) //si esta por arriba le restamos uno.
+				*pos_x = *pos_x -1;     // se vuelve a mover en x nomas.
+			else
+				*pos_x = *pos_x +1; //si esta por abajo le sumamos uno
+
+		} else {   //sino lo movemos en Y.
+			if (*pos_y > posD_y) //si esta por arriba le restamos uno
+				*pos_y = *pos_y -1;
+
+			else
+				*pos_y = *pos_y +1;
+
+			*seMovioEnX = 0; //y le seteamos el flag en 0.
+		}
 	}
 
-	if (entrenador->pos_x < entrenador->posD_x) { //si esta abajo de la posicion x que desea le subimos uno.
-		entrenador->pos_x++;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, mapa);
-		pthread_mutex_unlock(&itemsMutex);
+	else {
+		if (*pos_x == posD_x) { //si  se movio en X pero esta paralelo (en y) a su pokenest
+			if (*pos_y > posD_y) //si esta por arriba le restamos uno.
+				*pos_y = *pos_y -1;     // se vuelve a mover en y nomas.
+			else
+				*pos_y = *pos_x +1; //si esta por abajo le sumamos uno
+
+		} else { //sino lo movemos en X
+			if (*pos_x > posD_x) //si esta por arriba le restamos uno
+				*pos_x = *pos_x -1;
+
+			else
+				*pos_x = *pos_x + 1;
+
+			*seMovioEnX = 1; //y le seteamos el flag en 1.
+		}
+
 	}
 
-	if (entrenador->pos_y > entrenador->posD_y) { // si esta arriba de la posicion y que desea le bajamos uno.
-		entrenador->pos_y--;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, mapa);
-		pthread_mutex_unlock(&itemsMutex);
-	}
-
-	if (entrenador->pos_y < entrenador->posD_y) { //si esta abajo de la posicion y que desea le subimos uno.
-		entrenador->pos_y++;
-		pthread_mutex_lock(&itemsMutex);
-		MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
-				entrenador->pos_y);
-		nivel_gui_dibujar(items, mapa);
-		pthread_mutex_unlock(&itemsMutex);
-	}
-	return;
 }
 
 char* convertirPosicionesAString(int posX, int posY) {
@@ -996,7 +998,12 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 
 			case IR: {
 
-				moverEntrenador(entrenador); //mueve el entrenador de a 1 til.
+				moverEntrenador(&entrenador->pos_x,&entrenador->pos_y,entrenador->posD_x,entrenador->posD_y,&entrenador->seMovioEnX); //mueve el entrenador de a 1 til.
+				pthread_mutex_lock(&itemsMutex);
+				MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
+						entrenador->pos_y);
+				nivel_gui_dibujar(items, mapa);
+				pthread_mutex_unlock(&itemsMutex);
 				estaEnAccion = 0;
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				entrenador->accion = SIN_MENSAJE;
