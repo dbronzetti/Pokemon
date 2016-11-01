@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -220,7 +220,7 @@ void processMessageReceived(void *parameter){
 						char *content = malloc(contentSize);
 						//4) Content path
 						receiveMessage(&serverData->socketClient, content, contentSize);
-						log_info(logPokeDexServer, "FUSE_WRITE -Message content received : %s\n",content);
+						log_info(logPokeDexServer, "FUSE_WRITE - Message content received : %s\n",content);
 
 						crearUnArchivo(content, contentSize, path);
 						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
@@ -237,7 +237,7 @@ void processMessageReceived(void *parameter){
 					char *path = malloc(pathLength);
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
-					log_info(logPokeDexServer, "Message size received : %s\n",path);
+					log_info(logPokeDexServer, "Message received : %s\n",path);
 
 					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
 					int posBloquePadre = obtener_bloque_padre(path);
@@ -374,8 +374,6 @@ void processMessageReceived(void *parameter){
 				}
 				default:{
 					log_error(logPokeDexServer,"Invalid operation received '%d'", FUSEOperation);
-					close(serverData->socketClient);
-					free(serverData);
 					break;
 				}
 			}

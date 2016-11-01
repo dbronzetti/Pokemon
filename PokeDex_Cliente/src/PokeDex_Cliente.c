@@ -411,7 +411,6 @@ static int fuse_write(const char* path, const char* buf, size_t size, off_t offs
 
 	string_append(&path, "\0");
 	log_info(logPokeCliente, "fuse_write -  &path: %s\n", path);
-	//string_append(&buf, "\0");
 	log_info(logPokeCliente, "fuse_write -  &buf: %s\n", buf);
 	//1) send path length (+1 due to \0)
 	int pathLength = strlen(path) + 1;
@@ -422,12 +421,12 @@ static int fuse_write(const char* path, const char* buf, size_t size, off_t offs
 	exitCode = sendMessage(&socketPokeServer, path , pathLength );
 	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
 	//3) send buffer length (+1 due to \0)
-	int bufferSize = strlen(buf) + 1;
-	exitCode = sendMessage(&socketPokeServer, &size , sizeof(int));
-	log_info(logPokeCliente, "fuse_write - bufferSize: %i\n", size);
-	//4) send path
+	int bufferSize = size + 1;
+	exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(int));
+	log_info(logPokeCliente, "fuse_write - bufferSize: %i\n", bufferSize);
+	//4) send buffer
 	exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
-	log_info(logPokeCliente, "fuse_write - path: %s\n", buf);
+	log_info(logPokeCliente, "fuse_write - buffer: %s\n", buf);
 
 	//Receive message size
 	int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
