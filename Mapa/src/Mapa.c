@@ -575,7 +575,7 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 	list_add(listaDePokenest, pokenest);
 	log_info(logMapa, "Pokenest de %s y hay %d",
 			pokenest->metadata.nombrePokenest,
-			list_size(pokenest->listaDePokemones));  //todo: QUIERO BORRAR ESTO PERO ME TIRA UN SEG FAULT, AYUDA DAMI :(
+			list_size(pokenest->listaDePokemones)); //todo: QUIERO BORRAR ESTO PERO ME TIRA UN SEG FAULT, AYUDA DAMI :(
 
 	char simbolo = pokenest->metadata.id;
 
@@ -843,7 +843,7 @@ void planificarSRDF() {
 
 			sleep(3);
 
-			ejecutarAccionEntrenador(entrenador,0); //0 it's not needed for this planificador
+			ejecutarAccionEntrenador(entrenador, 0); //0 it's not needed for this planificador
 
 			queue_push(colaDeListos, entrenador);
 		}
@@ -1012,24 +1012,19 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 					return (pokenestParam->metadata.id == entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
 				}
 
-				//								bool unaFuncionDeMierdaQueDevuelveTrue(
-				//										t_pokemon* pokemon) {
-				//									return (pokemon->id == 'P');
-				//								}
+				bool unaFuncionDeMierdaQueDevuelveTrue(t_pokemon* pokemon) {
+					return TRUE;
+				}
 
 				pthread_mutex_lock(&listaDePokenestMutex);
 				t_pokenest* pokenestEncontrada = list_find(listaDePokenest,
 						(void*) buscarPokenestPorId);
 
-
-				t_pokemon* pokemon = list_remove(
-						pokenestEncontrada->listaDePokemones, 0);
-
 				//aca deberia haber un if para saber si la lista esta vacia para que entre en deadlock pero por ahora suponemos el camino positivo y lo captura bien :D
-				//								t_pokemon* pokemon =
-				//										list_remove_by_condition(
-				//												pokenest->listaDePokemones,
-				//												(void*) unaFuncionDeMierdaQueDevuelveTrue); //saca al primero que encuentra
+				t_pokemon* pokemon = list_remove_by_condition(
+						pokenestEncontrada->listaDePokemones,
+						(void*) unaFuncionDeMierdaQueDevuelveTrue); //saca al primero que encuentra
+
 				pthread_mutex_unlock(&listaDePokenestMutex);
 
 				pthread_mutex_lock(&setEntrenadoresMutex);
