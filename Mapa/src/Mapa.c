@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
 	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
-	pthread_create(&planificador, NULL, (void*) planificar, NULL);
+	pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
 
 	pthread_join(serverThread, NULL);
 	pthread_join(planificador, NULL);
@@ -839,7 +839,10 @@ void planificarSRDF() {
 
 		if (queue_size(colaDeListos)) {
 			ordenarColaEntrenadores();
+
+			pthread_mutex_lock(&colaDeListosMutex);
 			t_entrenador* entrenador = queue_pop(colaDeListos);
+			pthread_mutex_unlock(&colaDeListosMutex);
 
 			//TODO: CORTAR ACCION CON X TIEMPO DE NO CONTESTAR!!!!
 
@@ -847,7 +850,10 @@ void planificarSRDF() {
 
 			ejecutarAccionEntrenador(entrenador, 0); //0 it's not needed for this planificador
 
+			pthread_mutex_lock(&colaDeListosMutex);
 			queue_push(colaDeListos, entrenador);
+			pthread_mutex_unlock(&colaDeListosMutex);
+
 		}
 	}
 }
@@ -858,7 +864,7 @@ void ordenarColaEntrenadores() {
 	//@TODO: Poner un semaforo que bloque la Cola de Listos.
 
 	//obtenemos todos los entrenadores y determinamos su distancia.
-	for (i = 0; i < queue_size(colaDeListos); i++) {
+	while(queue_size(colaDeListos)) {
 		t_entrenador* entrenadorAux = queue_pop(colaDeListos);
 		calcularCantidadMovimientos(entrenadorAux);
 		list_add(listAuxOrdenar, entrenadorAux);
@@ -884,12 +890,13 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 		sendClientMessage(&entrenador->socket, "ASD", LIBRE); //no hace falta enviar un string solo un enum, por eso pongo "ASD"
 		log_info(logMapa, "Trainer: '%c' has free action ",
 				entrenador->simbolo);
+		while (estaEnAccion) {
 
 		if (entrenador->accion != SIN_MENSAJE) { //este if verifica que el entrenador respondio :D
 
 			switch (entrenador->accion) {
 
-			while (estaEnAccion) {
+
 
 				case CONOCER:
 				{
@@ -930,7 +937,26 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 	}
 
 	//@TODO: Esto hay que cambiarlo por un contador de movimientos acorde al mapa.
-	entrenador->distancia = rand();
+	pthread_mutex_lock(&setEntrenadoresMutex);
+	int pos_x = entrenador->pos_x;
+	int pos_y = entrenador->pos_y;
+	int posD_x = entrenador->posD_x;
+	int posD_y = entrenador->posD_y;
+	int seMovioEnX = entrenador->seMovioEnX;
+	pthread_mutex_unlock(&setEntrenadoresMutex);
+	int distancia = 0;
+
+	while(((pos_x == posD_x) && (pos_y == posD_y)) != 1){ //mientras no haya llegado que siga contando
+		moverEntrenador(&pos_x,&pos_y,posD_x,posD_y,&seMovioEnX);
+//		log_info(logMapa,"[DEBUG] pos en x:%d , pos deseada x: %d , pos en y:%d , pos deseada en y: %d", pos_x,posD_x,pos_y,posD_y);
+		distancia++;
+	}
+
+	pthread_mutex_lock(&setEntrenadoresMutex);
+	entrenador->distancia = distancia;
+	log_info(logMapa, "Trainer: '%c' it's about %d actions of his pokenest", entrenador->simbolo, entrenador->distancia);
+	pthread_mutex_unlock(&setEntrenadoresMutex);
+
 }
 
 void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
