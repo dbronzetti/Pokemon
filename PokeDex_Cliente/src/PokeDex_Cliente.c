@@ -209,8 +209,8 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 			if (nodo->state == REGULAR)
 			{
 				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->fname: %s\n", nodo->fname);
-				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: %c\n", nodo->state);
-				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: %i\n", nodo->file_size);
+				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: REGULAR\n");
+				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->file_size: %i\n", nodo->file_size);
 				stbuf->st_mode = S_IFREG | 0777;
 				stbuf->st_nlink = 1;
 				stbuf->st_size = nodo->file_size;
@@ -218,7 +218,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 			else if (nodo->state == DIRECTORY)
 			{
 				log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->fname: %s\n", nodo->fname);
-				log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: %c\n", nodo->state);
+				log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: DIRECTORY\n");
 				stbuf->st_mode = S_IFDIR | 0777;
 				stbuf->st_nlink = 2;
 			}
