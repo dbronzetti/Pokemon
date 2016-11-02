@@ -256,7 +256,7 @@ t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
 	return proximo;
 }
 
-osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
+osada_block_pointer devolverBloque(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre){
 	char *nac;
 	char *n;
 	nac = string_duplicate(&tablaDeArchivo.fname);
@@ -264,7 +264,7 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
 	string_trim(&nac);
 	string_trim(&n);
 
-	if (tablaDeArchivo.state == REGULAR && strcmp(nac, n) == 0){
+	if (tablaDeArchivo.parent_directory == parent_directory && tablaDeArchivo.state == REGULAR && strcmp(nac, n) == 0){
 		free(nac);
 		free(n);
 		printf("state_: %c\n", tablaDeArchivo.state);
@@ -282,18 +282,52 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
 	return -666;
 }
 
-osada_block_pointer buscarArchivo(char *nombre){
+
+
+osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
+	printf("******************************** ENTRO EN EL buscarArchivo ******************************** \n");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
 	printf("file_name: %s\n", file_name);
 
 	for (pos=0; pos <= 2047; pos++){
-		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos],  file_name)) != -666){
+
+		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos],parent_directory,  file_name)) != -666){
 			printf("encontro>! , %i\n", pos);
 			return posicion;
 		};
 	}
+
+	printf("******************************* NO LO ENCONTRO! ******************************* \n");
+	return posicion;
+}
+
+
+
+int borrarUnArchivo(char *nombre, uint16_t parent_directory){
+	printf("******************************** ENTRO EN borrarUnArchivo  ******************************** \n");
+	int pos=0;
+	osada_block_pointer posicion = 0;
+	char *file_name = strrchr (nombre, '/') + 1;
+	printf("file_name: %s\n", file_name);
+
+	for (pos=0; pos <= 2047; pos++){
+		char *nac;
+		char *n;
+		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
+		n = string_duplicate(nombre);
+		string_trim(&nac);
+		string_trim(&n);
+
+		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory && TABLA_DE_ARCHIVOS[pos].state != DELETED && strcmp(nac, n) == 0){
+
+			TABLA_DE_ARCHIVOS[pos].state = DELETED;
+			posicion = pos;
+
+		}
+	}
+	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 
 	printf("******************************* NO LO ENCONTRO! ******************************* \n");
 	return posicion;
@@ -505,7 +539,7 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 	int bloquePosInt = 0;
 	bloquePosInt = atoi(bloquePos);
 
-	char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+	char *bloqueDeDatos = malloc(strlen(contenido));
 
 	int bloque2 = bloquePosInt *64;
 	strcpy(bloqueDeDatos, contenido);
@@ -559,7 +593,7 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 
 
 
-void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos){
+void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 	int i=0;
@@ -622,7 +656,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
 		prepararBloquesDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
-		escribirEnLaTablaDeArchivos(65535, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
+		escribirEnLaTablaDeArchivos(parent_directory, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
 	}
 
 
