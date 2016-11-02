@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
 	char *pokedex = string_new();
 	pthread_t serverThread;
 	pthread_t planificador;
+	pthread_t detectorDeadlocks;
 	listaDeEntrenadores = list_create();
 	listaDePokenest = list_create();
 	colaDeBloqueados = queue_create();
@@ -83,9 +84,11 @@ int main(int argc, char **argv) {
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 	pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
+//	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
 
 	pthread_join(serverThread, NULL);
 	pthread_join(planificador, NULL);
+//	pthread_join(detectorDeadlocks, NULL);
 	return 0;
 
 }
@@ -654,6 +657,7 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	nuevoEntrenador->listaDePokemonesCapturados = list_create();
 	nuevoEntrenador->seEstaMoviendo = 0;
 	nuevoEntrenador->seMovioEnX = 0;
+	nuevoEntrenador->estaBloqueado = 0;
 
 	//In function CrearPersonaje there is a list_add to items
 	pthread_mutex_lock(&itemsMutex);
@@ -805,7 +809,7 @@ void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovi
 			if (*pos_y > posD_y) //si esta por arriba le restamos uno.
 				*pos_y = *pos_y -1;     // se vuelve a mover en y nomas.
 			else
-				*pos_y = *pos_x +1; //si esta por abajo le sumamos uno
+				*pos_y = *pos_y +1; //si esta por abajo le sumamos uno
 
 		} else { //sino lo movemos en X
 			if (*pos_x > posD_x) //si esta por arriba le restamos uno
@@ -848,7 +852,10 @@ void planificarSRDF() {
 			ejecutarAccionEntrenador(entrenador, 0); //0 it's not needed for this planificador
 
 			pthread_mutex_lock(&colaDeListosMutex);
+			if(entrenador->estaBloqueado!=1)
 			queue_push(colaDeListos, entrenador);
+			else
+				queue_push(colaDeBloqueados, entrenador);
 			pthread_mutex_unlock(&colaDeListosMutex);
 
 		}
@@ -1021,7 +1028,9 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 
 			case IR: {
 
-				moverEntrenador(&entrenador->pos_x,&entrenador->pos_y,entrenador->posD_x,entrenador->posD_y,&entrenador->seMovioEnX); //mueve el entrenador de a 1 til.
+				moverEntrenador(&entrenador->pos_x, &entrenador->pos_y,
+						entrenador->posD_x, entrenador->posD_y,
+						&entrenador->seMovioEnX); //mueve el entrenador de a 1 til.
 				pthread_mutex_lock(&itemsMutex);
 				MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
 						entrenador->pos_y);
@@ -1050,37 +1059,53 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 				t_pokenest* pokenestEncontrada = list_find(listaDePokenest,
 						(void*) buscarPokenestPorId);
 
-				//aca deberia haber un if para saber si la lista esta vacia para que entre en deadlock pero por ahora suponemos el camino positivo y lo captura bien :D
-				t_pokemon* pokemon = list_remove_by_condition(
-						pokenestEncontrada->listaDePokemones,
-						(void*) unaFuncionDeMierdaQueDevuelveTrue); //saca al primero que encuentra
+				bool hayPokemones = list_size(
+						pokenestEncontrada->listaDePokemones);
 
-				pthread_mutex_unlock(&listaDePokenestMutex);
+				if (hayPokemones) {
+					t_pokemon* pokemon = list_remove_by_condition(
+							pokenestEncontrada->listaDePokemones,
+							(void*) unaFuncionDeMierdaQueDevuelveTrue); //saca al primero que encuentra
 
-				pthread_mutex_lock(&setEntrenadoresMutex);
-				list_add(entrenador->listaDePokemonesCapturados, pokemon);
+					pthread_mutex_unlock(&listaDePokenestMutex);
 
-				log_info(logMapa,
-						"Trainer: '%c' capture the pokemon: '%s' SUCCESSFUL",
-						entrenador->simbolo, pokemon->nombre);
+					pthread_mutex_lock(&setEntrenadoresMutex);
+					list_add(entrenador->listaDePokemonesCapturados, pokemon);
 
-				pthread_mutex_lock(&itemsMutex);
-				restarRecurso(items, entrenador->pokemonD);
-				nivel_gui_dibujar(items, mapa);
-				pthread_mutex_unlock(&itemsMutex);
+					log_info(logMapa,
+							"Trainer: '%c' capture the pokemon: '%s' SUCCESSFUL",
+							entrenador->simbolo, pokemon->nombre);
 
-				entrenador->pokemonD = '/';
-				entrenador->posD_x = -1;
-				entrenador->posD_y = -1;
-				entrenador->accion = SIN_MENSAJE;
+					pthread_mutex_lock(&itemsMutex);
+					restarRecurso(items, entrenador->pokemonD);
+					nivel_gui_dibujar(items, mapa);
+					pthread_mutex_unlock(&itemsMutex);
 
-				char* msjAEnviar = pokemon->nombre;
-				sendClientMessage(&entrenador->socket, msjAEnviar, CAPTURADO);
+					entrenador->pokemonD = '/';
+					entrenador->posD_x = -1;
+					entrenador->posD_y = -1;
+					entrenador->accion = SIN_MENSAJE;
 
-				pthread_mutex_unlock(&setEntrenadoresMutex);
-				estaEnAccion = 0;
+					char* msjAEnviar = pokemon->nombre;
+					sendClientMessage(&entrenador->socket, msjAEnviar,
+							CAPTURADO);
+
+					pthread_mutex_unlock(&setEntrenadoresMutex);
+
+					//TODO agregar if teniendo en cuenta el algoritmo de planificacion
+
+				}
+
+				else {
+					pthread_mutex_lock(&setEntrenadoresMutex);
+					entrenador->estaBloqueado = 1;
+					log_info(logMapa,
+							"Trainer: '%c' couldn't capture the pokemon: '%c'",
+							entrenador->simbolo, entrenador->pokemonD);
+					pthread_mutex_unlock(&setEntrenadoresMutex);
+				}
 				i = metadataMapa.quantum; // le asignamos todo el quantum al contador asi sale
-				//TODO agregar if teniendo en cuenta el algoritmo de planificacion
+				estaEnAccion = 0;
 				break;
 			}
 
@@ -1099,3 +1124,76 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 	//				} else pthread_mutex_unlock(&setEntrenadoresMutex);
 
 }
+
+void detectarDeadlocks() {
+		while (1) {
+			sleep(7);
+			pthread_mutex_lock(&setEntrenadoresMutex);
+
+			bool _entrenadorBloqueado(t_entrenador* entrenadorParam) {
+				return entrenadorParam->estaBloqueado;
+			}
+
+			t_list* listaDeBloqueados = list_filter(listaDeEntrenadores,
+					(void*) _entrenadorBloqueado); //filtramos a los que estan bloqueados (no pueden conseguir su pokemon).
+			int i;
+			int a;
+			for (i = 0; i < list_size(listaDeBloqueados); i++) {
+				t_entrenador* entrenador1 = list_get(listaDeBloqueados, i); // sacamos un entrenador
+
+				for (a = 0; i < list_size(listaDeBloqueados); a++) {
+					t_entrenador* entrenador2 = list_get(listaDeBloqueados, a); // sacamos otro :)
+					bool _tieneAlPokemonDeEntrenador1(t_pokemon* pokemonParam) {
+						return pokemonParam->id == entrenador1->pokemonD;
+					}
+
+					bool _tieneAlPokemonDeEntrenador2(t_pokemon* pokemonParam) {
+						return pokemonParam->id == entrenador2->pokemonD;
+					}
+
+					bool _noEstaEnLaListaE1(t_entrenador* entrenadorParam) {
+						return entrenadorParam->simbolo != entrenador1->simbolo;
+					}
+
+					bool _noEstaEnLaListaE2(t_entrenador* entrenadorParam) {
+						return entrenadorParam->simbolo != entrenador2->simbolo;
+					}
+
+					bool siNoSonIguales = entrenador1->simbolo
+							!= entrenador2->simbolo;
+
+					bool siElEntrenador2TieneUnPokemonQueQuiereEntrenador1 =
+							list_any_satisfy(
+									entrenador2->listaDePokemonesCapturados,
+									(void*) _tieneAlPokemonDeEntrenador1);
+
+					bool siElEntrenador1TieneUnPokemonQueQuiereEntrenador2 =
+							list_any_satisfy(
+									entrenador1->listaDePokemonesCapturados,
+									(void*) _tieneAlPokemonDeEntrenador2);
+//
+//				bool noSeEncuentraEnLaListaE1 = list_all_satisfy(
+//						listaDeDeadlocks, _noEstaEnLaListaE1); //verifico que el entrenador1  no este ya puesto en la lista de deadlocks
+//
+//				bool noSeEncuentraEnLaListaE2 = list_all_sastisfy(
+//						listaDeDeadlocks, _noEstaEnLaListaE2); //verifico que el entrenador2  no este ya puesto en la lista de deadlocks
+
+					if (siNoSonIguales
+							&& siElEntrenador2TieneUnPokemonQueQuiereEntrenador1
+							&& siElEntrenador1TieneUnPokemonQueQuiereEntrenador2) {
+//					if (noSeEncuentraEnLaListaE1)
+//						list_add(listaDeDeadlocks, entrenador1);
+//					if (noSeEncuentraEnLaListaE2)
+//						list_add(listaDeDeadlocks, entrenador2);
+						log_info(logMapa,
+								"The trainer '%c' is in deadlock with the trainer '%c'",
+								entrenador1->simbolo, entrenador2->simbolo);
+
+					}
+				}
+			}
+			list_destroy(listaDeBloqueados);
+			pthread_mutex_unlock(&setEntrenadoresMutex);
+		}
+
+	}

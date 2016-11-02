@@ -79,6 +79,7 @@ typedef struct {
 	int seEstaMoviendo;
 	int distancia;
 	int	seMovioEnX;
+	int estaBloqueado;
 } t_entrenador;
 
 // Funciones de conexion
@@ -103,4 +104,5 @@ void ordenarColaEntrenadores();
 void planificarSRDF();
 void ejecutarAccionEntrenador (t_entrenador* entrenador, int* i);
 void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX );
+void detectarDeadlocks();
 #endif /* MAPA_H_ */
