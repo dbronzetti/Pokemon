@@ -275,16 +275,18 @@ void restarVida() {
 void desconectarse() {
 
 	sendClientMessage(&socketMapa, metadataEntrenador.simbolo, DESCONECTAR);
+	//log_info(logEntrenador,"tamanio cola de objetivos %d", queue_size(colaDeObjetivos));
 	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
 	sleep(1); //dormimos un segundo para darle tiempo al mapa de cerrar el socket correctamente y no joder el select.
 	close(socketMapa);
 }
 
 void jugar() {
+	char* objetivoActual;
 
-	while (queue_size(colaDeObjetivos)) //mientras queden objetivos se sigue jugando en el mapa
+	while ((queue_size(colaDeObjetivos) > 0 ) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
-		char* objetivoActual;
+
 		pthread_mutex_lock(&turnoMutex);
 		if (turno != SIN_MENSAJE) {
 			switch (turno) {
@@ -315,7 +317,7 @@ void jugar() {
 
 			case MOVETE: {// si estamos yendo a la pokenest le pedimos seguir moviendonos
 				log_info(logEntrenador,
-						"Trainer ask to mapa to move to the pokenest");
+						"Trainer ask to mapa to move to the pokenest '%s'",objetivoActual);
 				sendClientMessage(&socketMapa, objetivoActual, IR);
 //				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
 
@@ -332,7 +334,7 @@ void jugar() {
 				puts(rutaMedataPokemonMapa);
 				log_info(logEntrenador, "Trainer has captured: %s",pokemonCapturado);
 				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
-
+				objetivoActual = NULL;
 				break;
 			}
 
@@ -344,6 +346,7 @@ void jugar() {
 
 	}
 
+	//log_info(logEntrenador, "objetivoActual %s - ultimo pokemonCapturado %s",objetivoActual, pokemonCapturado);
 	desconectarse();
 }
 
