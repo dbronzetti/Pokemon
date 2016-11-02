@@ -560,7 +560,7 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 
 
 
-void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos){
+void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 	int i=0;
@@ -623,7 +623,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
 		prepararBloquesDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
-		escribirEnLaTablaDeArchivos(65535, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
+		escribirEnLaTablaDeArchivos(parent_directory, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
 	}
 
 

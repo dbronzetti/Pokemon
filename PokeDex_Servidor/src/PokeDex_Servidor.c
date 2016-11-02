@@ -206,6 +206,8 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "Processing FUSE_WRITE message");
 						int posDelaTablaDeArchivos=-999;
 						int pathLength = 0;
+						uint16_t parent_directory;
+
 						//1) Receive path length
 						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
 						log_info(logPokeDexServer, "FUSE_WRITE - Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
@@ -226,7 +228,12 @@ void processMessageReceived(void *parameter){
 						receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
 						log_info(logPokeDexServer, "FUSE_WRITE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
 
-						crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos);
+						//6) Receive parent_directory
+						log_info(logPokeDexServer, "Message parent_directory received --> \n");
+						receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+						log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
+
+						crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
 						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
 
 						sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
@@ -237,6 +244,7 @@ void processMessageReceived(void *parameter){
 					int pathLength = 0;
 					int posDelaTablaDeArchivos = -999;
 					int first_block_init = -999;
+					uint16_t parent_directory;
 
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -245,6 +253,11 @@ void processMessageReceived(void *parameter){
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message received : %s\n",path);
+
+					//3) Receive parent_directory
+					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
 					int posBloquePadre = obtener_bloque_padre(path);

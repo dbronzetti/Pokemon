@@ -219,6 +219,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 								stbuf->st_mode = S_IFREG | 0777;
 								stbuf->st_nlink = 1;
 								stbuf->st_size = nodo->file_size;
+								parent_directory = nodo->parent_directory;
 
 							}
 							else if (nodo->state == DIRECTORY)
@@ -301,6 +302,10 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 		//2) send path
 		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
 		log_info(logPokeCliente, "fuse_create - path: %s\n", path);
+
+		//3) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		log_info(logPokeCliente, "fuse_create - parent_directory: %i\n", parent_directory);
 
 		//Receive message Status
 		int receivedBytes = receiveMessage(&socketPokeServer, &posDelaTablaDeArchivos ,sizeof(posDelaTablaDeArchivos));
@@ -450,6 +455,10 @@ static int fuse_write(const char* path, const char* buf, size_t size, off_t offs
 	//5) send posDelaTablaDeArchivos
 	exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
 	log_info(logPokeCliente, "fuse_write - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
+
+	//6) send parent_directory
+	exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+	log_info(logPokeCliente, "fuse_write - parent_directory: %i\n", parent_directory);
 
 	//Receive message size
 	int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
