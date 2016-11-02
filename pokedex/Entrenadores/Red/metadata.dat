@@ -1,7 +1,7 @@
 nombre=Red
 simbolo=@
 hojaDeViaje=[Ciudad Paleta,Ciudad Verde,Ciudad Plateada]
-obj[Ciudad Paleta]=[P,B,G]
+obj[Ciudad Paleta]=[P,B,C]
 obj[Ciudad Verde]=[C,Z,C]
 obj[Ciudad Plateada]=[P,M,P,M,S]
 vidas=5
