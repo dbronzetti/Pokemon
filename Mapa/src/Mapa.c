@@ -466,9 +466,6 @@ void processMessageReceived(void *parameter) {
 
 				log_error(logMapa, "Se recibio: %s y: %d", message->mensaje,
 						message->tipo);
-
-				close(serverData->socketClient);
-				free(serverData);
 				break;
 			}
 			}
