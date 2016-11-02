@@ -10,17 +10,20 @@
 
 
 int main(int argc, char *argv[]){
+	int i=0;
 	int archivoID = obtenerIDDelArchivo(argv[1]);
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
 	obtenerHeader();
 	setearConstantesDePosicionDeOsada();
+	for(i=0;i<2;i++){
+		printf("hola: %i\n",i);
+	}
+	//obtenerBitmap();
 
-	obtenerBitmap();
-
-    obtenerTablaDeArchivos();
-	int *tablaDeAsignacion = obtenerTablaDeAsignacion();
+    //obtenerTablaDeArchivos();
+	//int *tablaDeAsignacion = obtenerTablaDeAsignacion();
 	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
 	//contarBloques(osada, osadaHeaderFile, bitMap);
@@ -31,7 +34,7 @@ int main(int argc, char *argv[]){
 	//dameTodosLosBorrados(tablaDeArchivo);
 	//dameTodosLosOtrosEstados(tablaDeArchivo);
 
-	crearArbolAPartirDelPadre(65535);
+	//crearArbolAPartirDelPadre(65535);
 
 	//t_list unaLista = crearArbolAPartirDelPadre(tablaDeArchivo, 0); //METER TODO EN UNA LISTA, SERIALIZAR E ENVIAR
 	//char *altoPaquete = serializeListaBloques(unaLista);
@@ -54,7 +57,7 @@ int main(int argc, char *argv[]){
 	//"large.txt" - basic
 	//archivo - basic
 	//special.mp4 - 138
-	//osada_block_pointer posicion = buscarArchivo("hola.tx\0");
+	//osada_block_pointer posicion = buscarArchivo("hola.txt");
 	//printf("posicion del primer bloque: %i\n", posicion);
 
 	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);

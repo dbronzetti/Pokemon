@@ -5,6 +5,9 @@
  */
 
 #include "PokeDex_Cliente.h"
+/************************************* JOEL GLOBALES *************************************************/
+int posDelaTablaDeArchivos = -999;
+/************************************* FIN GLOBALES *************************************************/
 
 int  borrarArchivo (const char* path){
 		int exitCode = EXIT_FAILURE; //DEFAULT Failure
@@ -278,7 +281,7 @@ static int fuse_rmdir(const char* path){
 static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * fi){
 	int exitCode = -1; //DEFAULT Failure
 	log_info(logPokeCliente, "****************fuse_create****************\n");
-	// diferente a .swx y swp
+	// JOEL: NO DEBE GUARDARSE LOS  .swx y swp
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_CREATE;
@@ -294,8 +297,9 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 		log_info(logPokeCliente, "fuse_create - path: %s\n", path);
 
 		//Receive message Status
-		int receivedBytes = receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
-		log_info(logPokeCliente, "fuse_create - MessageStatus: %i\n", exitCode);
+		int receivedBytes = receiveMessage(&socketPokeServer, &posDelaTablaDeArchivos ,sizeof(posDelaTablaDeArchivos));
+
+		log_info(logPokeCliente, "fuse_create - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
 	}else{
 		exitCode=EXIT_SUCCESS;
 	}
@@ -427,6 +431,10 @@ static int fuse_write(const char* path, const char* buf, size_t size, off_t offs
 	//4) send buffer
 	exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
 	log_info(logPokeCliente, "fuse_write - buffer: %s\n", buf);
+
+	//5) send posDelaTablaDeArchivos
+	exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
+	log_info(logPokeCliente, "fuse_write - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
 
 	//Receive message size
 	int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));

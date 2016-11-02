@@ -295,6 +295,84 @@ osada_block_pointer buscarArchivo(char *nombre){
 	return posicion;
 }
 
+char**  armar_vector_path(const char* text)
+{
+    int length_value = strlen(text) - 1;
+    char* value_without_brackets = string_substring(text, 1, length_value);
+    char **array_values = string_split(value_without_brackets, "/");
+
+    free(value_without_brackets);
+
+    return array_values;
+}
+
+
+int obtener_bloque_archivo(const char* path)
+{
+   char** vector_path = armar_vector_path(path);
+
+   int parent_dir = 65535;
+   int pos_archivo = -666;
+
+   int j;
+   int i=0;
+
+   while (vector_path[i] != NULL)
+   {
+	   for (j=0;j<2047;j++)
+	   {
+		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir) && (TABLA_DE_ARCHIVOS[j].state != DELETED))
+		   {
+			   parent_dir = j;
+			   pos_archivo = j;
+			   break;
+		   }
+	   }
+	   i++;
+   }
+
+   if (j == 2047)
+   {
+	   return -666;
+   }
+   return pos_archivo;
+}
+
+int obtener_bloque_padre (const char* path)
+{
+	char** vector_path = armar_vector_path(path);
+	char *file_name = strrchr (path, '/') + 1;
+
+	int parent_dir = 65535;
+
+	if ( strcmp (file_name, strrchr(path, '/')) !=0 )
+	{
+		int i = 0;
+		while (vector_path[i] != NULL)
+		{
+			int j;
+			for (j = 0; j < 2047; j++)
+			{
+				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
+				{
+					if ((i == 0) && (parent_dir == 65535))
+					{
+						parent_dir = j;
+					}
+					if ((i > 0) && (parent_dir != 0))
+					{
+						parent_dir = j;
+					}
+				}
+			}
+			i++;
+		}
+	}
+
+	return parent_dir;
+}
+
+
 int noEsVacio(int tamanio){
 	return tamanio !=0;
 }
@@ -304,40 +382,59 @@ int elTamanioDelArchivoEntraEnElOsada(int tamanio){
  return tamanio<=BYTES_LIBRES;
 }
 
-void escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block){
+int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos){
 	osada_file *tablaDeArchivo = obtenerTablaDeArchivos();
 	int k=0;
+	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
+	char *file_name = strrchr (fname, '/') + 1;
+	printf("file_name: %s\n", file_name);
 
-	for (k=0; k <= 2047; k++){
-		//printf("EN EL FOR\n");
-		if (tablaDeArchivo[k].state == DELETED){
-			printf("EN EL if\n");
-				tablaDeArchivo[k].state = REGULAR;
-				printf("state\n");
-				tablaDeArchivo[k].parent_directory = parent_directory;
-				printf("parent_directory\n");
-				//printf("fname: %s\n", fname);
-				printf("sizeof(fname): %i\n", strlen(fname));
-				strcpy(tablaDeArchivo[k].fname, "\0");
-				strcat(tablaDeArchivo[k].fname, fname);
+    if (posDelaTablaDeArchivos == -999){//SI SE CREA EL ARCHIVO POR PRIMERA VEZ
+		for (k=0; k <= 2047; k++){
+			//printf("EN EL FOR\n");
+			if (tablaDeArchivo[k].state == DELETED){
+				printf("EN EL if\n");
+					tablaDeArchivo[k].state = REGULAR;
+					printf("state\n");
 
-				printf("fname: %s\n", fname);
-				tablaDeArchivo[k].file_size = file_size;
-				printf("file_size\n");
-				tablaDeArchivo[k].lastmod = 0;
-				printf("lastmod\n");
-				tablaDeArchivo[k].first_block= first_block;
-				printf("first_block\n");
-				break;
+					tablaDeArchivo[k].parent_directory = parent_directory;
+					printf("parent_directory: %i\n",parent_directory);
 
-		}
-		//printf("afuera del if\n");
+					//printf("fname: %s\n", fname);
+					printf("sizeof(fname): %i\n", strlen(file_name));
+					strcpy(tablaDeArchivo[k].fname, "\0");
+					strcat(tablaDeArchivo[k].fname, file_name);
+
+					printf("fname: %s\n", file_name);
+					tablaDeArchivo[k].file_size = file_size;
+					printf("file_size: %i\n",file_size);
+					tablaDeArchivo[k].lastmod = 0;
+					printf("lastmod\n");
+
+					tablaDeArchivo[k].first_block= first_block;
+					printf("first_block: %i\n",first_block);
+
+					break;
+
+			}
+		}//for (k=0; k <= 2047; k++)
+			//printf("afuera del if\n");
 	}
+    else
+	{
+		tablaDeArchivo[posDelaTablaDeArchivos].file_size = file_size;
+		tablaDeArchivo[posDelaTablaDeArchivos].first_block= first_block;
+		k=posDelaTablaDeArchivos;
+	}
+
+
+
 	printf("k: %i\n", k);
 	printf("tablaDeArchivo[k].fname: %s\n", tablaDeArchivo[k].fname);
 
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, tablaDeArchivo, TAMANIO_TABLA_DE_ARCHIVOS);
 	printf("guarda osada 2 fuera\n");
+	return k;
 
 }
 
@@ -441,9 +538,9 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 
 
 
-void crearUnArchivo(char *contenido, int tamanio, char* fname){
+void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos){
 	int cantidadDeBloquesParaGrabar = 0;
-	t_list* listado;
+	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 	int i=0;
 	int cantidadDeElemento = 0;
 
@@ -451,15 +548,16 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname){
 	int bloquePos;
 	int bloqueSig;
 
+
 	if(elTamanioDelArchivoEntraEnElOsada(tamanio) && noEsVacio(tamanio)){
 
 		cantidadDeBloquesParaGrabar = tamanio /64;
-		listado = obtenerLosIndicesDeLosBloquesDisponibles(cantidadDeBloquesParaGrabar);
-		cantidadDeElemento = list_size(listado);
+		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponibles(cantidadDeBloquesParaGrabar);
+		cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
 
 		for(i=0;i<cantidadDeElemento;i++){
-			bloquePos = list_get(listado, i);
-			bloqueSig = list_get(listado, i+1);
+			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
+			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
 			printf("bloquePos: %i\n", bloquePos);
 
 			if(bloqueSig==0){
@@ -480,8 +578,8 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname){
 		dictionary_iterator(comoSeriaElArray, (void*) _recorrerComoSeriaElArray);
 		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
-		prepararBloquesDeDatos(listado, contenido);
-		escribirEnLaTablaDeArchivos(666, tamanio,fname,list_get(listado, 0));
+		prepararBloquesDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
+		escribirEnLaTablaDeArchivos(65535, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
 	}
 
 

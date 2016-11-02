@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
-	obtenerHeader();\
+	obtenerHeader();
 
 	setearConstantesDePosicionDeOsada();
 
@@ -204,7 +204,7 @@ void processMessageReceived(void *parameter){
 			switch (FUSEOperation){
 				case FUSE_WRITE:{
 						log_info(logPokeDexServer, "Processing FUSE_WRITE message");
-
+						int posDelaTablaDeArchivos=-999;
 						int pathLength = 0;
 						//1) Receive path length
 						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -222,7 +222,11 @@ void processMessageReceived(void *parameter){
 						receiveMessage(&serverData->socketClient, content, contentSize);
 						log_info(logPokeDexServer, "FUSE_WRITE - Message content received : %s\n",content);
 
-						crearUnArchivo(content, contentSize, path);
+						//5) posDelaTablaDeArchivos
+						receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
+						log_info(logPokeDexServer, "FUSE_WRITE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
+
+						crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos);
 						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
 
 						sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
@@ -231,6 +235,9 @@ void processMessageReceived(void *parameter){
 				case FUSE_CREATE:{
 					log_info(logPokeDexServer, "Processing FUSE_CREATE message");
 					int pathLength = 0;
+					int posDelaTablaDeArchivos = -999;
+					int first_block_init = -999;
+
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
 					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
@@ -243,10 +250,10 @@ void processMessageReceived(void *parameter){
 					int posBloquePadre = obtener_bloque_padre(path);
 
 					log_info(logPokeDexServer, "escribirEnLaTablaDeArchivos");
-					escribirEnLaTablaDeArchivos(posBloquePadre, 0, path, 666);
+					posDelaTablaDeArchivos = escribirEnLaTablaDeArchivos(posBloquePadre, 0, path, first_block_init, posDelaTablaDeArchivos);
 
 					int exitCode = EXIT_SUCCESS;
-					sendMessage(&serverData->socketClient, &exitCode, sizeof(exitCode));
+					sendMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(int));
 
 					break;
 				}
@@ -262,7 +269,7 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					crearUnArchivo("hola mundo\n", 128,"hola.txt\0");
+					//crearUnArchivo("hola mundo\n", 128,"hola.txt\0", -999);
 
 					sendMessage(&serverData->socketClient, "bien\0" , strlen("bien\0"));
 					break;
