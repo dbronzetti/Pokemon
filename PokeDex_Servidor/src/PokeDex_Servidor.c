@@ -270,6 +270,14 @@ void processMessageReceived(void *parameter){
 
 					break;
 				}
+				case FUSE_UNLINK:{
+
+									break;
+				}
+				case FUSE_TRUNCATE:{
+
+									break;
+				}
 				case FUSE_MKDIR:{
 					log_info(logPokeDexServer, "Processing FUSE_READ message");
 

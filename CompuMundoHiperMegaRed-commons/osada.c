@@ -282,6 +282,8 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, uint16_t parent_di
 	return -666;
 }
 
+
+
 osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
 	printf("******************************** ENTRO EN EL buscarArchivo ******************************** \n");
 	int pos=0;
@@ -290,11 +292,42 @@ osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
 	printf("file_name: %s\n", file_name);
 
 	for (pos=0; pos <= 2047; pos++){
+
 		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos],parent_directory,  file_name)) != -666){
 			printf("encontro>! , %i\n", pos);
 			return posicion;
 		};
 	}
+
+	printf("******************************* NO LO ENCONTRO! ******************************* \n");
+	return posicion;
+}
+
+
+
+int borrarUnArchivo(char *nombre, uint16_t parent_directory){
+	printf("******************************** ENTRO EN borrarUnArchivo  ******************************** \n");
+	int pos=0;
+	osada_block_pointer posicion = 0;
+	char *file_name = strrchr (nombre, '/') + 1;
+	printf("file_name: %s\n", file_name);
+
+	for (pos=0; pos <= 2047; pos++){
+		char *nac;
+		char *n;
+		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
+		n = string_duplicate(nombre);
+		string_trim(&nac);
+		string_trim(&n);
+
+		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory && TABLA_DE_ARCHIVOS[pos].state != DELETED && strcmp(nac, n) == 0){
+
+			TABLA_DE_ARCHIVOS[pos].state = DELETED;
+			posicion = pos;
+
+		}
+	}
+	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 
 	printf("******************************* NO LO ENCONTRO! ******************************* \n");
 	return posicion;

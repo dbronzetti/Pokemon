@@ -355,16 +355,88 @@ static int fuse_mkdir(const char* path, mode_t mode){
 
 }
 
+static int fuse_truncate(const char* path)
+{
+//	int resultado = borrarArchivo (path);
+	printf("********************************* fuse_truncate *********************\n");
+	log_info(logPokeCliente, "--------------------- fuse_truncate ------------ \n");
+	int resultado = 1;
+	int exitCode;
+
+	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
+		log_info(logPokeCliente, "****************FUSE_UNLINK****************\n");
+		//0) Send Fuse Operations
+		enum_FUSEOperations operacion = FUSE_TRUNCATE;
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_truncate - pathLength: %i\n", pathLength);
+
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "fuse_truncate - path: %s\n", path);
+
+		//3) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		log_info(logPokeCliente, "fuse_truncate - parent_directory: %i\n", parent_directory);
+
+		//Receive message size
+		int messageSize = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+		log_info(logPokeCliente, "fuse_truncate - MessageSize: %i\n", messageSize);
+
+		if (receivedBytes > 0){
+				}
+	}else{
+		exitCode=EXIT_SUCCESS;
+	}
+
+
+		return resultado;
+}
+
 static int fuse_unlink(const char* path)
 {
 //	int resultado = borrarArchivo (path);
 	printf("********************************* fuse_unlink *********************\n");
 	log_info(logPokeCliente, "--------------------- fuse_unlink ------------ \n");
 	int resultado = 1;
-	if (resultado!=0)	{
-			printf("[Error_Fuse] unlink(%s)\n", path);
-			return 1;
+	int exitCode;
+
+	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
+		log_info(logPokeCliente, "****************FUSE_UNLINK****************\n");
+		//0) Send Fuse Operations
+		enum_FUSEOperations operacion = FUSE_UNLINK;
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_unlink - pathLength: %i\n", pathLength);
+
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "fuse_unlink - path: %s\n", path);
+
+		//3) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		log_info(logPokeCliente, "fuse_unlink - parent_directory: %i\n", parent_directory);
+
+		//Receive message size
+		int messageSize = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+		log_info(logPokeCliente, "fuse_unlink - MessageSize: %i\n", messageSize);
+
+		if (receivedBytes > 0){
+				}
+	}else{
+		exitCode=EXIT_SUCCESS;
 	}
+
 
 		return resultado;
 }
@@ -491,6 +563,7 @@ static struct fuse_operations xmp_oper = {
     .open		= fuse_open,
     .read		= fuse_read,
     .write		= fuse_write,
+	.truncate   = fuse_truncate,
 	//.mknod		= fuse_mknod,
 
 	#ifdef HAVE_SETXATTR
