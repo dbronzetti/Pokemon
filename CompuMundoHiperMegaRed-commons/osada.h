@@ -71,13 +71,14 @@ void setearConstantesDePosicionDeOsada();
 
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento);
-osada_block_pointer buscarArchivo(char *nombre);
 char**  armar_vector_path(const char* text);
 void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos);
 int obtener_bloque_archivo(const char* path);
 t_list* crearArbolAPartirDelPadre(int padre);
 t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques);
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos);
+osada_block_pointer devolverBloque(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre);
+osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER;
 static int TAMANIO_DEL_BITMAP;

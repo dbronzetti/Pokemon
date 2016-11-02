@@ -276,7 +276,7 @@ void processMessageReceived(void *parameter){
 				}
 				case FUSE_READ:{
 					log_info(logPokeDexServer, "Processing FUSE_READ message");
-
+					int parent_directory=0;
 					int pathLength = 0;
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -286,7 +286,12 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message path received : %s\n",path);
 
-					osada_block_pointer posicion = buscarArchivo(path);
+					//3) Receive parent_directory
+					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
+
+					osada_block_pointer posicion = buscarArchivo(path, parent_directory);
 					t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 					//verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
 

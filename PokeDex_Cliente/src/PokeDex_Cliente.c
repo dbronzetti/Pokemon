@@ -7,6 +7,7 @@
 #include "PokeDex_Cliente.h"
 /************************************* JOEL GLOBALES *************************************************/
 int posDelaTablaDeArchivos = -999;
+int parent_directory = -999;
 /************************************* FIN GLOBALES *************************************************/
 
 int  borrarArchivo (const char* path){
@@ -202,31 +203,36 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_mode = S_IFDIR | 0777;
 		stbuf->st_nlink = 2;
 	}else {
-
+	//	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		//Esta funcion llama al socket y pide el bloque
-		t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
-		if (listaNodo->elements_count == 1 ){// listaNodo->elements_count SIEMPRE va a ser 1, porque el servidor solo manda 1 elemento
-			log_info(logPokeCliente, "FUSE_GETATTR -listaNodo->elements_count: %i\n", listaNodo->elements_count);
-			osada_file *nodo =list_get(listaNodo,0);
 
-			if (nodo->state == REGULAR)
-			{
-				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->fname: %s\n", nodo->fname);
-				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: REGULAR\n");
-				log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->file_size: %i\n", nodo->file_size);
-				stbuf->st_mode = S_IFREG | 0777;
-				stbuf->st_nlink = 1;
-				stbuf->st_size = nodo->file_size;
-			}
-			else if (nodo->state == DIRECTORY)
-			{
-				log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->fname: %s\n", nodo->fname);
-				log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: DIRECTORY\n");
-				stbuf->st_mode = S_IFDIR | 0777;
-				stbuf->st_nlink = 2;
-			}
+						t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
+						if (listaNodo->elements_count == 1 ){// listaNodo->elements_count SIEMPRE va a ser 1, porque el servidor solo manda 1 elemento
+							log_info(logPokeCliente, "FUSE_GETATTR -listaNodo->elements_count: %i\n", listaNodo->elements_count);
+							osada_file *nodo =list_get(listaNodo,0);
 
-		}
+							if (nodo->state == REGULAR)
+							{
+								log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->fname: %s\n", nodo->fname);
+								log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->state: REGULAR\n");
+								log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->file_size: %i\n", nodo->file_size);
+								stbuf->st_mode = S_IFREG | 0777;
+								stbuf->st_nlink = 1;
+								stbuf->st_size = nodo->file_size;
+
+							}
+							else if (nodo->state == DIRECTORY)
+							{
+								printf("NODO PADRE: %i\n",nodo->parent_directory );
+								parent_directory = nodo->parent_directory;
+								log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->fname: %s\n", nodo->fname);
+								log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: DIRECTORY\n");
+								stbuf->st_mode = S_IFDIR | 0777;
+								stbuf->st_nlink = 2;
+							}
+				}//if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
+
+//		}
 		else{
 			res = -ENOENT;
 		}
@@ -367,34 +373,43 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 static int fuse_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
-	log_info(logPokeCliente, "****************fuse_read****************\n");
-	//0) Send Fuse Operations
-	enum_FUSEOperations operacion = FUSE_READ;
-	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
+		log_info(logPokeCliente, "****************fuse_read****************\n");
+		//0) Send Fuse Operations
+		enum_FUSEOperations operacion = FUSE_READ;
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
-	string_append(&path, "\0");
-	//1) send path length (+1 due to \0)
-	int pathLength = strlen(path) + 1;
-	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-	log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
-	//2) send path
-	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-	log_info(logPokeCliente, "fuse_read - path: %s\n", path);
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
 
-	//Receive message size
-	int messageSize = -1;
-	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-	log_info(logPokeCliente, "fuse_read - MessageSize: %i\n", messageSize);
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
 
-	if (receivedBytes > 0){
-		char *messageRcv = malloc(messageSize);
-		receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-		log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
-		memcpy(buf, messageRcv, messageSize);
-		return messageSize;
+		//3) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
+
+		//Receive message size
+		int messageSize = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+		log_info(logPokeCliente, "fuse_read - MessageSize: %i\n", messageSize);
+
+		if (receivedBytes > 0){
+			char *messageRcv = malloc(messageSize);
+			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+			log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
+			memcpy(buf, messageRcv, messageSize);
+			return messageSize;
+		}
+	}else{
+		exitCode=EXIT_SUCCESS;
 	}
 
-	return 0;
+	return exitCode;
 }
 
 static int fuse_write(const char* path, const char* buf, size_t size, off_t offset, struct fuse_file_info *fi)

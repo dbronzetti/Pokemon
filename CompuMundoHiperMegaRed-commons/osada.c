@@ -256,7 +256,7 @@ t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
 	return proximo;
 }
 
-osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
+osada_block_pointer devolverBloque(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre){
 	char *nac;
 	char *n;
 	nac = string_duplicate(&tablaDeArchivo.fname);
@@ -264,7 +264,7 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
 	string_trim(&nac);
 	string_trim(&n);
 
-	if (tablaDeArchivo.state == REGULAR && strcmp(nac, n) == 0){
+	if (tablaDeArchivo.parent_directory == parent_directory && tablaDeArchivo.state == REGULAR && strcmp(nac, n) == 0){
 		free(nac);
 		free(n);
 		printf("state_: %c\n", tablaDeArchivo.state);
@@ -282,14 +282,15 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, char *nombre){
 	return -666;
 }
 
-osada_block_pointer buscarArchivo(char *nombre){
+osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
+	printf("******************************** ENTRO EN EL buscarArchivo ******************************** \n");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
 	printf("file_name: %s\n", file_name);
 
 	for (pos=0; pos <= 2047; pos++){
-		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos],  file_name)) != -666){
+		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos],parent_directory,  file_name)) != -666){
 			printf("encontro>! , %i\n", pos);
 			return posicion;
 		};
@@ -505,7 +506,7 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 	int bloquePosInt = 0;
 	bloquePosInt = atoi(bloquePos);
 
-	char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+	char *bloqueDeDatos = malloc(strlen(contenido));
 
 	int bloque2 = bloquePosInt *64;
 	strcpy(bloqueDeDatos, contenido);
