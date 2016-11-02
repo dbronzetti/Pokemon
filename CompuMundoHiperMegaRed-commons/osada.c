@@ -500,7 +500,7 @@ void _recorrerComoSeriaElArray(char* bloquePos, int bloqueSig) {
 }
 
 void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
-	//printf("_guardarEnTablaDeDatos - Bloque Pos: %i\n", atoi(bloquePos));
+	printf("_guardarEnTablaDeDatos - Bloque Pos: %i\n", atoi(bloquePos));
 	//printf("_guardarEnTablaDeDatos - contenido: %s\n",contenido);
 	int bloquePosInt = 0;
 	bloquePosInt = atoi(bloquePos);
@@ -525,7 +525,7 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 
 
 	for(i = 0; i < cantidadDeBloques; i++){
-		char *bloqueConDatos = malloc(64);
+		char *bloqueConDatos;
 		char *bloquePosStr;
 
 		bloquePos = list_get(listado, i);
@@ -533,22 +533,27 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 
 		bloqueConDatos = string_itoa(i);
 
-		//strcat(bloqueConDatos, contenido);
+		//TODO: PREGUNTAR A DAMIAN ESTA FORMA DE CODEAR PARA DIVIDIR CADA BLOQUE DE DATOS
 		if(i == (cantidadDeBloques - 1)){
-			printf("contenido 2: %c\n", contenido[j * OSADA_BLOCK_SIZE ]);
+			bloqueConDatos = malloc(strlen(contenido));
+			printf("contenido 2 - %i: %c\n",j, contenido[j * OSADA_BLOCK_SIZE ]);
 			memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], strlen(contenido) );
+			bloqueConDatos[strlen(contenido) +1 ]= '\0';
 			printf("bloqueConDatos: %s\n", bloqueConDatos);
 			j++;
 		}else{
-			printf("contenido 3: %c\n", contenido[j * OSADA_BLOCK_SIZE ]);
-			memcpy(bloqueConDatos, contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE );
+			bloqueConDatos = malloc(64);
+			printf("contenido 3 - %i: %c\n", j, contenido[j * OSADA_BLOCK_SIZE ]);
+			memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
+			bloqueConDatos[65]= '\0';
 			printf("bloqueConDatos: %s\n", bloqueConDatos);
 			j++;
 		}
 
 		dictionary_put(dicBloqueDeDatos, bloquePosStr, bloqueConDatos);
+		printf("ENTRO EN EL DICTIONARY\n");
 	}
-
+	printf("QJUIEE INTERAR \n");
 	dictionary_iterator(dicBloqueDeDatos, (void*) _guardarEnTablaDeDatos);
 }
 
@@ -572,7 +577,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 		if(tamanio > 0 && tamanio < 64){
 			cantidadDeBloquesParaGrabar = 1;
 		}
-		printf("cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
+
 
 		if(tamanio > 64){
 
@@ -581,10 +586,12 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 			moduloTamanio = tamanio % 64;
 
 			if (moduloTamanio>0){
-				cantidadDeBloquesParaGrabar = cantidadDeBloquesParaGrabar + moduloTamanio;
+				cantidadDeBloquesParaGrabar = cantidadDeBloquesParaGrabar + 1;
 			}
 
 		}
+
+		printf("cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
 
 		//cantidadDeBloquesParaGrabar = tamanio /64;
 		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponibles(cantidadDeBloquesParaGrabar);
