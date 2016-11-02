@@ -275,7 +275,6 @@ void restarVida() {
 void desconectarse() {
 
 	sendClientMessage(&socketMapa, metadataEntrenador.simbolo, DESCONECTAR);
-	//log_info(logEntrenador,"tamanio cola de objetivos %d", queue_size(colaDeObjetivos));
 	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
 	sleep(1); //dormimos un segundo para darle tiempo al mapa de cerrar el socket correctamente y no joder el select.
 	close(socketMapa);
