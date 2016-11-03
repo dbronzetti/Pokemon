@@ -83,12 +83,12 @@ int main(int argc, char **argv) {
 	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
-	pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
-//	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
+	pthread_create(&planificador, NULL, (void*) planificar, NULL);
+	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
 
 	pthread_join(serverThread, NULL);
 	pthread_join(planificador, NULL);
-//	pthread_join(detectorDeadlocks, NULL);
+	pthread_join(detectorDeadlocks, NULL);
 	return 0;
 
 }
@@ -463,12 +463,14 @@ void processMessageReceived(void *parameter) {
 			}
 
 			default: {
-				log_error(logMapa,
-						"Message not allowed. Invalid message '%s' tried to send to MAPA",
-						getProcessString(message->tipo));
+				pthread_mutex_lock(&setEntrenadoresMutex);
+				t_entrenador* entrenador = list_find(listaDeEntrenadores,
+						(void*) buscarPorSocket);
+				entrenador->accion = ERROR;
+				log_error(logMapa, "Message from the trainer %c came wrong",
+						entrenador->simbolo);
+				pthread_mutex_unlock(&setEntrenadoresMutex);
 
-				log_error(logMapa, "Se recibio: %s y: %d", message->mensaje,
-						message->tipo);
 				break;
 			}
 			}
@@ -753,31 +755,42 @@ void planificar() {
 						(void*) buscarPorSimbolo)) {
 					pthread_mutex_unlock(&setEntrenadoresMutex);
 
-					log_info(logMapa,
-							"End of the turn, trainer: %c goes to colaDeBloqueados",
-							entrenador->simbolo);
-					pthread_mutex_lock(&colaDeBloqueadosMutex);
-					entrenador->estaEnTurno = 0;
-					queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
-					pthread_mutex_unlock(&colaDeBloqueadosMutex);
+					if (entrenador->estaBloqueado != 1) {
+
+						log_info(logMapa,
+								"End of the turn, trainer: %c goes to the end colaDeListos",
+								entrenador->simbolo);
+						pthread_mutex_lock(&colaDeListosMutex);
+						entrenador->estaEnTurno = 0;
+						queue_push(colaDeListos, entrenador); //y aca lo mandamos a la cola de listos.
+						pthread_mutex_unlock(&colaDeListosMutex);
+					} else {
+						log_info(logMapa,
+								"End of the turn, trainer: %c goes to colaDeBloqueados",
+								entrenador->simbolo);
+						pthread_mutex_lock(&colaDeBloqueadosMutex);
+						entrenador->estaEnTurno = 0;
+						queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
+						pthread_mutex_unlock(&colaDeBloqueadosMutex);
+					}
 				} else
 					pthread_mutex_unlock(&setEntrenadoresMutex);
 			} else
 				pthread_mutex_unlock(&setEntrenadoresMutex);
 
-			pthread_mutex_lock(&colaDeBloqueadosMutex);
-			pthread_mutex_lock(&colaDeListosMutex);
-			if (queue_size(colaDeBloqueados) != 0
-					&& queue_size(colaDeListos) == 0) {
-
-				t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
-				queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
-
-				log_info(logMapa, "Trainer: %c goes to colaDeListos",
-						entrenador->simbolo);
-			}
-			pthread_mutex_unlock(&colaDeListosMutex);
-			pthread_mutex_unlock(&colaDeBloqueadosMutex);
+//			pthread_mutex_lock(&colaDeBloqueadosMutex);
+//			pthread_mutex_lock(&colaDeListosMutex);
+//			if (queue_size(colaDeBloqueados) != 0
+//					&& queue_size(colaDeListos) == 0) {
+//
+//				t_entrenador* entrenador = queue_pop(colaDeBloqueados); //desencolamos al primero que se bloqueo
+//				queue_push(colaDeListos, entrenador); //y lo encolamos a la cola de listos
+//
+//				log_info(logMapa, "Trainer: %c goes to colaDeListos",
+//						entrenador->simbolo);
+//			}
+//			pthread_mutex_unlock(&colaDeListosMutex);
+//			pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
 		}
 
@@ -785,20 +798,21 @@ void planificar() {
 
 }
 
-void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX ) { //le puse un millon de parametros para poder usarla despues como contador de distancia
+void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y,
+		int* seMovioEnX) { //le puse un millon de parametros para poder usarla despues como contador de distancia
 	if (*seMovioEnX) { //si ya se movio en x
 		if (*pos_y == posD_y) { //y ademas esta paralelo (en y) a su pokenest
 			if (*pos_x > posD_x) //si esta por arriba le restamos uno.
-				*pos_x = *pos_x -1;     // se vuelve a mover en x nomas.
+				*pos_x = *pos_x - 1;     // se vuelve a mover en x nomas.
 			else
-				*pos_x = *pos_x +1; //si esta por abajo le sumamos uno
+				*pos_x = *pos_x + 1; //si esta por abajo le sumamos uno
 
 		} else {   //sino lo movemos en Y.
 			if (*pos_y > posD_y) //si esta por arriba le restamos uno
-				*pos_y = *pos_y -1;
+				*pos_y = *pos_y - 1;
 
 			else
-				*pos_y = *pos_y +1;
+				*pos_y = *pos_y + 1;
 
 			*seMovioEnX = 0; //y le seteamos el flag en 0.
 		}
@@ -807,13 +821,13 @@ void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovi
 	else {
 		if (*pos_x == posD_x) { //si  se movio en X pero esta paralelo (en y) a su pokenest
 			if (*pos_y > posD_y) //si esta por arriba le restamos uno.
-				*pos_y = *pos_y -1;     // se vuelve a mover en y nomas.
+				*pos_y = *pos_y - 1;     // se vuelve a mover en y nomas.
 			else
-				*pos_y = *pos_y +1; //si esta por abajo le sumamos uno
+				*pos_y = *pos_y + 1; //si esta por abajo le sumamos uno
 
 		} else { //sino lo movemos en X
 			if (*pos_x > posD_x) //si esta por arriba le restamos uno
-				*pos_x = *pos_x -1;
+				*pos_x = *pos_x - 1;
 
 			else
 				*pos_x = *pos_x + 1;
@@ -852,8 +866,8 @@ void planificarSRDF() {
 			ejecutarAccionEntrenador(entrenador, 0); //0 it's not needed for this planificador
 
 			pthread_mutex_lock(&colaDeListosMutex);
-			if(entrenador->estaBloqueado!=1)
-			queue_push(colaDeListos, entrenador);
+			if (entrenador->estaBloqueado != 1)
+				queue_push(colaDeListos, entrenador);
 			else
 				queue_push(colaDeBloqueados, entrenador);
 			pthread_mutex_unlock(&colaDeListosMutex);
@@ -868,7 +882,7 @@ void ordenarColaEntrenadores() {
 	//@TODO: Poner un semaforo que bloque la Cola de Listos.
 
 	//obtenemos todos los entrenadores y determinamos su distancia.
-	while(queue_size(colaDeListos)) {
+	while (queue_size(colaDeListos)) {
 		t_entrenador* entrenadorAux = queue_pop(colaDeListos);
 		calcularCantidadMovimientos(entrenadorAux);
 		list_add(listAuxOrdenar, entrenadorAux);
@@ -896,14 +910,11 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 				entrenador->simbolo);
 		while (estaEnAccion) {
 
-		if (entrenador->accion != SIN_MENSAJE) { //este if verifica que el entrenador respondio :D
+			if (entrenador->accion != SIN_MENSAJE) { //este if verifica que el entrenador respondio :D
 
-			switch (entrenador->accion) {
+				switch (entrenador->accion) {
 
-
-
-				case CONOCER:
-				{
+				case CONOCER: {
 
 					char idPokemon = entrenador->pokemonD;
 
@@ -935,7 +946,7 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 					estaEnAccion = 0;
 					break;
 				}
-			}
+				}
 			}
 		}
 	}
@@ -950,15 +961,16 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 	int distancia = 0;
 
-	while(((pos_x == posD_x) && (pos_y == posD_y)) != 1){ //mientras no haya llegado que siga contando
-		moverEntrenador(&pos_x,&pos_y,posD_x,posD_y,&seMovioEnX);
+	while (((pos_x == posD_x) && (pos_y == posD_y)) != 1) { //mientras no haya llegado que siga contando
+		moverEntrenador(&pos_x, &pos_y, posD_x, posD_y, &seMovioEnX);
 //		log_info(logMapa,"[DEBUG] pos en x:%d , pos deseada x: %d , pos en y:%d , pos deseada en y: %d", pos_x,posD_x,pos_y,posD_y);
 		distancia++;
 	}
 
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	entrenador->distancia = distancia;
-	log_info(logMapa, "Trainer: '%c' it's about %d actions of his pokenest", entrenador->simbolo, entrenador->distancia);
+	log_info(logMapa, "Trainer: '%c' it's about %d actions of his pokenest",
+			entrenador->simbolo, entrenador->distancia);
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 
 }
@@ -1097,6 +1109,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 				}
 
 				else {
+					pthread_mutex_unlock(&listaDePokenestMutex);
 					pthread_mutex_lock(&setEntrenadoresMutex);
 					entrenador->estaBloqueado = 1;
 					log_info(logMapa,
@@ -1104,7 +1117,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 							entrenador->simbolo, entrenador->pokemonD);
 					pthread_mutex_unlock(&setEntrenadoresMutex);
 				}
-				i = metadataMapa.quantum; // le asignamos todo el quantum al contador asi sale
+				*i = metadataMapa.quantum; // le asignamos todo el quantum al contador asi sale
 				estaEnAccion = 0;
 				break;
 			}
@@ -1118,6 +1131,12 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 				estaEnAccion = 0;
 				break;
 			}
+
+			case ERROR: {
+				*i = *i-1; // si llego mal el msj le restamos 1 al contador asi no pierde una accion en caso de que este en RR
+				estaEnAccion = 0;
+				break;
+			}
 			}
 		}
 	}
@@ -1126,8 +1145,9 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 }
 
 void detectarDeadlocks() {
-		while (1) {
-			sleep(7);
+	while (1) {
+		sleep(10);
+		if (queue_size(colaDeBloqueados) > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
 			pthread_mutex_lock(&setEntrenadoresMutex);
 
 			bool _entrenadorBloqueado(t_entrenador* entrenadorParam) {
@@ -1138,10 +1158,13 @@ void detectarDeadlocks() {
 					(void*) _entrenadorBloqueado); //filtramos a los que estan bloqueados (no pueden conseguir su pokemon).
 			int i;
 			int a;
-			for (i = 0; i < list_size(listaDeBloqueados); i++) {
+			int tamanioDeLaListaDeBloqueados = list_size(listaDeBloqueados);
+			for (i = 0; i < tamanioDeLaListaDeBloqueados; i++) {
+
 				t_entrenador* entrenador1 = list_get(listaDeBloqueados, i); // sacamos un entrenador
 
-				for (a = 0; i < list_size(listaDeBloqueados); a++) {
+				for (a = 0; a < tamanioDeLaListaDeBloqueados; a++) {
+					log_info(logMapa, "[1157] a = %d", a);
 					t_entrenador* entrenador2 = list_get(listaDeBloqueados, a); // sacamos otro :)
 					bool _tieneAlPokemonDeEntrenador1(t_pokemon* pokemonParam) {
 						return pokemonParam->id == entrenador1->pokemonD;
@@ -1149,14 +1172,6 @@ void detectarDeadlocks() {
 
 					bool _tieneAlPokemonDeEntrenador2(t_pokemon* pokemonParam) {
 						return pokemonParam->id == entrenador2->pokemonD;
-					}
-
-					bool _noEstaEnLaListaE1(t_entrenador* entrenadorParam) {
-						return entrenadorParam->simbolo != entrenador1->simbolo;
-					}
-
-					bool _noEstaEnLaListaE2(t_entrenador* entrenadorParam) {
-						return entrenadorParam->simbolo != entrenador2->simbolo;
 					}
 
 					bool siNoSonIguales = entrenador1->simbolo
@@ -1167,33 +1182,30 @@ void detectarDeadlocks() {
 									entrenador2->listaDePokemonesCapturados,
 									(void*) _tieneAlPokemonDeEntrenador1);
 
+
 					bool siElEntrenador1TieneUnPokemonQueQuiereEntrenador2 =
 							list_any_satisfy(
 									entrenador1->listaDePokemonesCapturados,
-									(void*) _tieneAlPokemonDeEntrenador2);
-//
-//				bool noSeEncuentraEnLaListaE1 = list_all_satisfy(
-//						listaDeDeadlocks, _noEstaEnLaListaE1); //verifico que el entrenador1  no este ya puesto en la lista de deadlocks
-//
-//				bool noSeEncuentraEnLaListaE2 = list_all_sastisfy(
-//						listaDeDeadlocks, _noEstaEnLaListaE2); //verifico que el entrenador2  no este ya puesto en la lista de deadlocks
+									(void*) _tieneAlPokemonDeEntrenador2);;
 
 					if (siNoSonIguales
 							&& siElEntrenador2TieneUnPokemonQueQuiereEntrenador1
 							&& siElEntrenador1TieneUnPokemonQueQuiereEntrenador2) {
-//					if (noSeEncuentraEnLaListaE1)
-//						list_add(listaDeDeadlocks, entrenador1);
-//					if (noSeEncuentraEnLaListaE2)
-//						list_add(listaDeDeadlocks, entrenador2);
+
 						log_info(logMapa,
 								"The trainer '%c' is in deadlock with the trainer '%c'",
 								entrenador1->simbolo, entrenador2->simbolo);
 
 					}
+
 				}
+
 			}
+
 			list_destroy(listaDeBloqueados);
 			pthread_mutex_unlock(&setEntrenadoresMutex);
 		}
 
 	}
+
+}

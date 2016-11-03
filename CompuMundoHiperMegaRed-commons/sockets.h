@@ -42,7 +42,8 @@ typedef enum{
 	MOVETE,
 	LLEGO,
 	LIBRE,
-	CAPTURADO
+	CAPTURADO,
+	ERROR
 } enum_messages;
 
 typedef enum{
