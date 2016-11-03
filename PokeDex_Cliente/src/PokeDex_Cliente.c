@@ -10,42 +10,6 @@ int posDelaTablaDeArchivos = -999;
 int parent_directory = -999;
 /************************************* FIN GLOBALES *************************************************/
 
-int  borrarArchivo (const char* path){
-		int exitCode = EXIT_FAILURE; //DEFAULT Failure
-		int resultado = 1;
-		t_list *listaBloques = list_create();
-		enum_FUSEOperations fuseOperation =  FUSE_UNLINK;
-
-		//0) Send Fuse Operations
-		exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
-		log_info(logPokeCliente, "fuseOperation: %d\n", fuseOperation);
-		string_append(&path, "\0");
-
-		//1) send path length (+1 due to \0)
-		int pathLength = strlen(path) + 1;
-		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-
-		log_info(logPokeCliente, "pathLength: %i\n", pathLength);
-
-		//2) send path
-		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-		log_info(logPokeCliente, "path: %s\n", path);
-
-		//Receive element Count
-		int elementCount = -1;
-		int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
-
-		log_info(logPokeCliente, "elementCount: %i\n", elementCount);
-		if (receivedBytes > 0 && elementCount > 0){
-			int messageSize = elementCount * sizeof(osada_file);
-			char *messageRcv = malloc(messageSize);
-			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-			resultado = atoi(messageRcv);
-			log_info(logPokeCliente, "messageRcv: %d\n", resultado);
-		}
-		log_info(logPokeCliente, "*********************************\n");
-		return resultado;
-};
 
 int directorioBorrar(char *path){
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
@@ -402,12 +366,13 @@ static int fuse_unlink(const char* path)
 {
 //	int resultado = borrarArchivo (path);
 	printf("********************************* fuse_unlink *********************\n");
-	log_info(logPokeCliente, "--------------------- fuse_unlink ------------ \n");
+	log_info(logPokeCliente, "--------------------- fuse_unlink ------------ %s\n", path);
 	int resultado = 1;
 	int exitCode;
 
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		log_info(logPokeCliente, "****************FUSE_UNLINK****************\n");
+
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_UNLINK;
 		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -438,7 +403,7 @@ static int fuse_unlink(const char* path)
 	}
 
 
-		return resultado;
+		return 0;
 }
 
 static int fuse_open(const char *path, struct fuse_file_info *fi) {

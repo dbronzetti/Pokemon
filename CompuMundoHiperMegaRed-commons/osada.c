@@ -303,7 +303,21 @@ osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
 	return posicion;
 }
 
+void borrarBloqueDelBitmap(int bloque){
 
+	if(bitarray_test_bit(BITMAP, bloque) == 1){
+		bitarray_clean_bit(BITMAP, bloque);
+	}
+
+
+
+}
+
+void borrarBloquesDelBitmap(t_list *listado){
+	list_iterate(listado, (void*)borrarBloqueDelBitmap);
+	guardarEnOsada2(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
+
+}
 
 int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 	printf("******************************** ENTRO EN borrarUnArchivo  ******************************** \n");
@@ -316,12 +330,13 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 		char *nac;
 		char *n;
 		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
-		n = string_duplicate(nombre);
+		n = string_duplicate(file_name);
 		string_trim(&nac);
 		string_trim(&n);
+		printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
 
-		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory && TABLA_DE_ARCHIVOS[pos].state != DELETED && strcmp(nac, n) == 0){
-
+		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
+			printf("******************************* LO ENCONTRO! ******************************* \n");
 			TABLA_DE_ARCHIVOS[pos].state = DELETED;
 			posicion = pos;
 
@@ -329,7 +344,6 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 	}
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 
-	printf("******************************* NO LO ENCONTRO! ******************************* \n");
 	return posicion;
 }
 
@@ -478,19 +492,18 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 }
 
 t_list* obtenerLosIndicesDeLosBloquesDisponibles(int cantidadBloques){
-	//t_bitarray *bitMap = obtenerBitmap();
 	t_list *listDeBloques = list_create();
 
 	int bloquesOcupados  = 0;
 	int bloquesLibres = 0;
 	int i = 0;
 
-	for (i=0; i < HEADER->fs_blocks; i++){//para 150k
+	for (i=0; i < HEADER->fs_blocks; i++){
 
 		if(bitarray_test_bit(BITMAP, i) == 0){
 			list_add(listDeBloques, i);
 			bloquesLibres++;
-			printf("Bloque - %i - LIBRE\n",i);
+			//printf("Bloque - %i - LIBRE\n",i);
 			bitarray_set_bit(BITMAP, i);
 		}
 
@@ -499,8 +512,8 @@ t_list* obtenerLosIndicesDeLosBloquesDisponibles(int cantidadBloques){
 
 	}
 
-	printf("DESDE_PARA_BITMAP - %i\n",DESDE_PARA_BITMAP);
-	printf("TAMANIO_DEL_BITMAP - %i\n",TAMANIO_DEL_BITMAP);
+	//printf("DESDE_PARA_BITMAP - %i\n",DESDE_PARA_BITMAP);
+	//-printf("TAMANIO_DEL_BITMAP - %i\n",TAMANIO_DEL_BITMAP);
 	guardarEnOsada2(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
 
 	return listDeBloques;

@@ -271,8 +271,31 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 				case FUSE_UNLINK:{
+					log_info(logPokeDexServer, "-------Processing FUSE_UNLINK message");
+					int parent_directory=0;
+					int pathLength = 0;
 
-									break;
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+					//2) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message path received : %s\n",path);
+
+					//3) Receive parent_directory
+					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
+
+					osada_block_pointer posicion = buscarArchivo(path, parent_directory);
+					t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+					borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
+					borrarUnArchivo(path, parent_directory);
+
+					sendMessage(&serverData->socketClient, &posicion , sizeof(posicion));
+
+					break;
 				}
 				case FUSE_TRUNCATE:{
 
@@ -299,6 +322,7 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "Processing FUSE_READ message");
 					int parent_directory=0;
 					int pathLength = 0;
+
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
 					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
@@ -314,10 +338,9 @@ void processMessageReceived(void *parameter){
 
 					osada_block_pointer posicion = buscarArchivo(path, parent_directory);
 					t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
-					//verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
 
 					int i;
-					//char *contenido = malloc(OSADA_BLOCK_SIZE * conjuntoDeBloquesDelArchivo->elements_count + 1);
+
 					char *string = string_new();
 					log_info(logPokeDexServer, "ENTRA EN EL FOR DE BLOQUES\n");
 					memcpy(string, &conjuntoDeBloquesDelArchivo->elements_count, sizeof(int));
