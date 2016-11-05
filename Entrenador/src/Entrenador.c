@@ -7,14 +7,6 @@
 #include "Entrenador.h"
 
 int socketMapa = 0;
-t_queue* colaDeObjetivos;
-enum_messages turno;
-char* posicionPokenest;
-char* rutaMetadata;
-char* rutaDirDeBill;
-char* mapaActual;
-char* pokemonCapturado;
-char *pokedex;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
@@ -25,6 +17,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&turnoMutex, NULL);
 	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
 	int ganoMapa;
+	colaDeRutasCapturadas =	queue_create();
 
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -255,6 +248,7 @@ void recibirSignal() {
 	while (1) {
 		signal(SIGUSR1, sumarVida);
 		signal(SIGTERM, restarVida);
+		signal(SIGINT, cerrarEntrenador);
 	}
 }
 
@@ -333,6 +327,7 @@ void jugar() {
 				puts(rutaMedataPokemonMapa);
 				log_info(logEntrenador, "Trainer has captured: %s",pokemonCapturado);
 				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
+				queue_push(colaDeRutasCapturadas,rutaMetadataPokemon);
 				objetivoActual = NULL;
 				break;
 			}
@@ -479,4 +474,19 @@ void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
 	fclose(fp_org);
 	fclose(fp_dest);
 
+}
+
+void borrarArchivos(){ //se borran todos los pokemones capturados cuando se desconecta
+
+	 while(queue_size(colaDeRutasCapturadas)){
+		 char* rutaABorrar = queue_pop(colaDeRutasCapturadas);
+
+		 remove(rutaABorrar);
+	 }
+
+}
+
+void cerrarEntrenador(){
+	borrarArchivos();
+	exit(0);
 }
