@@ -428,6 +428,42 @@ void processMessageReceived(void *parameter){
 
 					break;
 				}
+				case FUSE_RENAME:{
+					log_info(logPokeDexServer, "-------Processing FUSE_RENAME message");
+					int parent_directory=0;
+					int pathLength = 0;
+					int newPathLength = 0;
+
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+
+					//2) Receive new path length
+					receiveMessage(&serverData->socketClient, &newPathLength, sizeof(newPathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, newPathLength);
+					char *newPath = malloc(newPathLength);
+
+					//3) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message path received : %s\n",path);
+
+					//4) Receive new path
+					receiveMessage(&serverData->socketClient, newPath, newPathLength);
+					log_info(logPokeDexServer, "Message newPath received : %s\n",newPath);
+
+					//5) Receive parent_directory
+					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
+
+					osada_block_pointer posicion = sobreescribirNombre(path, newPath, parent_directory);
+					log_info(logPokeDexServer, "Message posicion received : %i\n",posicion);
+
+					sendMessage(&serverData->socketClient, &posicion , sizeof(int));
+
+					break;
+				}
 				default:{
 					log_error(logPokeDexServer,"Invalid operation received '%d'", FUSEOperation);
 					break;
