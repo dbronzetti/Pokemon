@@ -693,13 +693,17 @@ void eliminarEntrenador(char simbolo) {
 		return simbolo == entrenador->simbolo;
 	}
 
-	void destruirElemento(t_entrenador *entrenador) {
-		free(entrenador);
-	}
 	pthread_mutex_lock(&setEntrenadoresMutex);
-	list_remove_and_destroy_by_condition(listaDeEntrenadores,
-			(void*) igualarACaracterCondicion, (void*) destruirElemento);
+	t_entrenador* entrenador = list_remove_by_condition(listaDeEntrenadores,(void*) igualarACaracterCondicion);
+	t_list* pokemones = entrenador->listaDePokemonesCapturados;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
+
+	devolverPokemones(pokemones);
+
+	pthread_mutex_lock(&setEntrenadoresMutex);
+	free(entrenador);
+	pthread_mutex_unlock(&setEntrenadoresMutex);
+
 }
 
 void planificar() {
@@ -716,22 +720,18 @@ void planificar() {
 
 			pthread_mutex_lock(&colaDeListosMutex);
 			t_entrenador* entrenador = queue_pop(colaDeListos);
+			pthread_mutex_unlock(&colaDeListosMutex);
 			simbolo = entrenador->simbolo;
+			pthread_mutex_lock(&setEntrenadoresMutex);
 			if (list_any_satisfy(listaDeEntrenadores,
 					(void*) buscarPorSimbolo)) { //hacemos un if por si sacamos un entrenador que se desconecto
 				entrenador->estaEnTurno = 1;
-				pthread_mutex_unlock(&colaDeListosMutex);
+				pthread_mutex_unlock(&setEntrenadoresMutex);
 
 				log_info(logMapa, "Begins the turn of trainer: %c",
 						entrenador->simbolo);
 
 				for (i = 0; i < metadataMapa.quantum; i++) {
-//				pthread_mutex_lock(&setEntrenadoresMutex);
-
-//hacemos un if por si se desconecto
-//					pthread_mutex_unlock(&setEntrenadoresMutex);
-
-					//@TODO: sleep((metadataMapa.retardo / 1000)); //el programa espera el tiempo de retardo(dividido mil porque se le da en milisegundos)
 
 					sleep(3);
 
@@ -1128,6 +1128,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 				eliminarEntrenador(simbolo);
 				log_info(logMapa, "Trainer: '%c' deleted SUCCESSFUL", simbolo);
 				//TODO agregar if teniendo en cuenta el algoritmo de planificacion
+				*i = metadataMapa.quantum; //asi lo deja de planificar.
 				estaEnAccion = 0;
 				break;
 			}
@@ -1149,13 +1150,14 @@ void detectarDeadlocks() {
 		sleep(10);
 		if (queue_size(colaDeBloqueados) > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
 			pthread_mutex_lock(&setEntrenadoresMutex);
+			t_list* listaDeBloqueados = list_create();
 
-			bool _entrenadorBloqueado(t_entrenador* entrenadorParam) {
-				return entrenadorParam->estaBloqueado;
+
+			while(colaDeBloqueados){ //transformo la cola en una lista para poder manejarla mejor...
+			t_entrenador* entrenadorBloqueado = queue_pop(colaDeBloqueados);
+			list_add(listaDeBloqueados,entrenadorBloqueado);
 			}
 
-			t_list* listaDeBloqueados = list_filter(listaDeEntrenadores,
-					(void*) _entrenadorBloqueado); //filtramos a los que estan bloqueados (no pueden conseguir su pokemon).
 			int i;
 			int a;
 			int tamanioDeLaListaDeBloqueados = list_size(listaDeBloqueados);
@@ -1163,8 +1165,10 @@ void detectarDeadlocks() {
 
 				t_entrenador* entrenador1 = list_get(listaDeBloqueados, i); // sacamos un entrenador
 
+				t_queue* colaDeDeadlocks = queue_create();
+
+				queue_push(colaDeDeadlocks,entrenador1); //lo ponemos tentativamente no se sabe si esta en deadlock realmente (por ahora).
 				for (a = 0; a < tamanioDeLaListaDeBloqueados; a++) {
-					log_info(logMapa, "[1157] a = %d", a);
 					t_entrenador* entrenador2 = list_get(listaDeBloqueados, a); // sacamos otro :)
 					bool _tieneAlPokemonDeEntrenador1(t_pokemon* pokemonParam) {
 						return pokemonParam->id == entrenador1->pokemonD;
@@ -1195,9 +1199,14 @@ void detectarDeadlocks() {
 						log_info(logMapa,
 								"The trainer '%c' is in deadlock with the trainer '%c'",
 								entrenador1->simbolo, entrenador2->simbolo);
+						queue_push(colaDeDeadlocks,entrenador2);
 
 					}
 
+				}
+
+				if(queue_size(colaDeDeadlocks) >1){ //como lo habiamos puesto tentativamente verifacmos que sea mayor que >1
+					//resolverDeadlocks(colaDeDeadlocks);
 				}
 
 			}
@@ -1208,4 +1217,77 @@ void detectarDeadlocks() {
 
 	}
 
+}
+
+void resolverDeadlocks(t_queue* colaDeDeadlocks){
+	while(queue_size(colaDeDeadlocks) > 1){//cuando quede uno solo matamos a ese.
+		t_entrenador* entrenador1 = queue_pop(colaDeDeadlocks);
+		t_entrenador* entrenador2 = queue_pop(colaDeDeadlocks);
+		t_pokemon* pokemon1 = dameTuMejorPokemon(entrenador1);
+		t_pokemon* pokemon2 = dameTuMejorPokemon(entrenador2);
+
+		t_pokemon* pokemonPerdedor;// = algortimoDeBatalla(pokemon1,pokemon2);
+
+		if (pokemonPerdedor == pokemon1){
+			queue_push(colaDeDeadlocks,entrenador2); // si perdio el entrenador 1 reencolamos al 2.
+			queue_push(colaDeBloqueados,entrenador1); //y encolamos al 1 en la cola de bloqueados
+		}
+
+		else{
+			queue_push(colaDeDeadlocks,entrenador1);
+			queue_push(colaDeBloqueados,entrenador2);
+		}
+
+	}
+
+	t_entrenador* entrenadorVictima = queue_pop(colaDeDeadlocks);
+	matar(entrenadorVictima);
+
+}
+
+t_pokemon* dameTuMejorPokemon(t_entrenador* entrenador){
+		bool _pokemonMayor(t_pokemon* pokemon1, t_pokemon* pokemon2) {
+		return pokemon1->nivel > pokemon2->nivel;
+		}
+
+		list_sort(entrenador->listaDePokemonesCapturados,(void*)_pokemonMayor);
+		t_pokemon* pokemonGroso = list_get(entrenador->listaDePokemonesCapturados,0); //como ya esta ordenada la lista el primer pokemon va a ser el mas poronga.
+		return pokemonGroso;
+
+}
+
+
+void matar(t_entrenador* entrenador){
+	sendClientMessage(&entrenador->socket, "cualquiercosa", MATAR); //le avisamos al entrenador que cago fuego
+
+}
+
+
+void sumarRecurso(t_list* items, char id) { //defino esta funcion porque no esta en la libreria
+    ITEM_NIVEL* item = _search_item_by_id(items, id);
+
+    if (item != NULL) {
+        item->quantity = item->quantity + 1;
+    } else {
+        printf("WARN: Item %c no existente\n", id);
+    }
+}
+
+void devolverPokemones(t_list* pokemones){
+	int i;
+		for(i=0;i<list_size(pokemones);i++){
+			t_pokemon* pokemon = list_get(pokemones,i);
+			bool _buscarPokenest(t_pokenest* pokenest){
+				return pokenest->metadata.id == pokemon->id;
+			}
+
+			t_pokenest* pokenest = list_find(listaDePokenest,(void*) _buscarPokenest);
+
+			list_add(pokenest->listaDePokemones, pokemon);
+
+			pthread_mutex_lock(&itemsMutex);
+			sumarRecurso(items,pokemon->id);
+			nivel_gui_dibujar(items, mapa);
+			pthread_mutex_unlock(&itemsMutex);
+		}
 }

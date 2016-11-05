@@ -88,6 +88,9 @@ void newClients(int *socketServer, fd_set *master, int *fdmax);
 void handShake(void *parameter);
 void processMessageReceived(void *parameter);
 
+// Funcion de mapa que la lib no traia
+void sumarRecurso(t_list* items, char id);
+
 // Funciones
 int recorrerdirDePokenest(char* rutaDirPokenest); //Se encarga de recorrer las carpetas que esta dentro de la pokenest (pikachu,bulbasaur,charmander,etc...)
 int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest); //Se encarga de recorrer lo que esta ADENTRO de las carpetas pokenest (pikachu001,pikachu002,metadata.dat,etc..)
@@ -105,4 +108,13 @@ void planificarSRDF();
 void ejecutarAccionEntrenador (t_entrenador* entrenador, int* i);
 void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX );
 void detectarDeadlocks();
+void resolverDeadlocks(t_queue* colaDeDeadlocks);
+t_pokemon* dameTuMejorPokemon(t_entrenador* entrenador);
+void matar(t_entrenador* entrenador);
+void devolverPokemones(t_list* pokemones);
+
+
+
+
+
 #endif /* MAPA_H_ */

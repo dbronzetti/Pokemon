@@ -43,7 +43,8 @@ typedef enum{
 	LLEGO,
 	LIBRE,
 	CAPTURADO,
-	ERROR
+	ERROR,
+	MATAR
 } enum_messages;
 
 typedef enum{
