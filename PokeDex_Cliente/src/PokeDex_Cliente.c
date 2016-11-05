@@ -88,42 +88,46 @@ int crearDirectorio(char *path){
 int renombrarArchivo(char* oldname,char* newName){
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 			int resultado = 1;
-			t_list *listaBloques = list_create();
 			enum_FUSEOperations fuseOperation =  FUSE_RENAME;
 
 			//0) Send Fuse Operations
 			exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
-			log_info(logPokeCliente, "fuseOperation: %d\n", fuseOperation);
+			log_info(logPokeCliente, "renombrarArchivo - fuseOperation: %d\n", fuseOperation);
 			string_append(&oldname, "\0");
+			string_append(&newName, "\0");
 
 			//1) send path length (+1 due to \0)
 			int pathLength = strlen(oldname) + 1;
 			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
 
-			log_info(logPokeCliente, "pathLength: %i\n", pathLength);
+			log_info(logPokeCliente, "renombrarArchivo - pathLength: %i\n", pathLength);
 
-			//2) send path ORIGINAL
+			//2) send path length (+1 due to \0)
+			int newPathLength = strlen(newName) + 1;
+			exitCode = sendMessage(&socketPokeServer, &newPathLength , sizeof(int));
+			log_info(logPokeCliente, "renombrarArchivo - newPathLength: %i\n", newPathLength);
+
+			//3) send path ORIGINAL
 			exitCode = sendMessage(&socketPokeServer, oldname , strlen(oldname) + 1 );
-			log_info(logPokeCliente, "path: %s\n", oldname);
+			log_info(logPokeCliente, "renombrarArchivo - oldname: %s\n", oldname);
 
-			//2.1) send path RENOMBRADO
-			exitCode = sendMessage(&socketPokeServer, newName , strlen(newName) + 1 );
-			log_info(logPokeCliente, "path: %s\n", newName);
+
+
+			//4) send path RENOMBRADO
+			exitCode = sendMessage(&socketPokeServer, newName , newPathLength );
+			log_info(logPokeCliente, "renombrarArchivo - newName: %s\n", newName);
+
+			//5) send path RENOMBRADO
+			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int) );
+			log_info(logPokeCliente, "renombrarArchivo - parent_directory: %i\n", parent_directory);
 
 			//Receive element Count
-			int elementCount = -1;
-			int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+			int osada_block_pointer = -1;
+			int receivedBytes = receiveMessage(&socketPokeServer, &osada_block_pointer ,sizeof(int));
 
-			log_info(logPokeCliente, "elementCount: %i\n", elementCount);
-			if (receivedBytes > 0 && elementCount > 0){
-				int messageSize = elementCount * sizeof(osada_file);
-				char *messageRcv = malloc(messageSize);
-				receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-				resultado = atoi(messageRcv);
-				log_info(logPokeCliente, "messageRcv: %d\n", resultado);
-			}
-			log_info(logPokeCliente, "*********************************\n");
-			return resultado;
+			log_info(logPokeCliente, "renombrarArchivo - osada_block_pointer: %i\n", osada_block_pointer);
+
+			return 0;
 };
 
 long int enviarArchivo(char* path,off_t offset){
@@ -505,14 +509,14 @@ static int fuse_write(const char* path, const char* buf, size_t size, off_t offs
 }
 
 static int fuse_rename (const char *oldname, const char *newName){
-	int resultado = renombrarArchivo(oldname,newName);
 	printf("********************************* fuse_rename *********************\n");
-	if (resultado!=0)	{
+	int resultado = renombrarArchivo(oldname, newName);
+	if (resultado!=-999)	{
 			printf("[Error_Fuse] rename(%s,%s)\n", oldname,newName);
 			return 1;
 		}
 
-	return resultado;
+	return 1;
 
 }
 

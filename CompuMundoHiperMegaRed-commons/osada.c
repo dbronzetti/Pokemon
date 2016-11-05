@@ -293,7 +293,7 @@ osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
 
 	for (pos=0; pos <= 2047; pos++){
 
-		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos],parent_directory,  file_name)) != -666){
+		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos], parent_directory,  file_name)) != -666){
 			printf("encontro>! , %i\n", pos);
 			return posicion;
 		};
@@ -339,6 +339,44 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 			printf("******************************* LO ENCONTRO! ******************************* \n");
 			TABLA_DE_ARCHIVOS[pos].state = DELETED;
 			posicion = pos;
+
+		}
+	}
+	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+
+	return posicion;
+}
+
+int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory){
+	printf("******************************** ENTRO EN sobreescribirNombre  ******************************** \n");
+	int pos=0;
+	osada_block_pointer posicion = 0;
+	printf("antes file_name: %s\n", nombre);
+	printf("antes nuevoNombre: %s\n", nuevoNombre);
+	char *file_name = strrchr (nombre, '/') + 1;
+	printf("file_name: %s\n", file_name);
+
+	char *nuevo_Nombre = strrchr (nuevoNombre, '/') + 1;
+	printf("nuevo_Nombre: %s\n", nuevo_Nombre);
+
+	for (pos=0; pos <= 2047; pos++){
+		char *nac;
+		char *n;
+
+		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
+		n = string_duplicate(file_name);
+		string_trim(&nac);
+		string_trim(&n);
+
+		//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
+
+		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
+			printf("******************************* LO ENCONTRO - sobreescribirNombre! ******************************* \n");
+
+			strcpy(TABLA_DE_ARCHIVOS[pos].fname, "\0");
+			strcat(TABLA_DE_ARCHIVOS[pos].fname, nuevo_Nombre);
+			posicion = pos;
+			break;
 
 		}
 	}
