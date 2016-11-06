@@ -80,6 +80,7 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 osada_block_pointer devolverBloque(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre);
 osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory);
 int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory);
+int crearUnDirectorio(char *fname, int parent_directory);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER;
 static int TAMANIO_DEL_BITMAP;

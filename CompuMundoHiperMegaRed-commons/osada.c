@@ -939,7 +939,51 @@ void encontrarArbolPadre(int padre){
 }
 
 /*****************************************************/
-void crearUnDirectorio(){
+int crearUnDirectorio(char *fname, int parent_directory){
+	int k=0;
+	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
+	char *file_name = strrchr (fname, '/') + 1;
+	printf("file_name: %s\n", file_name);
 
+
+		for (k=0; k <= 2047; k++){
+			//printf("EN EL FOR\n");
+			if (TABLA_DE_ARCHIVOS[k].state == DELETED){
+				printf("EN EL if\n");
+				TABLA_DE_ARCHIVOS[k].state = DIRECTORY;
+					printf("state\n");
+
+					TABLA_DE_ARCHIVOS[k].parent_directory = parent_directory;
+					printf("parent_directory: %i\n",parent_directory);
+
+					//printf("fname: %s\n", fname);
+					printf("sizeof(fname): %i\n", strlen(file_name));
+					strcpy(TABLA_DE_ARCHIVOS[k].fname, "\0");
+					strcat(TABLA_DE_ARCHIVOS[k].fname, file_name);
+
+					printf("fname: %s\n", file_name);
+					TABLA_DE_ARCHIVOS[k].file_size = 0;
+					printf("file_size: %i\n",0);
+					TABLA_DE_ARCHIVOS[k].lastmod = 0;
+					printf("lastmod\n");
+
+					TABLA_DE_ARCHIVOS[k].first_block= 0;
+					printf("first_block: %i\n",0);
+
+					break;
+
+			}
+		}//for (k=0; k <= 2047; k++)
+			//printf("afuera del if\n");
+
+
+
+	printf("k: %i\n", k);
+	printf("tablaDeArchivo[k].fname: %s\n", TABLA_DE_ARCHIVOS[k].fname);
+
+
+	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+	printf("guarda osada 2 fuera\n");
+	return k;
 }
 /*******************************************FIN DIRECTORIO*************************/

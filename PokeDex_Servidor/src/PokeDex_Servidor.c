@@ -302,20 +302,28 @@ void processMessageReceived(void *parameter){
 									break;
 				}
 				case FUSE_MKDIR:{
-					log_info(logPokeDexServer, "Processing FUSE_READ message");
-
+					log_info(logPokeDexServer, "Processing FUSE_MKDIR message");
+					int parent_directory=0;
 					int pathLength = 0;
+					int posTablaDeArchivos=0;
+
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
 					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 					char *path = malloc(pathLength);
+
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					//crearUnArchivo("hola mundo\n", 128,"hola.txt\0", -999);
+					//3) Receive parent_directory
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
-					sendMessage(&serverData->socketClient, "bien\0" , strlen("bien\0"));
+					posTablaDeArchivos = crearUnDirectorio(path, parent_directory);
+					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
+
+					sendMessage(&serverData->socketClient, &posTablaDeArchivos , sizeof(int));
 					break;
 				}
 				case FUSE_READ:{

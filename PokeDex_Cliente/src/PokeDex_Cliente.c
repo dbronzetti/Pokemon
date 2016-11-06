@@ -288,12 +288,8 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 
 static int fuse_mkdir(const char* path, mode_t mode){
 
-	//int resultado = crearDirectorio(path);
 	printf("********************************* fuse_mkdir *********************\n");
-	//if (resultado!=0)	{
-		//printf("[Error_Fuse] mkdir(%s)\n", path);
-		//return 1;
-	//}
+
     mode = S_IFDIR | 0777;
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	log_info(logPokeCliente, "****************fuse_mkdir****************\n");
@@ -302,21 +298,25 @@ static int fuse_mkdir(const char* path, mode_t mode){
 	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
 	string_append(&path, "\0");
+
 	//1) send path length (+1 due to \0)
 	int pathLength = strlen(path) + 1;
 	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-	log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
+	log_info(logPokeCliente, "fuse_mkdir - pathLength: %i\n", pathLength);
+
 	//2) send path
 	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-	log_info(logPokeCliente, "fuse_read - path: %s\n", path);
+	log_info(logPokeCliente, "fuse_mkdir - path: %s\n", path);
+
+	//3) send parent_directory
+	exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+	log_info(logPokeCliente, "fuse_mkdir - parent_directory: %i\n", parent_directory);
 
 	//Receive message size
-	int elementCount = -1;
-	int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
-	log_info(logPokeCliente, "fuse_read - elementCount: %i\n", elementCount);
+	int messageSize = -1;
+	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+	log_info(logPokeCliente, "fuse_mkdir - pos de la tabla de archivos: %i\n", messageSize);
 
-	if (receivedBytes > 0){
-		}
 
 	return 0;
 
