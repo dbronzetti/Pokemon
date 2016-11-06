@@ -202,6 +202,31 @@ void processMessageReceived(void *parameter){
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
 
 			switch (FUSEOperation){
+				case FUSE_RMDIR:{
+					log_info(logPokeDexServer, "Processing FUSE_RMDIR message");
+					int parent_directory=0;
+					int pathLength = 0;
+					int posTablaDeArchivos=0;
+
+					//1) Receive path length
+					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					char *path = malloc(pathLength);
+
+					//2) Receive path
+					receiveMessage(&serverData->socketClient, path, pathLength);
+					log_info(logPokeDexServer, "Message size received : %s\n",path);
+
+					//3) Receive parent_directory
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
+
+					posTablaDeArchivos = borrarUnDirectorio(path, parent_directory);
+					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
+
+					sendMessage(&serverData->socketClient, &posTablaDeArchivos , sizeof(int));
+					break;
+				}
 				case FUSE_WRITE:{
 						log_info(logPokeDexServer, "Processing FUSE_WRITE message");
 						int posDelaTablaDeArchivos=-999;
@@ -299,7 +324,7 @@ void processMessageReceived(void *parameter){
 				}
 				case FUSE_TRUNCATE:{
 
-									break;
+					break;
 				}
 				case FUSE_MKDIR:{
 					log_info(logPokeDexServer, "Processing FUSE_MKDIR message");

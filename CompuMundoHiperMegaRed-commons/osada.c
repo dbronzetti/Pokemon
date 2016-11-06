@@ -986,4 +986,34 @@ int crearUnDirectorio(char *fname, int parent_directory){
 	printf("guarda osada 2 fuera\n");
 	return k;
 }
+
+int borrarUnDirectorio(char *fname, int parent_directory){
+	int pos=0;
+	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
+	char *file_name = strrchr (fname, '/') + 1;
+	printf("file_name: %s\n", file_name);
+
+
+		for (pos=0; pos <= 2047; pos++){
+			char *nac;
+			char *n;
+
+			nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
+			n = string_duplicate(file_name);
+			string_trim(&nac);
+			string_trim(&n);
+
+			if (TABLA_DE_ARCHIVOS[pos].state == DIRECTORY && TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
+				printf("EN EL if\n");
+				TABLA_DE_ARCHIVOS[pos].state =  DELETED;
+					printf("state\n");
+					break;
+
+			}
+		}
+
+	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+	printf("guarda osada 2 fuera\n");
+	return pos;
+}
 /*******************************************FIN DIRECTORIO*************************/
