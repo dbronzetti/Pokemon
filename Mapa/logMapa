@@ -1,0 +1,25 @@
+[INFO] 15:35:07:276 MAPA/(3701:3701): Directorio de la metadata del mapa 'Ciudad Paleta': '/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/pokedex/Mapas/Ciudad Paleta/metadata.dat'
+
+[INFO] 15:35:07:276 MAPA/(3701:3701): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 15:35:07:286 MAPA/(3701:3701): Tiempo de checkeo de deadlock: 10000
+
+[INFO] 15:35:07:286 MAPA/(3701:3701): Batalla: 1
+
+[INFO] 15:35:07:286 MAPA/(3701:3701): Algoritmo: RR
+
+[INFO] 15:35:07:286 MAPA/(3701:3701): Quantum: 3
+
+[INFO] 15:35:07:286 MAPA/(3701:3701): Retardo: 500
+
+[INFO] 15:35:07:286 MAPA/(3701:3701): IP: 127.0.0.1
+
+[INFO] 15:35:07:286 MAPA/(3701:3701): Puerto: 5001
+
+[INFO] 15:35:07:286 MAPA/(3701:3701): @@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@
+[INFO] 15:35:07:292 MAPA/(3701:3701): Pokenest de Bulbasaur y hay 2
+[INFO] 15:35:07:326 MAPA/(3701:3701): Pokenest de Squirtle y hay 8
+[INFO] 15:35:07:334 MAPA/(3701:3701): Pokenest de Pikachu y hay 2
+[INFO] 15:35:07:355 MAPA/(3701:3701): Pokenest de Charmander y hay 2
+[INFO] 15:35:07:355 MAPA/(3701:3701): Bienvenido al mapa
+[INFO] 15:35:09:380 MAPA/(3701:3705): SocketServer: 4
+[INFO] 15:35:09:380 MAPA/(3701:3705): the server is opened
