@@ -1291,3 +1291,170 @@ void devolverPokemones(t_list* pokemones){
 			pthread_mutex_unlock(&itemsMutex);
 		}
 }
+void cargarListaAsignacion(t_list *asignacion){
+	int i;
+	//recorrer la lista de entrenadores
+	t_list* pokemonesList = list_create();
+	cargarPokemonesExistentes(pokemonesList);
+
+	for (i=0;i< list_size(listaDeEntrenadores); i++){
+		int j;
+		t_entrenador_Asignacion* entrenador = malloc(sizeof(t_entrenador_Asignacion));
+		t_entrenador* entrenadorAux = list_get(listaDeEntrenadores,i);
+		entrenador->entrenador= entrenadorAux->simbolo;
+		entrenador->pokemonesAsignados = list_create();
+
+		cargarPokeNests(entrenador->pokemonesAsignados,pokemonesList);
+
+		//Recorro la lista de Pokemones caputurados por este entrenador
+		for(j=0;j<list_size(entrenadorAux->listaDePokemonesCapturados);j++){
+
+			t_pokemon * pokemon = list_get(entrenadorAux->listaDePokemonesCapturados,i);
+			bool _funcBuscarPokemon(t_pokemones_Asignacion *pokemonAux) {
+				return pokemonAux->pokemon_id== pokemon->id;
+			}
+
+			//Determino si el Pokemon que llego ya estaba en  mi lista de Asignados.
+			t_pokemones_Asignacion *recursoDisponible = list_find(entrenador->pokemonesAsignados, (void *) _funcBuscarPokemon);
+
+			//Si existia sumo uno, sino creo uno nuevo.
+			if (recursoDisponible != NULL){
+				recursoDisponible->cantidad++;
+			}
+
+		}
+	}
+}
+void cargarPokeNests(t_list *pokemonesAsignados,t_list* pokemonesList){
+	int i;
+	for (i=0;i<list_size(pokemonesList);i++){
+		t_pokemon* pokemon =  list_get(pokemonesList,i);
+		t_pokemones_Asignacion *recursoDisponible = malloc(sizeof(t_pokemones_Asignacion));
+
+		recursoDisponible->cantidad = 0;
+		recursoDisponible->pokemon_id = pokemon->id;
+		list_add(pokemonesAsignados,recursoDisponible);
+
+	}
+
+}
+
+void cargarEntrenadoresEnNoBloqueados(t_list *entrenadoresNoBloqueados){
+	int i;
+
+	for (i=0;i< list_size(listaDeEntrenadores); i++){
+		char entrenador = malloc(sizeof(char));
+		t_entrenador* entrenadorAux = list_get(listaDeEntrenadores,i);
+		entrenador = entrenadorAux->simbolo;
+		list_add(entrenadoresNoBloqueados, entrenador);
+	}
+
+}
+
+void quitarEntrenadoresSinAsignacion(t_list *asignacion, t_list *entrenadoresNoBloqueados){
+	t_list* idEntrenadorFuera;
+	int flag;
+	int i;
+	for(i=0;i<list_size(asignacion);i++){
+		flag=0;
+		int j;
+		t_entrenador_Asignacion* entrenadorAux = list_get(asignacion,i);
+		for(j=0;j<list_size(entrenadorAux->pokemonesAsignados);j++){
+			t_pokemones_Asignacion* auxPok = list_get(entrenadorAux->pokemonesAsignados,j);
+			if(auxPok->cantidad>0){
+				flag=1;
+			}
+		}
+		bool _funcBuscarEntrenador(char entrenador) {
+			return entrenador == entrenadorAux->entrenador;
+		}
+
+		void _destroyElement(char entrenador){
+			free(entrenador);
+		}
+
+		if(flag==0){
+			list_remove_and_destroy_by_condition(entrenadoresNoBloqueados, (void *) _funcBuscarEntrenador, (void *) _destroyElement);
+		}
+	}
+}
+
+void cargarPokemonesExistentes(t_list *pokemonesList){
+	int i;
+
+	for (i=0;i< list_size(listaDePokenest);i++){
+
+		t_pokenest* pokenest = list_get(listaDePokenest, i);
+		int j;
+		for (j=0;j< list_size(pokenest->listaDePokemones);j++){
+			t_pokemon* pokemon =  list_get(pokenest->listaDePokemones,j);
+
+			bool _funcBuscarPokemon(t_pokemon *pokemonAux) {
+				return pokemonAux->id== pokemon->id;
+			}
+
+			//Determino si el Pokemon es un nuevo pokemon o ya exisita.
+			t_pokemon *recursoDisponible = list_find(pokemonesList, (void *) _funcBuscarPokemon);
+
+			if(recursoDisponible==NULL){
+				list_add(pokemonesList,recursoDisponible);
+			}
+		}
+	}
+
+}
+
+void cargarCantidadPokemonesExistentes(t_list *pokemonesList){
+	int i;
+
+	for (i=0;i< list_size(listaDePokenest);i++){
+
+		t_pokenest* pokenest = list_get(listaDePokenest, i);
+		int j;
+		for (j=0;j< list_size(pokenest->listaDePokemones);j++){
+			t_pokemon* pokemon =  list_get(pokenest->listaDePokemones,j);
+
+			t_pokemones_Asignacion* pokAux = malloc(sizeof(t_pokemones_Asignacion));
+			pokAux.pokemon_id = pokemon->id;
+			pokAux.cantidad  = 1;
+
+			bool _funcBuscarPokemon(t_pokemones_Asignacion *pokemonAux) {
+				return pokemonAux->pokemon_id== pokAux->pokemon_id;
+			}
+
+			//Determino si el Pokemon es un nuevo pokemon o ya exisita.
+			t_pokemones_Asignacion *recursoDisponible = list_find(pokemonesList, (void *) _funcBuscarPokemon);
+
+			if(recursoDisponible==NULL){
+
+				list_add(pokemonesList,pokAux);
+			}else{
+				recursoDisponible->cantidad++;
+			}
+		}
+	}
+
+}
+
+
+t_list* detectarInterbloque(){
+
+	//1)Obtener la lista asignacion ( La cantidad de pokemon que tiene cada Entrenador)
+	t_list* asignacion = list_create();
+	cargarListaAsignacion(asignacion);
+
+	//2)Crear list para entrenadores NO bloqueados
+	t_list* entrenadoresNoBloqueados = list_create();
+	cargarEntrenadoresEnNoBloqueados(entrenadoresNoBloqueados);
+
+	//3) Buscar en lista de asignacion el entrenadore que tenga TODOS 0 en su lista de pokemones
+	quitarEntrenadoresSinAsignacion(asignacion, entrenadoresNoBloqueados);
+
+	//4) Crear lista auxiliar con pokemones disponibles (pokemon y cantidad)
+	t_list* pokemonesExistentes = list_create();
+	cargarCantidadPokemonesExistentes(pokemonesExistentes);
+
+
+	return asignacion;
+
+}
