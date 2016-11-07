@@ -22,17 +22,17 @@ int main(int argc, char *argv[]){
 	}
 	//obtenerBitmap();
 
-    //obtenerTablaDeArchivos();
-	//int *tablaDeAsignacion = obtenerTablaDeAsignacion();
+    obtenerTablaDeArchivos();
+	obtenerTablaDeAsignacion();
 	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
 	//contarBloques(osada, osadaHeaderFile, bitMap);
 	//crearUnArchivo("hola mundo\n", 128,"hola.tx\0");
 
-	//dameTodosLosDirectorios(tablaDeArchivo);
+	//dameTodosLosDirectorios();
 	//dameTodosLosArchivosRegulares();
-	//dameTodosLosBorrados(tablaDeArchivo);
-	//dameTodosLosOtrosEstados(tablaDeArchivo);
+	//dameTodosLosBorrados();
+	//dameTodosLosOtrosEstados();
 
 	//crearArbolAPartirDelPadre(65535);
 
