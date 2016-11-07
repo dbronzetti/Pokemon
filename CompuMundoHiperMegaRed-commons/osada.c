@@ -616,21 +616,21 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 		bloquePos = list_get(listado, i);
 		bloquePosStr = string_itoa(bloquePos);
 
-		bloqueConDatos = string_itoa(i);
+		//bloqueConDatos = string_itoa(i);
 
 		//TODO: PREGUNTAR A DAMIAN ESTA FORMA DE CODEAR PARA DIVIDIR CADA BLOQUE DE DATOS
+		bloqueConDatos = malloc(OSADA_BLOCK_SIZE);
 		if(i == (cantidadDeBloques - 1)){
-			bloqueConDatos = malloc(strlen(contenido));
-			printf("contenido 2 - %i: %c\n",j, contenido[j * OSADA_BLOCK_SIZE ]);
+			//ultimo bloque o contenido < 64
+			bloqueConDatos = string_repeat("/0", OSADA_BLOCK_SIZE);
+			printf("contenido ultimo bloque - %i: %c\n",j, contenido[j * OSADA_BLOCK_SIZE ]);
 			memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], strlen(contenido) );
-			bloqueConDatos[strlen(contenido) +1 ]= '\0';
-			printf("bloqueConDatos: %s\n", bloqueConDatos);
+			printf("ultimo bloqueConDatos: %s\n", bloqueConDatos);
 			j++;
 		}else{
-			bloqueConDatos = malloc(64);
-			printf("contenido 3 - %i: %c\n", j, contenido[j * OSADA_BLOCK_SIZE ]);
+			printf("contenido bloque - %i: %c\n", j, contenido[j * OSADA_BLOCK_SIZE ]);
 			memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
-			bloqueConDatos[65]= '\0';
+			bloqueConDatos[OSADA_BLOCK_SIZE + 1]= '\0';
 			printf("bloqueConDatos: %s\n", bloqueConDatos);
 			j++;
 		}
