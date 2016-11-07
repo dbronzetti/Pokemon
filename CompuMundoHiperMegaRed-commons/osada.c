@@ -943,7 +943,7 @@ int crearUnDirectorio(char *fname, int parent_directory){
 	int k=0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
-	printf("file_name: %s\n", file_name);
+	printf("crearUnDirectorio - file_name: %s\n", file_name);
 
 
 		for (k=0; k <= 2047; k++){
@@ -991,7 +991,7 @@ int borrarUnDirectorio(char *fname, int parent_directory){
 	int pos=0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
-	printf("file_name: %s\n", file_name);
+	printf("borrarUnDirectorio - file_name: %s\n", file_name);
 
 
 		for (pos=0; pos <= 2047; pos++){
