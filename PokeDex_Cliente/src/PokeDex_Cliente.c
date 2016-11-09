@@ -409,7 +409,7 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 static int fuse_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
-	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
+	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp") && !string_is_empty(path)){
 		log_info(logPokeCliente, "****************fuse_read****************\n");
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_READ;
