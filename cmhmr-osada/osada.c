@@ -529,7 +529,7 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 
 }
 
-t_list* obtenerLosIndicesDeLosBloquesDisponibles(int cantidadBloques){
+t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (int cantidadBloques){
 	t_list *listDeBloques = list_create();
 
 	int bloquesOcupados  = 0;
@@ -602,7 +602,7 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 
 
 
-void prepararBloquesDeDatos(t_list* listado, char *contenido){
+void guardarBloqueDeDatos(t_list* listado, char *contenido){
 	int cantidadDeBloques = list_size(listado);
 	int bloquePos;
 	int i,j=0;
@@ -679,7 +679,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 		printf("cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
 
 		//cantidadDeBloquesParaGrabar = tamanio /64;
-		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponibles(cantidadDeBloquesParaGrabar);
+		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
 		cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
 		printf("cantidadDeElemento: %i\n", cantidadDeElemento);
 
@@ -706,7 +706,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 		dictionary_iterator(comoSeriaElArray, (void*) _recorrerComoSeriaElArray);
 		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
-		prepararBloquesDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
+		guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
 		escribirEnLaTablaDeArchivos(parent_directory, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
 	}
 

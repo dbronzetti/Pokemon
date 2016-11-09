@@ -199,7 +199,8 @@ void processMessageReceived(void *parameter){
 
 		if ( receivedBytes > 0 ){
 
-			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received");
+			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",FUSEOperation);
+			printf("Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i\n",FUSEOperation);
 
 			switch (FUSEOperation){
 				case FUSE_RMDIR:{
@@ -229,7 +230,7 @@ void processMessageReceived(void *parameter){
 				}
 				case FUSE_WRITE:{
 						log_info(logPokeDexServer, "Processing FUSE_WRITE message");
-						int posDelaTablaDeArchivos=-999;
+						int posDelaTablaDeArchivos = -999;
 						int pathLength = 0;
 						uint16_t parent_directory;
 
@@ -262,6 +263,8 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
 
 						sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
+						printf("********************************* TERMINO EL WRITE *********************\n");
+
 						break;
 				}
 				case FUSE_CREATE:{
