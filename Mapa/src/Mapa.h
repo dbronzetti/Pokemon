@@ -22,6 +22,7 @@
 #include <tad_items.h>
 #include <nivel.h>
 #include <curses.h>
+#include <time.h>
 
 t_log* logMapa;
 char *mapa;

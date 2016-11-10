@@ -342,6 +342,7 @@ void jugar() {
 
 	//log_info(logEntrenador, "objetivoActual %s - ultimo pokemonCapturado %s",objetivoActual, pokemonCapturado);
 	desconectarse();
+	yoYaGane(mapaActual);
 }
 
 t_queue* parsearObjetivos(char** objetivos) {
@@ -489,4 +490,12 @@ void borrarArchivos(){ //se borran todos los pokemones capturados cuando se desc
 void cerrarEntrenador(){
 	borrarArchivos();
 	exit(0);
+}
+
+void yoYaGane(){
+
+	char* nombreMedalla = string_from_format("medalla-%s",mapaActual);
+	char* rutaMedalla = string_from_format("%s/Mapas/%s/metadata.dat",
+			pokedex, mapaActual);
+
 }
