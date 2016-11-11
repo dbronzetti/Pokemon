@@ -12,12 +12,10 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *entrenador = string_new();
 	pokedex = string_new();
-	pthread_t hiloSignal; //un hio para detectar la signals que se le envia
-	pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
 	pthread_mutex_init(&turnoMutex, NULL);
 	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
-	int ganoMapa;
-	colaDeRutasCapturadas =	queue_create();
+	colaDeRutasDePokemones = queue_create();
+	colaDeRutasDeMapas = queue_create();
 
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -46,7 +44,11 @@ int main(int argc, char **argv) {
 	rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
 			pokedex, entrenador);
 
-	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill");
+	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill",
+			pokedex, entrenador);
+
+	rutaMedallas = string_from_format("%s/Entrenadores/%s/medallas",
+			pokedex, entrenador);
 
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
 			rutaMetadata);
@@ -83,9 +85,6 @@ int main(int argc, char **argv) {
 			pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
 
 			jugar();
-
-			pthread_join(hiloSignal, NULL);
-			pthread_join(hiloEscuchar, NULL);
 
 		} else {
 			log_error(logEntrenador,
@@ -267,17 +266,15 @@ void restarVida() {
 }
 
 void desconectarse() {
+	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
 
-	sendClientMessage(&socketMapa, metadataEntrenador.simbolo, DESCONECTAR);
-	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
-	sleep(1); //dormimos un segundo para darle tiempo al mapa de cerrar el socket correctamente y no joder el select.
 	close(socketMapa);
 }
 
 void jugar() {
 	char* objetivoActual;
 
-	while ((queue_size(colaDeObjetivos) > 0 ) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
+	while ((queue_size(colaDeObjetivos) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
 
 		pthread_mutex_lock(&turnoMutex);
@@ -310,7 +307,8 @@ void jugar() {
 
 			case MOVETE: {// si estamos yendo a la pokenest le pedimos seguir moviendonos
 				log_info(logEntrenador,
-						"Trainer ask to mapa to move to the pokenest '%s'",objetivoActual);
+						"Trainer ask to mapa to move to the pokenest '%s'",
+						objetivoActual);
 				sendClientMessage(&socketMapa, objetivoActual, IR);
 //				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
 
@@ -320,14 +318,16 @@ void jugar() {
 			case CAPTURADO: { // si se capturo ok hay que copiar el archivito metadata en el dir de bill
 				char* rutaMetadataPokemon = string_from_format(
 						"%s/metadata%s.dat", rutaDirDeBill, pokemonCapturado); //armamos la ruta de donde se va a copiar el archivo metadata del pokemon capturado :)
-				puts(rutaMetadataPokemon);
+
 				char* rutaMedataPokemonMapa = string_from_format(
-						"%s/Mapas/%s/Pokenest/%s/metadata.dat", pokedex, mapaActual,
-						pokemonCapturado); //armamos la ruta del archivo metadata que vamos a copiar
+						"%s/Mapas/%s/Pokenest/%s/metadata.dat", pokedex,
+						mapaActual, pokemonCapturado); //armamos la ruta del archivo metadata que vamos a copiar
 				puts(rutaMedataPokemonMapa);
-				log_info(logEntrenador, "Trainer has captured: %s",pokemonCapturado);
+
+				log_info(logEntrenador, "Trainer has captured: %s",
+						pokemonCapturado);
 				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
-				queue_push(colaDeRutasCapturadas,rutaMetadataPokemon);
+				queue_push(colaDeRutasDePokemones, rutaMetadataPokemon);
 				objetivoActual = NULL;
 				break;
 			}
@@ -340,9 +340,8 @@ void jugar() {
 
 	}
 
-	//log_info(logEntrenador, "objetivoActual %s - ultimo pokemonCapturado %s",objetivoActual, pokemonCapturado);
-	desconectarse();
 	yoYaGane(mapaActual);
+
 }
 
 t_queue* parsearObjetivos(char** objetivos) {
@@ -477,25 +476,36 @@ void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
 
 }
 
-void borrarArchivos(){ //se borran todos los pokemones capturados cuando se desconecta
+void borrarArchivos(t_queue* colaDeRutas) { //se borran todos los archivos que se pasa por la cola
 
-	 while(queue_size(colaDeRutasCapturadas)){
-		 char* rutaABorrar = queue_pop(colaDeRutasCapturadas);
+	while (queue_size(colaDeRutas)) {
+		char* rutaABorrar = queue_pop(colaDeRutas);
 
-		 remove(rutaABorrar);
-	 }
+		remove(rutaABorrar);
+	}
 
 }
 
-void cerrarEntrenador(){
-	borrarArchivos();
+void cerrarEntrenador() {
+	borrarArchivos(colaDeRutasDePokemones);
+	borrarArchivos(colaDeRutasDeMapas);
 	exit(0);
 }
 
-void yoYaGane(){
+void yoYaGane() {
+	//suponiendo que las medallas siempre son.jpg
+	char* nombreMedalla = string_from_format("medalla-%s.jpg", mapaActual);
 
-	char* nombreMedalla = string_from_format("medalla-%s",mapaActual);
-	char* rutaMedalla = string_from_format("%s/Mapas/%s/metadata.dat",
-			pokedex, mapaActual);
+	char* rutaMedallaMapa = string_from_format("%s/Mapas/%s/%s", pokedex,
+			mapaActual, nombreMedalla);
+
+	char* rutaMedallaEntrenador = string_from_format("%s/%s", rutaMedallas,
+			nombreMedalla);
+
+	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
+	queue_push(colaDeRutasDeMapas, rutaMedallaEntrenador);
+
+	desconectarse();
+	pthread_cancel(hiloEscuchar);
 
 }

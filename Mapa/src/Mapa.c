@@ -389,11 +389,11 @@ void processMessageReceived(void *parameter) {
 
 		//Now it's checked that the client is not down
 		if (receivedBytes == 0) {
-			log_error(logMapa,
-					"The client went down while sending message! - Please check the client '%d' is down!",
-					serverData->socketClient); //disculpen mi ingles is very dificcul
-			close(serverData->socketClient);
-			free(serverData);
+//			log_error(logMapa,
+//					"The client went down while sending message! - Please check the client '%d' is down!",
+//					serverData->socketClient); //disculpen mi ingles is very dificcul
+//			close(serverData->socketClient);
+//			free(serverData);
 		} else {
 
 			switch (message->tipo) {
@@ -403,20 +403,6 @@ void processMessageReceived(void *parameter) {
 						serverData->socketClient);
 				log_info(logMapa, "Trainer:%s created SUCCESSFUL",
 						message->mensaje);
-				break;
-			}
-
-			case DESCONECTAR: {
-				log_info(logMapa, "Deleting trainer: '%s'", message->mensaje);
-				eliminarEntrenador(message->mensaje[0]);
-				log_info(logMapa, "Trainer: '%s' deleted SUCCESSFUL",
-						message->mensaje);
-
-				close(serverData->socketClient); // bye!
-
-				pthread_mutex_lock(&setFDmutex);
-				FD_CLR(serverData->socketClient, serverData->masterFD); // remove from master set
-				pthread_mutex_unlock(&setFDmutex);
 				break;
 			}
 
@@ -722,7 +708,9 @@ void planificar() {
 			pthread_mutex_lock(&colaDeListosMutex);
 			t_entrenador* entrenador = queue_pop(colaDeListos);
 			pthread_mutex_unlock(&colaDeListosMutex);
+
 			simbolo = entrenador->simbolo;
+
 			pthread_mutex_lock(&setEntrenadoresMutex);
 			if (list_any_satisfy(listaDeEntrenadores,
 					(void*) buscarPorSimbolo)) { //hacemos un if por si sacamos un entrenador que se desconecto
