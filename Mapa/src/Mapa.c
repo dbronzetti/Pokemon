@@ -1517,6 +1517,10 @@ t_list* detectarInterbloque() {
 	t_list* asignacion = list_create();
 	cargarListaAsignacion(asignacion);
 
+	//1.1)Obtener la lista solicitud ( La cantidad de pokemon que necesitan los entrenadores en este momento)
+	t_list* solicitud = list_create();
+	cargarListaSolicitud(solicitud);
+
 	//2)Crear lista para entrenadores NO bloqueados
 	t_list* entrenadoresNoBloqueados = list_create();
 	cargarEntrenadoresEnNoBloqueados(entrenadoresNoBloqueados);
@@ -1524,16 +1528,11 @@ t_list* detectarInterbloque() {
 	//3) Buscar en lista de asignacion el entrenador que tenga TODOS 0 en su lista de pokemones y sacarlos
 	quitarEntrenadoresSinAsignacion(asignacion, entrenadoresNoBloqueados);
 
-	//1)Obtener la lista solicitud ( La cantidad de pokemon que necesitan los entrenadores en este momento)
-	t_list* solicitud = list_create();
-	cargarListaSolicitud(solicitud);
-
 	//4) Crear lista auxiliar con pokemones disponibles (pokemon y cantidad)
 	t_list* pokemonesDisponibles = list_create();
 	cargarCantidadPokemonesExistentes(pokemonesDisponibles);
 
 	//5)Recorrer matriz asignacion buscando que tenga recursos <= a la lista creada previamente (pokemonesExistentes)
-
 	bool notFound = true;
 	while (notFound){
 
@@ -1556,9 +1555,10 @@ t_list* detectarInterbloque() {
 
 			if (notFound){
 
-				//5.1) El entrenador tiene
-				for (i=0; i < list_size(entrenadorAux->pokemonesAsignados); i++){
-					t_pokemones_Asignacion* pokemonAsignado = list_get(entrenadorAux->pokemonesAsignados, i);
+				//5.1) El entrenador tiene recursos <= a los asignados
+				int j;
+				for (j=0; j < list_size(entrenadorAux->pokemonesAsignados); j++){
+					t_pokemones_Asignacion* pokemonAsignado = list_get(entrenadorAux->pokemonesAsignados, j);
 
 					bool _funcBuscarPokemon(t_pokemones_Asignacion *listElement) {
 						return listElement->pokemon_id == pokemonAsignado->pokemon_id;
@@ -1568,12 +1568,26 @@ t_list* detectarInterbloque() {
 					pokemonDisponible->cantidad += pokemonAsignado->cantidad;
 				}
 
+				bool _funcBuscarEntrenador(char* listElement){
+					return (*listElement == entrenadorAux->entrenador);
+				}
+				//5.1) Remuevo el entrenador de la lista de entrenadoresNoBloqueados
+				list_remove_and_destroy_by_condition(entrenadoresNoBloqueados, (void*) _funcBuscarEntrenador, (void*) free);
 			}
 		}
 
 	}
 
-	return asignacion;
+	if (list_size(entrenadoresNoBloqueados) > 0){
+		log_info(logMapa, "Hay DEADLOCK!!");
+		int i;
+		for (i=0; i < list_size(entrenadoresNoBloqueados); i++){
+			char* entrenador = list_get(entrenadoresNoBloqueados, i);
+			log_info(logMapa, "---> Entrenador: '%c'",*entrenador);
+		}
+	}
+
+	return entrenadoresNoBloqueados;
 
 }
 
