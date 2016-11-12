@@ -1046,26 +1046,34 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 					return (pokenestParam->metadata.id == idPokemon); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
 				}
 
-				pthread_mutex_lock(&listaDePokenestMutex);
-				t_pokenest* pokenestEncontrada = list_find(listaDePokenest,
-						(void*) buscarPokenestPorId1);
-				int posX = pokenestEncontrada->metadata.pos_x;
-				int posY = pokenestEncontrada->metadata.pos_y;
-				pthread_mutex_unlock(&listaDePokenestMutex);
+				if(existePokenest(idPokemon)){
+					pthread_mutex_lock(&listaDePokenestMutex);
+					t_pokenest* pokenestEncontrada = list_find(listaDePokenest,
+							(void*) buscarPokenestPorId1);
+					int posX = pokenestEncontrada->metadata.pos_x;
+					int posY = pokenestEncontrada->metadata.pos_y;
+					pthread_mutex_unlock(&listaDePokenestMutex);
 
-				pthread_mutex_lock(&setEntrenadoresMutex);
-				entrenador->posD_x = posX;
-				entrenador->posD_y = posY;
-				char* mensajeAEnviar = convertirPosicionesAString(posX, posY);
-				entrenador->accion = SIN_MENSAJE;
-				entrenador->seEstaMoviendo = 1;
-				sendClientMessage(&entrenador->socket, mensajeAEnviar, CONOCER);
-				pthread_mutex_unlock(&setEntrenadoresMutex);
+					pthread_mutex_lock(&setEntrenadoresMutex);
+					entrenador->posD_x = posX;
+					entrenador->posD_y = posY;
+					char* mensajeAEnviar = convertirPosicionesAString(posX, posY);
+					entrenador->accion = SIN_MENSAJE;
+					entrenador->seEstaMoviendo = 1;
+					sendClientMessage(&entrenador->socket, mensajeAEnviar, CONOCER);
+					pthread_mutex_unlock(&setEntrenadoresMutex);
 
-				log_info(logMapa, "Map send the position to the trainer: '%c'",
-						entrenador->simbolo);
-				estaEnAccion = 0;
-				break;
+					log_info(logMapa, "Map send the position to the trainer: '%c'",
+							entrenador->simbolo);
+					estaEnAccion = 0;
+					break;
+				}
+				else{
+					pthread_mutex_unlock(&listaDePokenestMutex);
+					sendClientMessage(&entrenador->socket, "The id of pokemon came wrong",
+							ERROR_CONOCER);
+					break;
+				}
 			}
 
 			case IR: {
@@ -1378,10 +1386,9 @@ void cargarEntrenadoresEnNoBloqueados(t_list *entrenadoresNoBloqueados) {
 	int i;
 
 	for (i = 0; i < list_size(listaDeEntrenadores); i++) {
-		char entrenador = malloc(sizeof(char));
 		t_entrenador* entrenadorAux = list_get(listaDeEntrenadores, i);
-		entrenador = entrenadorAux->simbolo;
-		list_add(entrenadoresNoBloqueados, entrenador);
+		char entrenador = entrenadorAux->simbolo;
+		list_add(entrenadoresNoBloqueados, &entrenador);
 	}
 
 }
@@ -1507,3 +1514,5 @@ bool existePokenest(char idPokemon){
 	return list_any_satisfy(listaDePokenest,(void*)buscarPokenestPorId1);
 
 }
+
+
