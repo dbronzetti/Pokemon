@@ -529,7 +529,7 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 
 }
 
-t_list* obtenerLosIndicesDeLosBloquesDisponibles(int cantidadBloques){
+t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantidadBloques){
 	t_list *listDeBloques = list_create();
 
 	int bloquesOcupados  = 0;
@@ -573,7 +573,7 @@ void _interarBloquesQueSeranAsignados(int bloque,int hola){
 	printf("el proximo: %i\n", bloque);
 }
 
-void _recorrerComoSeriaElArray(char* bloquePos, int bloqueSig) {
+void _prepararLaVariableGlobalParaGuadar(char* bloquePos, int bloqueSig) {
 
 	printf("Bloque Pos: %i\n", atoi(bloquePos));
 	printf("Bloque Sig: %i\n", bloqueSig);
@@ -590,27 +590,29 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 	int bloquePosInt = 0;
 	bloquePosInt = atoi(bloquePos);
 
-	char *bloqueDeDatos = malloc(strlen(contenido));
 
 	int bloque2 = bloquePosInt *64;
-	strcpy(bloqueDeDatos, contenido);
-	printf("_guardarEnTablaDeDatos - bloqueDeDatos: %s\n",bloqueDeDatos);
-	memcpy(&OSADA[DATA_BLOCKS+bloque2], bloqueDeDatos, OSADA_BLOCK_SIZE );
+	//strcpy(bloqueDeDatos, contenido);
+	//memcpy(bloqueDeDatos, contenido, OSADA_BLOCK_SIZE);
+	printf("_guardarEnTablaDeDatos - bloqueDeDatos: %s\n",contenido);
+	//memcpy(&OSADA[DATA_BLOCKS+bloque2], contenido, OSADA_BLOCK_SIZE );
 
 
 }
 
 
 
-void prepararBloquesDeDatos(t_list* listado, char *contenido){
+void guardarBloqueDeDatos(t_list* listado, char *contenido){
 	int cantidadDeBloques = list_size(listado);
 	int bloquePos;
 	int i,j=0;
 	t_dictionary *dicBloqueDeDatos = dictionary_create();
 
+	char *bloqueConDatos;
+	bloqueConDatos = malloc(OSADA_BLOCK_SIZE);
 
 	for(i = 0; i < cantidadDeBloques; i++){
-		char *bloqueConDatos;
+		bloqueConDatos = string_repeat("/0", OSADA_BLOCK_SIZE);
 		char *bloquePosStr;
 
 		bloquePos = list_get(listado, i);
@@ -619,98 +621,101 @@ void prepararBloquesDeDatos(t_list* listado, char *contenido){
 		//bloqueConDatos = string_itoa(i);
 
 		//TODO: PREGUNTAR A DAMIAN ESTA FORMA DE CODEAR PARA DIVIDIR CADA BLOQUE DE DATOS
-		bloqueConDatos = malloc(OSADA_BLOCK_SIZE);
+
 		if(i == (cantidadDeBloques - 1)){
 			//ultimo bloque o contenido < 64
-			bloqueConDatos = string_repeat("/0", OSADA_BLOCK_SIZE);
-			printf("contenido ultimo bloque - %i: %c\n",j, contenido[j * OSADA_BLOCK_SIZE ]);
+
 			memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], strlen(contenido) );
-			printf("ultimo bloqueConDatos: %s\n", bloqueConDatos);
+			printf("ultimo bloqueConDatos -%i: %s\n",j, bloqueConDatos);
 			j++;
 		}else{
-			printf("contenido bloque - %i: %c\n", j, contenido[j * OSADA_BLOCK_SIZE ]);
+
 			memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
-			bloqueConDatos[OSADA_BLOCK_SIZE + 1]= '\0';
-			printf("bloqueConDatos: %s\n", bloqueConDatos);
+			//bloqueConDatos[OSADA_BLOCK_SIZE + 1]= '\0';
+			printf("contenido bloque - %i: %s\n", j, bloqueConDatos);
 			j++;
 		}
 
 		dictionary_put(dicBloqueDeDatos, bloquePosStr, bloqueConDatos);
-		printf("ENTRO EN EL DICTIONARY\n");
+		printf("GUARDO UN BLOQUE EN EL DICTIONARY\n");
 	}
-	printf("QJUIEE INTERAR \n");
-	dictionary_iterator(dicBloqueDeDatos, (void*) _guardarEnTablaDeDatos);
+	free(bloqueConDatos);
+	printf("EMPIEZA A INTERAR PARA GUARDAR \n");
+	//dictionary_iterator(dicBloqueDeDatos, (void*) _guardarEnTablaDeDatos);
 }
 
+int calcularCantidadDeBloquesParaGrabar(int tamanio){
+	int cantidadDeBloquesParaGrabar = 0;
 
+	if(tamanio > 0 && tamanio < 64){
+		return 1;
+	}
 
+	if(tamanio > 64){
+
+		cantidadDeBloquesParaGrabar = tamanio / 64;
+		int moduloTamanio=0;
+		moduloTamanio = tamanio % 64;
+
+		if (moduloTamanio>0){
+			return cantidadDeBloquesParaGrabar + 1;
+		}
+
+	}
+
+	return 0;
+}
+t_dictionary *armarDicDeTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles){
+	char *bloquePosStr=malloc(10);
+	int cantidadDeElemento = 0;
+	int bloquePos;
+	int bloqueSig;
+	int i;
+	t_dictionary *dictionary = dictionary_create();
+	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
+
+	printf("cantidadDeElemento: %i\n", cantidadDeElemento);
+	for(i=0;i<cantidadDeElemento;i++){
+		bloquePosStr = string_repeat("/0", 10);
+		bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
+		bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
+		printf("bloquePos: %i\n", bloquePos);
+
+		if(bloqueSig==0){
+			bloqueSig =-1;
+		}
+
+		sprintf(bloquePosStr, "%d", bloquePos);
+
+		dictionary_put(dictionary, bloquePosStr, bloqueSig);
+
+		//printf("bloqueSig: %i\n",bloqueSig);
+
+	}
+	free(bloquePosStr);
+	return dictionary;
+}
+void guardarEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles){
+	dictionary_iterator(armarDicDeTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles), (void*) _prepararLaVariableGlobalParaGuadar);
+	guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
+}
 void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
-	int i=0;
-	int cantidadDeElemento = 0;
-
-	t_dictionary *comoSeriaElArray = dictionary_create();
-	int bloquePos;
-	int bloqueSig;
-
 
 	if(elTamanioDelArchivoEntraEnElOsada(tamanio) && noEsVacio(tamanio)){
-
 		printf("tamanio: %i\n", tamanio);
 
-		if(tamanio > 0 && tamanio < 64){
-			cantidadDeBloquesParaGrabar = 1;
-		}
-
-
-		if(tamanio > 64){
-
-			cantidadDeBloquesParaGrabar = tamanio / 64;
-			int moduloTamanio=0;
-			moduloTamanio = tamanio % 64;
-
-			if (moduloTamanio>0){
-				cantidadDeBloquesParaGrabar = cantidadDeBloquesParaGrabar + 1;
-			}
-
-		}
-
+		cantidadDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanio);
 		printf("cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
 
-		//cantidadDeBloquesParaGrabar = tamanio /64;
-		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponibles(cantidadDeBloquesParaGrabar);
-		cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
-		printf("cantidadDeElemento: %i\n", cantidadDeElemento);
-
-		for(i=0;i<cantidadDeElemento;i++){
-			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
-			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
-			printf("bloquePos: %i\n", bloquePos);
-
-			if(bloqueSig==0){
-				bloqueSig =-1;
-			}
-
-			char bloquePosStr[10];
-			sprintf(bloquePosStr, "%d", bloquePos);
-
-			dictionary_put(comoSeriaElArray, bloquePosStr, bloqueSig);
-
-			//printf("bloqueSig: %i\n",bloqueSig);
-
-		}
-
-		//QUE HACER CUANDO LOS BLOQUES NO SON ENTEROS.
-		//list_iterate(listado, (int)_interarBloquesQueSeranAsignados);
-		dictionary_iterator(comoSeriaElArray, (void*) _recorrerComoSeriaElArray);
-		guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
-
-		prepararBloquesDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
+		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
+		guardarEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles);
+		guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
 		escribirEnLaTablaDeArchivos(parent_directory, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
 	}
 
-
+	printf("************************ FIN CREAR UN ARCHIVO ************************\n");
 }
 /************************FIN ARCHIVO************************************************/
 

@@ -23,9 +23,15 @@ t_log* logEntrenador;
 //Rutas y relacionados
 char* rutaMetadata;
 char* rutaDirDeBill;
+char* rutaMedallas;
 char* mapaActual;
 char *pokedex;
-t_queue* colaDeRutasCapturadas; //rutas de pokemones capturados (lo pongo en una cola porque es mas practico, podria ser un array,lista,pila,etc)
+t_queue* colaDeRutasDePokemones; //rutas de pokemones capturados y medallas conseguidas (lo pongo en una cola porque es mas practico, podria ser un array,lista,pila,etc)
+t_queue* colaDeRutasDeMapas;
+
+//Hilos
+pthread_t hiloSignal; //un hio para detectar la signals que se le envia
+pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
 
 //Variables del juego en si. (funcion jugar)
 char* pokemonCapturado;
@@ -48,6 +54,7 @@ t_queue* parsearObjetivos(char** objetivos); //convierte un array de  strings co
 void jugar();
 void recibirMsjs();
 void copiarArchivos(char* archivoOrigen, char* archivoDestino);
+void yoYaGane();
 
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
@@ -58,7 +65,7 @@ void recibirSignal();
 void sumarVida();
 void restarVida();
 void desconectarse();
-void borrarArchivos();
+void borrarArchivos(t_queue* colaDeRutas);
 void cerrarEntrenador();
 
 #endif /* ENTRENADOR_H_ */

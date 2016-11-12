@@ -22,6 +22,7 @@
 #include <tad_items.h>
 #include <nivel.h>
 #include <curses.h>
+#include <time.h>
 
 t_log* logMapa;
 char *mapa;
@@ -34,6 +35,7 @@ int semaforo_wait;
 t_list* listaDePokenest;
 t_list* items;
 t_list* listaDeEntrenadores;
+t_list* entrenadoresDeadLock;
 t_queue* colaDeListos;
 t_queue* colaDeBloqueados;
 pthread_mutex_t setFDmutex;
@@ -113,8 +115,14 @@ t_pokemon* dameTuMejorPokemon(t_entrenador* entrenador);
 void matar(t_entrenador* entrenador);
 void devolverPokemones(t_list* pokemones);
 
+typedef struct {
+	char entrenador;
+	t_list* pokemonesAsignados;	//esta lista contendra elementos del tipo t_pokemones_Asignacion
+} t_entrenador_Asignacion;
 
-
-
+typedef struct {
+	char pokemon_id;
+	int cantidad;
+} t_pokemones_Asignacion;
 
 #endif /* MAPA_H_ */
