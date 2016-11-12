@@ -925,6 +925,7 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 					}
 
 					pthread_mutex_lock(&listaDePokenestMutex);
+					if(existePokenest(idPokemon)){
 					t_pokenest* pokenestEncontrada = list_find(listaDePokenest,
 							(void*) buscarPokenestPorId1);
 					int posX = pokenestEncontrada->metadata.pos_x;
@@ -947,6 +948,14 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 							entrenador->simbolo);
 					estaEnAccion = 0;
 					break;
+					}
+					else{
+						pthread_mutex_unlock(&listaDePokenestMutex);
+						sendClientMessage(&entrenador->socket, "The id of pokemon came wrong",
+								ERROR_CONOCER);
+						break;
+					}
+
 				}
 				case DESCONECTAR: { //por si se desconecta en medio del turno
 					char simbolo = entrenador->simbolo; // guardamos el simbolo en esta variable para poder logearlo
@@ -1486,5 +1495,15 @@ t_list* detectarInterbloque() {
 	cargarCantidadPokemonesExistentes(pokemonesExistentes);
 
 	return asignacion;
+
+}
+
+bool existePokenest(char idPokemon){
+
+	bool buscarPokenestPorId1(t_pokenest* pokenestParam) {
+		return (pokenestParam->metadata.id == idPokemon); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
+	}
+
+	return list_any_satisfy(listaDePokenest,(void*)buscarPokenestPorId1);
 
 }
