@@ -1311,6 +1311,7 @@ void devolverPokemones(t_list* pokemones) {
 		pthread_mutex_unlock(&itemsMutex);
 	}
 }
+
 void cargarListaAsignacion(t_list *asignacion) {
 	int i;
 	//recorrer la lista de entrenadores
@@ -1328,8 +1329,7 @@ void cargarListaAsignacion(t_list *asignacion) {
 		cargarPokeNests(entrenador->pokemonesAsignados, pokemonesList);
 
 		//Recorro la lista de Pokemones caputurados por este entrenador
-		for (j = 0; j < list_size(entrenadorAux->listaDePokemonesCapturados);
-				j++) {
+		for (j = 0; j < list_size(entrenadorAux->listaDePokemonesCapturados);j++) {
 
 			t_pokemon * pokemon = list_get(
 					entrenadorAux->listaDePokemonesCapturados, i);
@@ -1348,8 +1348,42 @@ void cargarListaAsignacion(t_list *asignacion) {
 			}
 
 		}
+
+		list_add(asignacion,entrenador);
 	}
 }
+
+void cargarListaSolicitud(t_list *solicitud) {
+	int i;
+	//recorrer la lista de entrenadores
+	t_list* pokemonesList = list_create();
+	cargarPokemonesExistentes(pokemonesList);
+
+	for (i = 0; i < list_size(listaDeEntrenadores); i++) {
+		int j;
+		t_entrenador_Asignacion* entrenador = malloc(sizeof(t_entrenador_Asignacion));
+		t_entrenador* entrenadorAux = list_get(listaDeEntrenadores, i);
+		entrenador->entrenador = entrenadorAux->simbolo;
+		entrenador->pokemonesAsignados = list_create();
+
+		cargarPokeNests(entrenador->pokemonesAsignados, pokemonesList);
+
+		//busca el pokemon deseado por este entrenador en la lista de pokemones existentes en el mapa
+		bool _funcBuscarPokemon(t_pokemones_Asignacion *pokemonAux) {
+			return pokemonAux->pokemon_id == entrenadorAux->pokemonD;
+		}
+
+		t_pokemones_Asignacion *pokemonDeseado = list_find(entrenador->pokemonesAsignados,(void *) _funcBuscarPokemon);
+
+		//le asigna 1 al pokemon deseado de la lista
+		if (pokemonDeseado != NULL) {
+			pokemonDeseado->cantidad = 1;
+		}
+
+		list_add(solicitud,entrenador);
+	}
+}
+
 void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList) {
 	int i;
 	for (i = 0; i < list_size(pokemonesList); i++) {
@@ -1474,16 +1508,61 @@ t_list* detectarInterbloque() {
 	t_list* asignacion = list_create();
 	cargarListaAsignacion(asignacion);
 
-	//2)Crear list para entrenadores NO bloqueados
+	//2)Crear lista para entrenadores NO bloqueados
 	t_list* entrenadoresNoBloqueados = list_create();
 	cargarEntrenadoresEnNoBloqueados(entrenadoresNoBloqueados);
 
-	//3) Buscar en lista de asignacion el entrenadore que tenga TODOS 0 en su lista de pokemones
+	//3) Buscar en lista de asignacion el entrenador que tenga TODOS 0 en su lista de pokemones y sacarlos
 	quitarEntrenadoresSinAsignacion(asignacion, entrenadoresNoBloqueados);
 
+	//1)Obtener la lista solicitud ( La cantidad de pokemon que necesitan los entrenadores en este momento)
+	t_list* solicitud = list_create();
+	cargarListaSolicitud(solicitud);
+
 	//4) Crear lista auxiliar con pokemones disponibles (pokemon y cantidad)
-	t_list* pokemonesExistentes = list_create();
-	cargarCantidadPokemonesExistentes(pokemonesExistentes);
+	t_list* pokemonesDisponibles = list_create();
+	cargarCantidadPokemonesExistentes(pokemonesDisponibles);
+
+	//5)Recorrer matriz asignacion buscando que tenga recursos <= a la lista creada previamente (pokemonesExistentes)
+
+	bool notFound = true;
+	while (notFound){
+
+		//** Find function by cantidad**//
+		bool recursosMenores_aAsignados(t_pokemones_Asignacion* listElement){
+
+			//** Find function by pokemon**//
+			bool _funcBuscarPokemon(t_pokemones_Asignacion *pokemonAux) {
+				return pokemonAux->pokemon_id == listElement->pokemon_id;
+			}
+
+			t_pokemones_Asignacion * pokemonDisponible = list_find(pokemonesDisponibles,(void*) _funcBuscarPokemon);
+			return (listElement->cantidad <= pokemonDisponible->cantidad);
+		}
+
+		int i;
+		for (i=0; i < list_size(solicitud); i++){
+			t_entrenador_Asignacion* entrenadorAux = list_get(solicitud, i);
+			notFound = list_all_satisfy(entrenadorAux->pokemonesAsignados,(void*) recursosMenores_aAsignados);
+
+			if (notFound){
+
+				//5.1) El entrenador tiene
+				for (i=0; i < list_size(entrenadorAux->pokemonesAsignados); i++){
+					t_pokemones_Asignacion* pokemonAsignado = list_get(entrenadorAux->pokemonesAsignados, i);
+
+					bool _funcBuscarPokemon(t_pokemones_Asignacion *listElement) {
+						return listElement->pokemon_id == pokemonAsignado->pokemon_id;
+					}
+
+					t_pokemones_Asignacion * pokemonDisponible = list_find(pokemonesDisponibles,(void*) _funcBuscarPokemon);
+					pokemonDisponible->cantidad += pokemonAsignado->cantidad;
+				}
+
+			}
+		}
+
+	}
 
 	return asignacion;
 
