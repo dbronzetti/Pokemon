@@ -114,6 +114,7 @@ void resolverDeadlocks(t_queue* colaDeDeadlocks);
 t_pokemon* dameTuMejorPokemon(t_entrenador* entrenador);
 void matar(t_entrenador* entrenador);
 void devolverPokemones(t_list* pokemones);
+bool existePokenest(char idPokemon);
 
 typedef struct {
 	char entrenador;
