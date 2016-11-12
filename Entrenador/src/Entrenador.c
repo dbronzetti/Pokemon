@@ -332,6 +332,15 @@ void jugar() {
 				break;
 			}
 
+			case ERROR_CONOCER: { //si hubo un error cuando queria conocer la pos de la pokenest se vuelva a mandar :)
+				log_info(logEntrenador, "Trainer send the id of the pokenest");
+				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
+				log_info(logEntrenador, "Conocer: Se manda: %s",
+						objetivoActual);
+
+				break;
+			}
+
 			}
 			turno = SIN_MENSAJE;
 
