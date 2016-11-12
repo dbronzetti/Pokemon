@@ -69,6 +69,7 @@ typedef struct {
 
 typedef struct {
 	char simbolo;
+	time_t timeIngreso;
 	int pos_x;
 	int pos_y;
 	int posD_x; //posicion deseada (a la que quiere ir)

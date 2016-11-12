@@ -44,6 +44,7 @@ typedef enum{
 	LIBRE,
 	CAPTURADO,
 	ERROR,
+	ERROR_CONOCER,
 	MATAR
 } enum_messages;
 

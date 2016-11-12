@@ -635,6 +635,7 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	t_entrenador* nuevoEntrenador = malloc(sizeof(t_entrenador));
 
 	nuevoEntrenador->simbolo = simbolo;
+	nuevoEntrenador->timeIngreso = time(0);
 	nuevoEntrenador->pos_x = 1; //por defecto se setea en el (1,1) creo que lo dijeron en la charla, por las dudas preguntar.
 	nuevoEntrenador->pos_y = 1;
 	nuevoEntrenador->posD_x = -1; //flag para representar que por el momento no busca ninguna ubicacion
@@ -1188,67 +1189,50 @@ void detectarDeadlocks() {
 		sleep(10);
 		if (queue_size(colaDeBloqueados) > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
 			pthread_mutex_lock(&setEntrenadoresMutex);
-			t_list* listaDeBloqueados = list_create();
+			t_list* listaDeadlock = list_create();
+
+
+			t_list* entrenadoresBloqueados = detectarInterbloque();
 
 			while (colaDeBloqueados) { //transformo la cola en una lista para poder manejarla mejor...
 				t_entrenador* entrenadorBloqueado = queue_pop(colaDeBloqueados);
-				list_add(listaDeBloqueados, entrenadorBloqueado);
-			}
 
-			int i;
-			int a;
-			int tamanioDeLaListaDeBloqueados = list_size(listaDeBloqueados);
-			for (i = 0; i < tamanioDeLaListaDeBloqueados; i++) {
 
-				t_entrenador* entrenador1 = list_get(listaDeBloqueados, i); // sacamos un entrenador
-
-				t_queue* colaDeDeadlocks = queue_create();
-
-				queue_push(colaDeDeadlocks, entrenador1); //lo ponemos tentativamente no se sabe si esta en deadlock realmente (por ahora).
-				for (a = 0; a < tamanioDeLaListaDeBloqueados; a++) {
-					t_entrenador* entrenador2 = list_get(listaDeBloqueados, a); // sacamos otro :)
-					bool _tieneAlPokemonDeEntrenador1(t_pokemon* pokemonParam) {
-						return pokemonParam->id == entrenador1->pokemonD;
-					}
-
-					bool _tieneAlPokemonDeEntrenador2(t_pokemon* pokemonParam) {
-						return pokemonParam->id == entrenador2->pokemonD;
-					}
-
-					bool siNoSonIguales = entrenador1->simbolo
-							!= entrenador2->simbolo;
-
-					bool siElEntrenador2TieneUnPokemonQueQuiereEntrenador1 =
-							list_any_satisfy(
-									entrenador2->listaDePokemonesCapturados,
-									(void*) _tieneAlPokemonDeEntrenador1);
-
-					bool siElEntrenador1TieneUnPokemonQueQuiereEntrenador2 =
-							list_any_satisfy(
-									entrenador1->listaDePokemonesCapturados,
-									(void*) _tieneAlPokemonDeEntrenador2);
-					;
-
-					if (siNoSonIguales
-							&& siElEntrenador2TieneUnPokemonQueQuiereEntrenador1
-							&& siElEntrenador1TieneUnPokemonQueQuiereEntrenador2) {
-
-						log_info(logMapa,
-								"The trainer '%c' is in deadlock with the trainer '%c'",
-								entrenador1->simbolo, entrenador2->simbolo);
-						queue_push(colaDeDeadlocks, entrenador2);
-
-					}
-
+				bool _funcBuscarEntrenador(char *entrenador) {
+					return *entrenador == entrenadorBloqueado->simbolo;
 				}
 
-				if (queue_size(colaDeDeadlocks) > 1) { //como lo habiamos puesto tentativamente verifacmos que sea mayor que >1
-					//resolverDeadlocks(colaDeDeadlocks);
+				// ME fijo si ese entrenador esta en mi lista de DeadLock
+				char * entrenadorFalg = list_find(entrenadoresBloqueados,(void *)_funcBuscarEntrenador);
+				if(entrenadorFalg != NULL ){
+					list_add(listaDeadlock, entrenadorBloqueado);
+				}else{
+					//Los devuelvo a la cola de Listo. TODOS los entrenadores no DEADLOCK vuelven a competir
+					entrenadorBloqueado->estaBloqueado = 0;
+					queue_push(colaDeListos,entrenadorBloqueado );
 				}
-
 			}
 
-			list_destroy(listaDeBloqueados);
+			//Ordenamos la lista segun acceso al Mapa.
+			bool _entrenadorMasViejoEnMapa(t_entrenador* entrenador1, t_entrenador* entrenador2) {
+				time_t tiempoDiferencia = difftime(entrenador1->timeIngreso, entrenador2->timeIngreso);
+
+				if (tiempoDiferencia < 0 ){
+					return true;
+				}else{
+					return false;
+				}
+			}
+
+			list_sort(listaDeadlock,(void*)_entrenadorMasViejoEnMapa);
+
+			//TODO
+			/*1) mandar pokemon 1 y 2 a pelear. El ganador debera pasar a la cola de listo y su flag "estaBloqueado" = 0.
+			 *2) Se debera iterar hasta que la lista tenga tamaño 1, ese entrenador va a ser el candidato a muerte
+			 *3)  Se debera recuperar todos sus pokemons y devolverlos al mapa
+			 */
+
+			list_destroy(listaDeadlock);
 			pthread_mutex_unlock(&setEntrenadoresMutex);
 		}
 
@@ -1416,13 +1400,16 @@ void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList) {
 
 }
 
-void cargarEntrenadoresEnNoBloqueados(t_list *entrenadoresNoBloqueados) {
+void cargarEntrenadores(t_list *entrenadores) {
 	int i;
 
 	for (i = 0; i < list_size(listaDeEntrenadores); i++) {
 		t_entrenador* entrenadorAux = list_get(listaDeEntrenadores, i);
-		char entrenador = entrenadorAux->simbolo;
-		list_add(entrenadoresNoBloqueados, &entrenador);
+
+		if(entrenadorAux->estaBloqueado == 1){
+			char entrenador = entrenadorAux->simbolo;
+			list_add(entrenadores, &entrenador);
+		}
 	}
 
 }
@@ -1443,8 +1430,8 @@ void quitarEntrenadoresSinAsignacion(t_list *asignacion,
 				flag = 1;
 			}
 		}
-		bool _funcBuscarEntrenador(char entrenador) {
-			return entrenador == entrenadorAux->entrenador;
+		bool _funcBuscarEntrenador(char *entrenador) {
+			return *entrenador == entrenadorAux->entrenador;
 		}
 
 		void _destroyElement(char entrenador) {
@@ -1529,11 +1516,11 @@ t_list* detectarInterbloque() {
 	cargarListaSolicitud(solicitud);
 
 	//2)Crear lista para entrenadores NO bloqueados
-	t_list* entrenadoresNoBloqueados = list_create();
-	cargarEntrenadoresEnNoBloqueados(entrenadoresNoBloqueados);
+	t_list* entrenadoresDeadlock = list_create();
+	cargarEntrenadores(entrenadoresDeadlock);
 
 	//3) Buscar en lista de asignacion el entrenador que tenga TODOS 0 en su lista de pokemones y sacarlos
-	quitarEntrenadoresSinAsignacion(asignacion, entrenadoresNoBloqueados);
+	quitarEntrenadoresSinAsignacion(asignacion, entrenadoresDeadlock);
 
 	//4) Crear lista auxiliar con pokemones disponibles (pokemon y cantidad)
 	t_list* pokemonesDisponibles = list_create();
@@ -1579,22 +1566,22 @@ t_list* detectarInterbloque() {
 					return (*listElement == entrenadorAux->entrenador);
 				}
 				//5.1) Remuevo el entrenador de la lista de entrenadoresNoBloqueados
-				list_remove_and_destroy_by_condition(entrenadoresNoBloqueados, (void*) _funcBuscarEntrenador, (void*) free);
+				list_remove_and_destroy_by_condition(entrenadoresDeadlock, (void*) _funcBuscarEntrenador, (void*) free);
 			}
 		}
 
 	}
 
-	if (list_size(entrenadoresNoBloqueados) > 0){
+	if (list_size(entrenadoresDeadlock) > 0){
 		log_info(logMapa, "Hay DEADLOCK!!");
 		int i;
-		for (i=0; i < list_size(entrenadoresNoBloqueados); i++){
-			char* entrenador = list_get(entrenadoresNoBloqueados, i);
+		for (i=0; i < list_size(entrenadoresDeadlock); i++){
+			char* entrenador = list_get(entrenadoresDeadlock, i);
 			log_info(logMapa, "---> Entrenador: '%c'",*entrenador);
 		}
 	}
 
-	return entrenadoresNoBloqueados;
+	return entrenadoresDeadlock;
 
 }
 
