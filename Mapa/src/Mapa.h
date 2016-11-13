@@ -69,6 +69,7 @@ typedef struct {
 
 typedef struct {
 	char simbolo;
+	time_t timeIngreso;
 	int pos_x;
 	int pos_y;
 	int posD_x; //posicion deseada (a la que quiere ir)
@@ -114,6 +115,7 @@ void resolverDeadlocks(t_queue* colaDeDeadlocks);
 t_pokemon* dameTuMejorPokemon(t_entrenador* entrenador);
 void matar(t_entrenador* entrenador);
 void devolverPokemones(t_list* pokemones);
+bool existePokenest(char idPokemon);
 
 typedef struct {
 	char entrenador;

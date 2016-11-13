@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -190,19 +190,19 @@ void processMessageReceived(void *parameter){
 	t_serverData *serverData = (t_serverData*) parameter;
 
 	t_list* lista = list_create();
+	enum_FUSEOperations *FUSEOperation = malloc(sizeof(enum_FUSEOperations));
 	/*t_list* lista2 = list_create();
 	osada_file *tablaDeArchivo2= malloc(64);*/
 	while(1){
 		//0) Receive FUSE Operation
-		enum_FUSEOperations FUSEOperation;
-		int receivedBytes = receiveMessage(&serverData->socketClient, &FUSEOperation, sizeof(enum_FUSEOperations));
+		int receivedBytes = receiveMessage(&serverData->socketClient, FUSEOperation, sizeof(enum_FUSEOperations));
 
 		if ( receivedBytes > 0 ){
 
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",FUSEOperation);
 			printf("Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i\n",FUSEOperation);
 
-			switch (FUSEOperation){
+			switch (*FUSEOperation){
 				case FUSE_RMDIR:{
 					log_info(logPokeDexServer, "Processing FUSE_RMDIR message");
 					int parent_directory=0;
@@ -263,6 +263,8 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
 
 						sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
+
+						log_info(logPokeDexServer, "FUSE_WRITE - FIN sendMessage");
 						printf("********************************* TERMINO EL WRITE *********************\n");
 						free(content);
 						free(path);
@@ -292,12 +294,13 @@ void processMessageReceived(void *parameter){
 					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
 					int posBloquePadre = obtener_bloque_padre(path);
 
-					log_info(logPokeDexServer, "escribirEnLaTablaDeArchivos");
+					log_info(logPokeDexServer, "FUSE_CREATE - escribirEnLaTablaDeArchivos");
 					posDelaTablaDeArchivos = escribirEnLaTablaDeArchivos(posBloquePadre, 0, path, first_block_init, posDelaTablaDeArchivos);
 
-					int exitCode = EXIT_SUCCESS;
-					sendMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(int));
+					//log_info(logPokeDexServer, "FUSE_CREATE - posDelaTablaDeArchivos a enviar %d", posDelaTablaDeArchivos);
 
+					sendMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(int));
+					log_info(logPokeDexServer, "FUSE_CREATE - TERMINO");
 					break;
 				}
 				case FUSE_UNLINK:{
@@ -513,7 +516,7 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 				default:{
-					log_error(logPokeDexServer,"Invalid operation received '%d'", FUSEOperation);
+					log_error(logPokeDexServer,"Invalid operation received '%d'", *FUSEOperation);
 					break;
 				}
 			}
@@ -531,4 +534,5 @@ void processMessageReceived(void *parameter){
 			break;
 		}
 	}
+	free(FUSEOperation);
 }
