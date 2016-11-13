@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -199,8 +199,8 @@ void processMessageReceived(void *parameter){
 
 		if ( receivedBytes > 0 ){
 
-			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",FUSEOperation);
-			printf("Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i\n",FUSEOperation);
+			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",*FUSEOperation);
+			printf("Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i\n",*FUSEOperation);
 
 			switch (*FUSEOperation){
 				case FUSE_RMDIR:{
