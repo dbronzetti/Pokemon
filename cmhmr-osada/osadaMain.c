@@ -6,6 +6,7 @@
  */
 #include "osada.h"
 #include "mockOsada.h"
+#include <string.h>
 
 
 
@@ -17,17 +18,15 @@ int main(int argc, char *argv[]){
 	inicializarOSADA(archivoID);
 	obtenerHeader();
 	setearConstantesDePosicionDeOsada();
-	for(i=0;i<2;i++){
-		printf("hola: %i\n",i);
-	}
-	//obtenerBitmap();
+
+	obtenerBitmap();
 
     obtenerTablaDeArchivos();
 	obtenerTablaDeAsignacion();
-	//char *bloqueDeDatos = obtenerBloqueDeDatos(osada, osadaHeaderFile);
 
 	//contarBloques(osada, osadaHeaderFile, bitMap);
-	//crearUnArchivo("hola mundo\n", 128,"hola.tx\0");
+	int posDelaTablaDeArchivos = escribirEnLaTablaDeArchivos(65535, 0, "/test1", -999, -999);
+	crearUnArchivo("hola como andas todo bien que se cuenta nose como estabas tratandonte la vida pero es dififcil.", strlen("hola como andas todo bien que se cuenta nose como estabas tratandonte la vida pero es dififcil."), "/test1", posDelaTablaDeArchivos, 65535);
 
 	//dameTodosLosDirectorios();
 	//dameTodosLosArchivosRegulares();
@@ -36,9 +35,6 @@ int main(int argc, char *argv[]){
 
 	//crearArbolAPartirDelPadre(65535);
 
-	//t_list unaLista = crearArbolAPartirDelPadre(tablaDeArchivo, 0); //METER TODO EN UNA LISTA, SERIALIZAR E ENVIAR
-	//char *altoPaquete = serializeListaBloques(unaLista);
-	//sendMessage(&serverData->socketClient, altoPaquete, sizeof(altoPaquete));
 
 	//encontrarArbolPadre(tablaDeArchivo, 140);
 	//printf("bytes libres: %i\n",bytesLibres());
@@ -57,13 +53,13 @@ int main(int argc, char *argv[]){
 	//"large.txt" - basic
 	//archivo - basic
 	//special.mp4 - 138
-	//osada_block_pointer posicion = buscarArchivo("hola.txt");
+	osada_block_pointer posicion = buscarArchivo("/test1", 65535);
 	//printf("posicion del primer bloque: %i\n", posicion);
 
-	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(31216);
 
-	//verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
+	verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);
 
 
 	//mock_setearTamanioDelArchivo(tamanioDelArchivo);
