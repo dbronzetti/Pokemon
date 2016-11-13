@@ -23,6 +23,8 @@
 #include <nivel.h>
 #include <curses.h>
 #include <time.h>
+#include <pkmn/battle.h>
+#include <pkmn/factory.h>
 
 t_log* logMapa;
 char *mapa;
@@ -65,7 +67,7 @@ typedef struct {
 	char id;
 	char* tipo;
 	char* nombre;
-} t_pokemon;
+} t_pokemones;
 
 typedef struct {
 	char simbolo;
@@ -112,9 +114,18 @@ void ejecutarAccionEntrenador (t_entrenador* entrenador, int* i);
 void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX );
 void detectarDeadlocks();
 void resolverDeadlocks(t_queue* colaDeDeadlocks);
-t_pokemon* dameTuMejorPokemon(t_entrenador* entrenador);
+t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador);
 void matar(t_entrenador* entrenador);
 void devolverPokemones(t_list* pokemones);
+bool existePokenest(char idPokemon);
+void cargarListaAsignacion(t_list *asignacion);
+void cargarListaSolicitud(t_list *solicitud);
+void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList);
+void cargarEntrenadores(t_list *entrenadores);
+void quitarEntrenadoresSinAsignacion(t_list *asignacion,t_list *entrenadoresNoBloqueados);
+void cargarPokemonesExistentes(t_list *pokemonesList) ;
+void cargarCantidadPokemonesExistentes(t_list *pokemonesList);
+t_list* detectarInterbloque();
 bool existePokenest(char idPokemon);
 
 typedef struct {

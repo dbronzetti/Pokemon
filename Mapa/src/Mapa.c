@@ -535,7 +535,7 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 				char* rutaDelPokemon = string_from_format("%s/%s",
 						rutaDeUnaPokenest, ditPokemones->d_name);
 
-				t_pokemon* pokemon = malloc(sizeof(pokemon));
+				t_pokemones* pokemon = malloc(sizeof(pokemon));
 				pokemon->nivel = levantarNivelDelPokemon(rutaDelPokemon);
 				list_add(pokenest->listaDePokemones, pokemon);
 			}
@@ -550,7 +550,7 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 		return -1;
 	}
 
-	void mapearIdYTipo(t_pokemon* pokemon) {
+	void mapearIdYTipo(t_pokemones* pokemon) {
 		pokemon->id = pokenest->metadata.id;
 		pokemon->tipo = pokenest->metadata.tipo;
 		pokemon->nombre = pokenest->metadata.nombrePokenest;
@@ -1102,7 +1102,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 					return (pokenestParam->metadata.id == entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
 				}
 
-				bool unaFuncionDeMierdaQueDevuelveTrue(t_pokemon* pokemon) {
+				bool unaFuncionDeMierdaQueDevuelveTrue(t_pokemones* pokemon) {
 					return TRUE;
 				}
 
@@ -1114,7 +1114,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 						pokenestEncontrada->listaDePokemones);
 
 				if (hayPokemones) {
-					t_pokemon* pokemon = list_remove_by_condition(
+					t_pokemones* pokemon = list_remove_by_condition(
 							pokenestEncontrada->listaDePokemones,
 							(void*) unaFuncionDeMierdaQueDevuelveTrue); //saca al primero que encuentra
 
@@ -1244,10 +1244,10 @@ void resolverDeadlocks(t_queue* colaDeDeadlocks) {
 	while (queue_size(colaDeDeadlocks) > 1) {//cuando quede uno solo matamos a ese.
 		t_entrenador* entrenador1 = queue_pop(colaDeDeadlocks);
 		t_entrenador* entrenador2 = queue_pop(colaDeDeadlocks);
-		t_pokemon* pokemon1 = dameTuMejorPokemon(entrenador1);
-		t_pokemon* pokemon2 = dameTuMejorPokemon(entrenador2);
+		t_pokemones* pokemon1 = dameTuMejorPokemon(entrenador1);
+		t_pokemones* pokemon2 = dameTuMejorPokemon(entrenador2);
 
-		t_pokemon* pokemonPerdedor;	// = algortimoDeBatalla(pokemon1,pokemon2);
+		t_pokemones* pokemonPerdedor;	// = algortimoDeBatalla(pokemon1,pokemon2);
 
 		if (pokemonPerdedor == pokemon1) {
 			queue_push(colaDeDeadlocks, entrenador2); // si perdio el entrenador 1 reencolamos al 2.
@@ -1266,13 +1266,13 @@ void resolverDeadlocks(t_queue* colaDeDeadlocks) {
 
 }
 
-t_pokemon* dameTuMejorPokemon(t_entrenador* entrenador) {
-	bool _pokemonMayor(t_pokemon* pokemon1, t_pokemon* pokemon2) {
+t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador) {
+	bool _pokemonMayor(t_pokemones* pokemon1, t_pokemones* pokemon2) {
 		return pokemon1->nivel > pokemon2->nivel;
 	}
 
 	list_sort(entrenador->listaDePokemonesCapturados, (void*) _pokemonMayor);
-	t_pokemon* pokemonGroso = list_get(entrenador->listaDePokemonesCapturados,
+	t_pokemones* pokemonGroso = list_get(entrenador->listaDePokemonesCapturados,
 			0); //como ya esta ordenada la lista el primer pokemon va a ser el mas poronga.
 	return pokemonGroso;
 
@@ -1296,7 +1296,7 @@ void sumarRecurso(t_list* items, char id) { //defino esta funcion porque no esta
 void devolverPokemones(t_list* pokemones) {
 	int i;
 	for (i = 0; i < list_size(pokemones); i++) {
-		t_pokemon* pokemon = list_get(pokemones, i);
+		t_pokemones* pokemon = list_get(pokemones, i);
 		bool _buscarPokenest(t_pokenest* pokenest) {
 			return pokenest->metadata.id == pokemon->id;
 		}
@@ -1332,7 +1332,7 @@ void cargarListaAsignacion(t_list *asignacion) {
 		//Recorro la lista de Pokemones caputurados por este entrenador
 		for (j = 0; j < list_size(entrenadorAux->listaDePokemonesCapturados);j++) {
 
-			t_pokemon * pokemon = list_get(
+			t_pokemones * pokemon = list_get(
 					entrenadorAux->listaDePokemonesCapturados, i);
 			bool _funcBuscarPokemon(t_pokemones_Asignacion *pokemonAux) {
 				return pokemonAux->pokemon_id == pokemon->id;
@@ -1388,7 +1388,7 @@ void cargarListaSolicitud(t_list *solicitud) {
 void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList) {
 	int i;
 	for (i = 0; i < list_size(pokemonesList); i++) {
-		t_pokemon* pokemon = list_get(pokemonesList, i);
+		t_pokemones* pokemon = list_get(pokemonesList, i);
 		t_pokemones_Asignacion *recursoDisponible = malloc(
 				sizeof(t_pokemones_Asignacion));
 
@@ -1453,14 +1453,14 @@ void cargarPokemonesExistentes(t_list *pokemonesList) {
 		t_pokenest* pokenest = list_get(listaDePokenest, i);
 		int j;
 		for (j = 0; j < list_size(pokenest->listaDePokemones); j++) {
-			t_pokemon* pokemon = list_get(pokenest->listaDePokemones, j);
+			t_pokemones* pokemon = list_get(pokenest->listaDePokemones, j);
 
-			bool _funcBuscarPokemon(t_pokemon *pokemonAux) {
+			bool _funcBuscarPokemon(t_pokemones *pokemonAux) {
 				return pokemonAux->id == pokemon->id;
 			}
 
 			//Determino si el Pokemon es un nuevo pokemon o ya exisita.
-			t_pokemon *recursoDisponible = list_find(pokemonesList,
+			t_pokemones *recursoDisponible = list_find(pokemonesList,
 					(void *) _funcBuscarPokemon);
 
 			if (recursoDisponible == NULL) {
@@ -1479,7 +1479,7 @@ void cargarCantidadPokemonesExistentes(t_list *pokemonesList) {
 		t_pokenest* pokenest = list_get(listaDePokenest, i);
 		int j;
 		for (j = 0; j < list_size(pokenest->listaDePokemones); j++) {
-			t_pokemon* pokemon = list_get(pokenest->listaDePokemones, j);
+			t_pokemones* pokemon = list_get(pokenest->listaDePokemones, j);
 
 			t_pokemones_Asignacion* pokAux = malloc(
 					sizeof(t_pokemones_Asignacion));
@@ -1505,7 +1505,7 @@ void cargarCantidadPokemonesExistentes(t_list *pokemonesList) {
 
 }
 
-t_list* detectarInterbloque() {
+t_list* detectarInterbloque(){
 
 	//1)Obtener la lista asignacion ( La cantidad de pokemon que tiene cada Entrenador)
 	t_list* asignacion = list_create();
