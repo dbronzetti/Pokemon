@@ -113,7 +113,6 @@ void planificarSRDF();
 void ejecutarAccionEntrenador (t_entrenador* entrenador, int* i);
 void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX );
 void detectarDeadlocks();
-void resolverDeadlocks(t_queue* colaDeDeadlocks);
 t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador);
 void matar(t_entrenador* entrenador);
 void devolverPokemones(t_list* pokemones);

@@ -318,11 +318,9 @@ void processMessageReceived(void *parameter) {
 			// connection closed
 			pthread_mutex_lock(&borradoDeEntrenadores);
 			pthread_mutex_lock(&setEntrenadoresMutex);
-			if (list_any_satisfy(listaDeEntrenadores,
-					(void*) buscarPorSocket)) {
+			if (list_any_satisfy(listaDeEntrenadores,(void*) buscarPorSocket)) {
 
-				t_entrenador* entrenador = list_find(listaDeEntrenadores,
-						(void*) buscarPorSocket);
+				t_entrenador* entrenador = list_find(listaDeEntrenadores,(void*) buscarPorSocket);
 
 				if (entrenador->estaEnTurno == false) { //si no esta en turno lo borramos normal
 
@@ -346,8 +344,7 @@ void processMessageReceived(void *parameter) {
 					pthread_mutex_lock(&setFDmutex);
 					FD_CLR(serverData->socketClient, serverData->masterFD); // remove from master set
 					pthread_mutex_unlock(&setFDmutex);
-					log_error(logMapa, "Socket: %d  disconected SUCCESSFUL",
-							socketFD);
+					log_error(logMapa, "Socket: %d  disconected SUCCESSFUL",socketFD);
 				} else {
 
 					log_error(logMapa,
@@ -681,8 +678,7 @@ void eliminarEntrenador(char simbolo) {
 	}
 
 	pthread_mutex_lock(&setEntrenadoresMutex);
-	t_entrenador* entrenador = list_remove_by_condition(listaDeEntrenadores,
-			(void*) igualarACaracterCondicion);
+	t_entrenador* entrenador = list_remove_by_condition(listaDeEntrenadores,(void*) igualarACaracterCondicion);
 	t_list* pokemones = entrenador->listaDePokemonesCapturados;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 
@@ -927,36 +923,32 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 
 					pthread_mutex_lock(&listaDePokenestMutex);
 					if(existePokenest(idPokemon)){
-					t_pokenest* pokenestEncontrada = list_find(listaDePokenest,
-							(void*) buscarPokenestPorId1);
-					int posX = pokenestEncontrada->metadata.pos_x;
-					int posY = pokenestEncontrada->metadata.pos_y;
-					pthread_mutex_unlock(&listaDePokenestMutex);
-
-					pthread_mutex_lock(&setEntrenadoresMutex);
-					entrenador->posD_x = posX;
-					entrenador->posD_y = posY;
-					char* mensajeAEnviar = convertirPosicionesAString(posX,
-							posY);
-					entrenador->accion = SIN_MENSAJE;
-					entrenador->seEstaMoviendo = 1;
-					sendClientMessage(&entrenador->socket, mensajeAEnviar,
-							CONOCER);
-					pthread_mutex_unlock(&setEntrenadoresMutex);
-
-					log_info(logMapa,
-							"Map send the position to the trainer: '%c'",
-							entrenador->simbolo);
-					estaEnAccion = 0;
-					break;
-					}
-					else{
+						t_pokenest* pokenestEncontrada = list_find(listaDePokenest,(void*) buscarPokenestPorId1);
+						int posX = pokenestEncontrada->metadata.pos_x;
+						int posY = pokenestEncontrada->metadata.pos_y;
 						pthread_mutex_unlock(&listaDePokenestMutex);
-						sendClientMessage(&entrenador->socket, "The id of pokemon came wrong",
-								ERROR_CONOCER);
-						break;
-					}
 
+						pthread_mutex_lock(&setEntrenadoresMutex);
+						entrenador->posD_x = posX;
+						entrenador->posD_y = posY;
+						char* mensajeAEnviar = convertirPosicionesAString(posX,
+								posY);
+						entrenador->accion = SIN_MENSAJE;
+						entrenador->seEstaMoviendo = 1;
+						sendClientMessage(&entrenador->socket, mensajeAEnviar,
+								CONOCER);
+						pthread_mutex_unlock(&setEntrenadoresMutex);
+
+						log_info(logMapa,
+								"Map send the position to the trainer: '%c'",
+								entrenador->simbolo);
+						estaEnAccion = 0;
+
+					}else{
+						pthread_mutex_unlock(&listaDePokenestMutex);
+						sendClientMessage(&entrenador->socket, "The id of pokemon came wrong",ERROR_CONOCER);
+					}
+					break;
 				}
 				case DESCONECTAR: { //por si se desconecta en medio del turno
 					char simbolo = entrenador->simbolo; // guardamos el simbolo en esta variable para poder logearlo
@@ -1049,8 +1041,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 
 				if(existePokenest(idPokemon)){
 					pthread_mutex_lock(&listaDePokenestMutex);
-					t_pokenest* pokenestEncontrada = list_find(listaDePokenest,
-							(void*) buscarPokenestPorId1);
+					t_pokenest* pokenestEncontrada = list_find(listaDePokenest,(void*) buscarPokenestPorId1);
 					int posX = pokenestEncontrada->metadata.pos_x;
 					int posY = pokenestEncontrada->metadata.pos_y;
 					pthread_mutex_unlock(&listaDePokenestMutex);
@@ -1067,16 +1058,11 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 					log_info(logMapa, "Map send the position to the trainer: '%c'",
 							entrenador->simbolo);
 					estaEnAccion = 0;
-					break;
-				}
-				else{
-					pthread_mutex_unlock(&listaDePokenestMutex);
-					sendClientMessage(&entrenador->socket, "The id of pokemon came wrong",
-							ERROR_CONOCER);
-					break;
+				}else{
+					sendClientMessage(&entrenador->socket, "The id of pokemon came wrong",ERROR_CONOCER);
 				}
 			}
-
+			break;
 			case IR: {
 
 				moverEntrenador(&entrenador->pos_x, &entrenador->pos_y,
@@ -1186,17 +1172,21 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 
 void detectarDeadlocks() {
 	while (1) {
-		sleep(10);
-		if (queue_size(colaDeBloqueados) > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
-			pthread_mutex_lock(&setEntrenadoresMutex);
+		sleep(metadataMapa.tiempoChequeoDeadlock);
+
+		pthread_mutex_lock(&colaDeBloqueadosMutex);
+		int tamanioColaBloqueados = queue_size(colaDeBloqueados);
+		pthread_mutex_lock(&colaDeBloqueadosMutex);
+
+		if (tamanioColaBloqueados > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
+
 			t_list* listaDeadlock = list_create();
-
-
 			t_list* entrenadoresBloqueados = detectarInterbloque();
 
-			while (colaDeBloqueados) { //transformo la cola en una lista para poder manejarla mejor...
+			pthread_mutex_lock(&colaDeBloqueadosMutex);
+			while (queue_size(colaDeBloqueados)>0) { //transformo la cola en una lista para poder manejarla mejor...
+				//se limpia la cola de bloqueados completamente
 				t_entrenador* entrenadorBloqueado = queue_pop(colaDeBloqueados);
-
 
 				bool _funcBuscarEntrenador(char *entrenador) {
 					return *entrenador == entrenadorBloqueado->simbolo;
@@ -1204,14 +1194,16 @@ void detectarDeadlocks() {
 
 				// ME fijo si ese entrenador esta en mi lista de DeadLock
 				char * entrenadorFalg = list_find(entrenadoresBloqueados,(void *)_funcBuscarEntrenador);
+
 				if(entrenadorFalg != NULL ){
 					list_add(listaDeadlock, entrenadorBloqueado);
 				}else{
 					//Los devuelvo a la cola de Listo. TODOS los entrenadores no DEADLOCK vuelven a competir
 					entrenadorBloqueado->estaBloqueado = 0;
-					queue_push(colaDeListos,entrenadorBloqueado );
+					queue_push(colaDeListos,entrenadorBloqueado);
 				}
 			}
+			pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
 			//Ordenamos la lista segun acceso al Mapa.
 			bool _entrenadorMasViejoEnMapa(t_entrenador* entrenador1, t_entrenador* entrenador2) {
@@ -1226,43 +1218,83 @@ void detectarDeadlocks() {
 
 			list_sort(listaDeadlock,(void*)_entrenadorMasViejoEnMapa);
 
-			//TODO
-			/*1) mandar pokemon 1 y 2 a pelear. El ganador debera pasar a la cola de listo y su flag "estaBloqueado" = 0.
-			 *2) Se debera iterar hasta que la lista tenga tamaño 1, ese entrenador va a ser el candidato a muerte
-			 *3)  Se debera recuperar todos sus pokemons y devolverlos al mapa
-			 */
+			//1) mandar pokemon 1 y 2 a pelear. El ganador debera pasar a la cola de listo y su flag "estaBloqueado" = 0.
+			bool enBatalla = true;
+			while(enBatalla){
+
+				//me voy a asegurar que siempre haya por lo menos 2 entrenadores para hacer pelear
+				if (list_size(listaDeadlock) >= 2){
+					t_entrenador* entrenador1 = list_get(listaDeadlock,0);//saco primer entrenador
+					t_entrenador* entrenador2 = list_get(listaDeadlock,1);//saco el segundo entrenador
+
+					//obtengo sus pokemones mas fuertes
+					t_pokemones* pokemon1 = dameTuMejorPokemon(entrenador1);
+					t_pokemones* pokemon2 = dameTuMejorPokemon(entrenador2);
+
+					//Creamos una instancia de la Factory
+					//La misma sirve para crear pokémons con solo el nombre y el nivel
+					t_pkmn_factory* pokemon_factory = create_pkmn_factory();
+
+					//Nótese que empieza con letra mayúscula y no debe tener errores de nombre
+					t_pokemon * pokemonParaBatalla1 = create_pokemon(pokemon_factory, pokemon1->nombre, pokemon1->nivel);
+					t_pokemon * pokemonParaBatalla2 = create_pokemon(pokemon_factory, pokemon2->nombre, pokemon2->nivel);
+
+					log_info(logMapa, "\n========Batalla!========\n");
+					log_info(logMapa, "Primer Pokemon: %s[%s/%s] Nivel: %d",
+							pokemonParaBatalla1->species, pkmn_type_to_string(pokemonParaBatalla1->type),
+							pkmn_type_to_string(pokemonParaBatalla1->second_type), pokemonParaBatalla1->level);
+					log_info(logMapa, "Segundo Pokemon: %s[%s/%s] Nivel: %d",
+							pokemonParaBatalla2->species, pkmn_type_to_string(pokemonParaBatalla2->type),
+							pkmn_type_to_string(pokemonParaBatalla2->second_type), pokemonParaBatalla2->level); //Función que sirve para ver el Tipo de Enum como un String
+
+					//La batalla propiamente dicha
+					t_pokemon * loser = pkmn_battle(pokemonParaBatalla1, pokemonParaBatalla2);
+
+					//uso un puntero para identificar el ganador y luego trabajar sobre ese
+					t_entrenador* entrenadorGanador;
+					if (string_equals_ignore_case(loser->species,pokemon1->nombre)){//comparo el pokemon que perdio contra el pokemon de entrenador 1 obtenido antes
+						entrenadorGanador = entrenador2;
+						log_info(logMapa,"El entrenador PERDEDOR fue '%c' con el pokemon '%s'",entrenador1->simbolo, loser->species);
+					}else{
+						entrenadorGanador = entrenador1;
+						log_info(logMapa,"El entrenador PERDEDOR fue '%c' con el pokemon '%s'",entrenador2->simbolo, loser->species);
+					}
+
+					log_info(logMapa,"El GANADOR el entrenador '%c' con el pokemon '%s'",entrenadorGanador->simbolo, loser->species);
+
+					//Devuelvo a la cola de Listo al entrenador contrario que fue quien gano la batalla
+					entrenadorGanador->estaBloqueado = 0;
+					queue_push(colaDeListos,entrenadorGanador);
+
+					bool _funcBuscarEntrenador(char* listElement){
+						return (*listElement == entrenadorGanador->simbolo);
+					}
+
+					//Remuevo al entrenador ganador de la lista de deadlock
+					list_remove_and_destroy_by_condition(listaDeadlock, (void*) _funcBuscarEntrenador, (void*) free);
+					//Liberemos los recursos
+					//Como el puntero loser apunta a alguno de los otros 2, no se lo libera
+					free(pokemonParaBatalla1);
+					free(pokemonParaBatalla2);
+
+				}else{
+					//2) Se debera iterar hasta que la lista tenga tamaño 1, ese entrenador va a ser el candidato a muerte
+					enBatalla = false;
+				}
+
+			}
+
+			//3) Se obtiene la victima y se procede a matarlo y devolver sus pokemones
+			t_entrenador* entrenadorVictima = list_get(listaDeadlock,0);//En este punto solo debe haber un entrenador en la lista de deadlock
+			log_info(logMapa,"El entrenador VICTIMA para resolver el deadlock es '%c'",entrenadorVictima->simbolo);
+			log_info(logMapa,"Se le notifica al entrenador '%c' que se va a morir",entrenadorVictima->simbolo);
+			matar(entrenadorVictima);//se envia mensaje al entrenador y devuelve sus pokemones al mapa
 
 			list_destroy(listaDeadlock);
-			pthread_mutex_unlock(&setEntrenadoresMutex);
+
 		}
 
 	}
-
-}
-
-void resolverDeadlocks(t_queue* colaDeDeadlocks) {
-	while (queue_size(colaDeDeadlocks) > 1) {//cuando quede uno solo matamos a ese.
-		t_entrenador* entrenador1 = queue_pop(colaDeDeadlocks);
-		t_entrenador* entrenador2 = queue_pop(colaDeDeadlocks);
-		t_pokemones* pokemon1 = dameTuMejorPokemon(entrenador1);
-		t_pokemones* pokemon2 = dameTuMejorPokemon(entrenador2);
-
-		t_pokemones* pokemonPerdedor;	// = algortimoDeBatalla(pokemon1,pokemon2);
-
-		if (pokemonPerdedor == pokemon1) {
-			queue_push(colaDeDeadlocks, entrenador2); // si perdio el entrenador 1 reencolamos al 2.
-			queue_push(colaDeBloqueados, entrenador1); //y encolamos al 1 en la cola de bloqueados
-		}
-
-		else {
-			queue_push(colaDeDeadlocks, entrenador1);
-			queue_push(colaDeBloqueados, entrenador2);
-		}
-
-	}
-
-	t_entrenador* entrenadorVictima = queue_pop(colaDeDeadlocks);
-	matar(entrenadorVictima);
 
 }
 
@@ -1281,6 +1313,7 @@ t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador) {
 void matar(t_entrenador* entrenador) {
 	sendClientMessage(&entrenador->socket, "cualquiercosa", MATAR); //le avisamos al entrenador que cago fuego
 
+	eliminarEntrenador(entrenador->simbolo);//Se debera recuperar todos sus pokemons y devolverlos al mapa
 }
 
 void sumarRecurso(t_list* items, char id) { //defino esta funcion porque no esta en la libreria
@@ -1300,9 +1333,9 @@ void devolverPokemones(t_list* pokemones) {
 		bool _buscarPokenest(t_pokenest* pokenest) {
 			return pokenest->metadata.id == pokemon->id;
 		}
-
-		t_pokenest* pokenest = list_find(listaDePokenest,
-				(void*) _buscarPokenest);
+		pthread_mutex_lock(&listaDePokenestMutex);
+		t_pokenest* pokenest = list_find(listaDePokenest,(void*) _buscarPokenest);
+		pthread_mutex_unlock(&listaDePokenestMutex);
 
 		list_add(pokenest->listaDePokemones, pokemon);
 
@@ -1319,6 +1352,7 @@ void cargarListaAsignacion(t_list *asignacion) {
 	t_list* pokemonesList = list_create();
 	cargarPokemonesExistentes(pokemonesList);
 
+	pthread_mutex_lock(&setEntrenadoresMutex);
 	for (i = 0; i < list_size(listaDeEntrenadores); i++) {
 		int j;
 		t_entrenador_Asignacion* entrenador = malloc(
@@ -1352,6 +1386,7 @@ void cargarListaAsignacion(t_list *asignacion) {
 
 		list_add(asignacion,entrenador);
 	}
+	pthread_mutex_unlock(&setEntrenadoresMutex);
 }
 
 void cargarListaSolicitud(t_list *solicitud) {
@@ -1360,8 +1395,8 @@ void cargarListaSolicitud(t_list *solicitud) {
 	t_list* pokemonesList = list_create();
 	cargarPokemonesExistentes(pokemonesList);
 
+	pthread_mutex_lock(&setEntrenadoresMutex);
 	for (i = 0; i < list_size(listaDeEntrenadores); i++) {
-		int j;
 		t_entrenador_Asignacion* entrenador = malloc(sizeof(t_entrenador_Asignacion));
 		t_entrenador* entrenadorAux = list_get(listaDeEntrenadores, i);
 		entrenador->entrenador = entrenadorAux->simbolo;
@@ -1383,6 +1418,7 @@ void cargarListaSolicitud(t_list *solicitud) {
 
 		list_add(solicitud,entrenador);
 	}
+	pthread_mutex_unlock(&setEntrenadoresMutex);
 }
 
 void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList) {
@@ -1403,6 +1439,7 @@ void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList) {
 void cargarEntrenadores(t_list *entrenadores) {
 	int i;
 
+	pthread_mutex_lock(&setEntrenadoresMutex);
 	for (i = 0; i < list_size(listaDeEntrenadores); i++) {
 		t_entrenador* entrenadorAux = list_get(listaDeEntrenadores, i);
 
@@ -1411,21 +1448,20 @@ void cargarEntrenadores(t_list *entrenadores) {
 			list_add(entrenadores, &entrenador);
 		}
 	}
+	pthread_mutex_unlock(&setEntrenadoresMutex);
 
 }
 
-void quitarEntrenadoresSinAsignacion(t_list *asignacion,
-		t_list *entrenadoresNoBloqueados) {
-	t_list* idEntrenadorFuera;
+void quitarEntrenadoresSinAsignacion(t_list *asignacion,t_list *entrenadoresNoBloqueados) {
 	int flag;
 	int i;
+
 	for (i = 0; i < list_size(asignacion); i++) {
 		flag = 0;
 		int j;
 		t_entrenador_Asignacion* entrenadorAux = list_get(asignacion, i);
 		for (j = 0; j < list_size(entrenadorAux->pokemonesAsignados); j++) {
-			t_pokemones_Asignacion* auxPok = list_get(
-					entrenadorAux->pokemonesAsignados, j);
+			t_pokemones_Asignacion* auxPok = list_get(entrenadorAux->pokemonesAsignados, j);
 			if (auxPok->cantidad > 0) {
 				flag = 1;
 			}
@@ -1435,12 +1471,11 @@ void quitarEntrenadoresSinAsignacion(t_list *asignacion,
 		}
 
 		void _destroyElement(char entrenador) {
-			free(entrenador);
+			free(&entrenador);
 		}
 
 		if (flag == 0) {
-			list_remove_and_destroy_by_condition(entrenadoresNoBloqueados,
-					(void *) _funcBuscarEntrenador, (void *) _destroyElement);
+			list_remove_and_destroy_by_condition(entrenadoresNoBloqueados,(void *) _funcBuscarEntrenador, (void *) _destroyElement);
 		}
 	}
 }
@@ -1448,6 +1483,7 @@ void quitarEntrenadoresSinAsignacion(t_list *asignacion,
 void cargarPokemonesExistentes(t_list *pokemonesList) {
 	int i;
 
+	pthread_mutex_lock(&listaDePokenestMutex);
 	for (i = 0; i < list_size(listaDePokenest); i++) {
 
 		t_pokenest* pokenest = list_get(listaDePokenest, i);
@@ -1460,20 +1496,21 @@ void cargarPokemonesExistentes(t_list *pokemonesList) {
 			}
 
 			//Determino si el Pokemon es un nuevo pokemon o ya exisita.
-			t_pokemones *recursoDisponible = list_find(pokemonesList,
-					(void *) _funcBuscarPokemon);
+			t_pokemones *recursoDisponible = list_find(pokemonesList,(void *) _funcBuscarPokemon);
 
 			if (recursoDisponible == NULL) {
 				list_add(pokemonesList, recursoDisponible);
 			}
 		}
 	}
+	pthread_mutex_unlock(&listaDePokenestMutex);
 
 }
 
 void cargarCantidadPokemonesExistentes(t_list *pokemonesList) {
 	int i;
 
+	pthread_mutex_lock(&listaDePokenestMutex);
 	for (i = 0; i < list_size(listaDePokenest); i++) {
 
 		t_pokenest* pokenest = list_get(listaDePokenest, i);
@@ -1481,8 +1518,7 @@ void cargarCantidadPokemonesExistentes(t_list *pokemonesList) {
 		for (j = 0; j < list_size(pokenest->listaDePokemones); j++) {
 			t_pokemones* pokemon = list_get(pokenest->listaDePokemones, j);
 
-			t_pokemones_Asignacion* pokAux = malloc(
-					sizeof(t_pokemones_Asignacion));
+			t_pokemones_Asignacion* pokAux = malloc(sizeof(t_pokemones_Asignacion));
 			pokAux->pokemon_id = pokemon->id;
 			pokAux->cantidad = 1;
 
@@ -1491,17 +1527,16 @@ void cargarCantidadPokemonesExistentes(t_list *pokemonesList) {
 			}
 
 			//Determino si el Pokemon es un nuevo pokemon o ya exisita.
-			t_pokemones_Asignacion *recursoDisponible = list_find(pokemonesList,
-					(void *) _funcBuscarPokemon);
+			t_pokemones_Asignacion *recursoDisponible = list_find(pokemonesList,(void *) _funcBuscarPokemon);
 
 			if (recursoDisponible == NULL) {
-
 				list_add(pokemonesList, pokAux);
 			} else {
 				recursoDisponible->cantidad++;
 			}
 		}
 	}
+	pthread_mutex_unlock(&listaDePokenestMutex);
 
 }
 
