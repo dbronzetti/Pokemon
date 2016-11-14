@@ -6,6 +6,8 @@
 
 #include "PokeDex_Servidor.h"
 //joel
+pthread_mutex_t mutexG;
+
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
@@ -21,7 +23,7 @@ int main(int argc, char **argv) {
 	obtenerBitmap();
     obtenerTablaDeArchivos();
     obtenerTablaDeAsignacion();
-
+    pthread_mutex_init(&mutexG, NULL);
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -46,6 +48,7 @@ int main(int argc, char **argv) {
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 
 	pthread_join(serverThread, NULL);
+	pthread_mutex_destroy(&mutexG);
 
 	return EXIT_SUCCESS;
 
@@ -191,12 +194,11 @@ void processMessageReceived(void *parameter){
 
 	t_list* lista = list_create();
 	enum_FUSEOperations *FUSEOperation = malloc(sizeof(enum_FUSEOperations));
-	/*t_list* lista2 = list_create();
-	osada_file *tablaDeArchivo2= malloc(64);*/
+
 	while(1){
 		//0) Receive FUSE Operation
 		int receivedBytes = receiveMessage(&serverData->socketClient, FUSEOperation, sizeof(enum_FUSEOperations));
-
+		pthread_mutex_lock(&mutexG);
 		if ( receivedBytes > 0 ){
 
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",*FUSEOperation);
@@ -572,6 +574,7 @@ void processMessageReceived(void *parameter){
 			free(serverData);
 			break;
 		}
+		 pthread_mutex_unlock(&mutexG);
 	}
 	free(FUSEOperation);
 }
