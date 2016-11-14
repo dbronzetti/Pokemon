@@ -303,6 +303,33 @@ osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
 	return posicion;
 }
 
+osada_file buscarElArchivo(char *nombre, uint16_t parent_directory){
+	printf("******************************** ENTRO EN buscarElArchivo  ******************************** \n");
+	int pos=0;
+	osada_block_pointer posicion = 0;
+	char *file_name = strrchr (nombre, '/') + 1;
+	printf("file_name: %s\n", file_name);
+
+	for (pos=0; pos <= 2047; pos++){
+		char *nac;
+		char *n;
+		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
+		n = string_duplicate(file_name);
+		string_trim(&nac);
+		string_trim(&n);
+		printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
+
+		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
+			printf("******************************* LO ENCONTRO! ******************************* \n");
+			break;
+		}else if(TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) != 0 && pos == 2047){
+			printf("******************************* NO LO ENCONTRO! ******************************* \n");
+
+		}
+	}
+
+	return TABLA_DE_ARCHIVOS[pos];
+}
 void borrarBloqueDelBitmap(int bloque){
 
 	if(bitarray_test_bit(BITMAP, bloque) == 1){
@@ -538,7 +565,7 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantidadBloques){
 	int i = 0;
 
 	printf("HEADER->fs_blocks:  %i\n",HEADER->fs_blocks);
-	for (i=0; i < 163840; i++){
+	for (i=0; i < HEADER->fs_blocks; i++){
 
 		if(bitarray_test_bit(BITMAP, i) == 0){
 			list_add(listDeBloques, i);
@@ -559,17 +586,11 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantidadBloques){
 	return listDeBloques;
 }
 
-void escribirElBitmap(int bloques){
-
-}
 
 void escribirTablaDeAsignacion(int pos, int bloqueSiguiente){
 	ARRAY_TABLA_ASIGNACION[pos] = bloqueSiguiente;
 }
 
-void escribirBloquesDeDatos(){
-
-}
 
 void _interarBloquesQueSeranAsignados(int bloque,int hola){
 	printf("el proximo: %i\n", bloque);
@@ -712,10 +733,13 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 		cantidadDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanio);
 		printf("cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
 
+
 		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
+
 		guardarEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles);
 		guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
 		escribirEnLaTablaDeArchivos(parent_directory, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
+
 	}
 
 	printf("************************ FIN CREAR UN ARCHIVO ************************\n");
