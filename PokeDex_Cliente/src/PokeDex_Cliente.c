@@ -9,6 +9,7 @@
 static int posDelaTablaDeArchivos = -999;
 static int parent_directory = -999;
 static int ESTA_MODIFICANDO = 0;
+static int HIZO_TRUNCATE = 0;
 //TODO: TRUNCATE, HAGO LA MAODIFICACION
 //TODO: SIN TRUNCATE, BORRO
 /************************************* FIN GLOBALES *************************************************/
@@ -316,10 +317,19 @@ static int fuse_mkdir(const char* path, mode_t mode){
 
 }
 
-static int fuse_truncate(const char* path)
+
+static int fuse_truncate(const char* path,  char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 //	int resultado = borrarArchivo (path);
 	printf("********************************* fuse_truncate *********************\n");
+	printf("size: %d\n", size);
+	printf("offset: %d\n", offset);
+	printf("buf: %s\n", buf);
+	HIZO_TRUNCATE = 1;
+	//ME FIJO LOS BYTES.
+	//SI ES MAYOR AL ACTUAL, SE LE ASIGNA MAS BLOQUES SI ES NECESARIO
+	//SI ES MAYOR AL ACTUAL,  SE LE ASGINA MENOS BLOQUES SI ES NECESARIO.
+	//SI ES IGUAL AL ACTUAL, NO SE ALTERA NADA.
 	/*
 	log_info(logPokeCliente, "--------------------- fuse_truncate ------------ \n");
 	int resultado = 1;
@@ -359,7 +369,7 @@ static int fuse_truncate(const char* path)
 
 		return resultado;
 		*/
-	return 1;
+	return 0;
 }
 
 static int fuse_unlink(const char* path, int hizoElOpen)
@@ -371,11 +381,12 @@ static int fuse_unlink(const char* path, int hizoElOpen)
 	int exitCode;
 
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
-		if (ESTA_MODIFICANDO){
-			printf("********************************* fuseOPEN | fuse_unlink *********************\n");
-			ESTA_MODIFICANDO = 0;
-
-		}else{
+		if (HIZO_TRUNCATE){
+			printf("********************************* hizo fuseOPEN | HIZO_TRUNCATE | ahora fuse_unlink *********************\n");
+			HIZO_TRUNCATE = 0;
+			return 0;
+		}else if(hizoElOpen != 666){//PARA BORRAR, NO TIENE QUE HACER EL OPEN, NI EL TRUNCATE.
+			printf("HIZO_TRUNCATE: %i\n",HIZO_TRUNCATE);
 			log_info(logPokeCliente, "****************FUSE_UNLINK****************\n");
 			printf("********************************* fuse_unlink *********************\n");
 
@@ -492,10 +503,68 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 	return exitCode;
 }
-
-static int fuse_write(const char* path, const char* buf, size_t size, off_t offset, struct fuse_file_info *fi)
+void modificarElArchivo(){}
+static int fuse_write(const char* path, const char* buf, size_t size,  int truncate)
 {
 	int bytes_escritos = 0;
+	if (HIZO_TRUNCATE ==1){
+		printf("********************************* FUSE_MODIFICAR *********************\n");
+		printf("buf: %s\n", buf);
+		printf("size: %i\n", size);
+		log_info(logPokeCliente, "FUSE_MODIFICAR  - path: %s\n", path);
+			log_info(logPokeCliente, "FUSE_MODIFICAR  - buf: %s\n", buf);
+			log_info(logPokeCliente, "FUSE_MODIFICAR  - size: %i\n", size);
+			int exitCode = EXIT_FAILURE; //DEFAULT Failure
+			//0) Send Fuse Operations
+			enum_FUSEOperations operacion = FUSE_MODIFICAR;
+
+			log_info(logPokeCliente, "FUSE_MODIFICAR -  ENVIO MENSAJE\n");
+			exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+			printf("********************************* sendMessage 1 *********************\n");
+			log_info(logPokeCliente, "FUSE_MODIFICAR -  RECIBIO MENSAJE\n");
+
+			string_append(&path, "\0");
+			log_info(logPokeCliente, "FUSE_MODIFICAR -  &path: %s\n", path);
+			log_info(logPokeCliente, "FUSE_MODIFICAR -  &buf: %s\n", buf);
+			//1) send path length (+1 due to \0)
+			int pathLength = strlen(path) + 1;
+			log_info(logPokeCliente, "FUSE_MODIFICAR -  ENVIO MENSAJE: %i\n",pathLength);
+			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+			log_info(logPokeCliente, "fuse_write - pathLength: %i\n", pathLength);
+			printf("********************************* sendMessage 2 *********************\n");
+			//2) send path
+			exitCode = sendMessage(&socketPokeServer, path , pathLength );
+			log_info(logPokeCliente, "FUSE_MODIFICAR - path: %s\n", path);
+			printf("********************************* sendMessage 3 *********************\n");
+
+			//3) send buffer length (+1 due to \0)
+			int bufferSize = size;
+			exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(int));
+			log_info(logPokeCliente, "FUSE_MODIFICAR - bufferSize: %i\n", bufferSize);
+			printf("********************************* sendMessage \4 *********************\n");
+			//4) send buffer
+			exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
+			printf("********************************* sendMessage 4 *********************\n");
+			log_info(logPokeCliente, "FUSE_MODIFICAR - buffer: %s\n", buf);
+
+			//5) send posDelaTablaDeArchivos
+			exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
+			log_info(logPokeCliente, "FUSE_MODIFICAR - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
+			printf("********************************* sendMessage 5 *********************\n");
+
+			//6) send parent_directory
+			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+			log_info(logPokeCliente, "FUSE_MODIFICAR - parent_directory: %i\n", parent_directory);
+			printf("********************************* sendMessage 6 *********************\n");
+
+			//Receive message size
+			int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
+			log_info(logPokeCliente, "FUSE_MODIFICAR - bytes_escritos: %i\n", bytes_escritos);
+			usleep(500000);
+
+		return 99;
+	}
+
 	printf("********************************* fuse_write *********************\n");
 	//bytes_escritos = enviarArchivo(path,offset);
 	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
@@ -577,6 +646,7 @@ static struct fuse_operations xmp_oper = {
     .write		= fuse_write,
 	.truncate   = fuse_truncate,
 	//.mknod		= fuse_mknod,
+
 
 	#ifdef HAVE_SETXATTR
 		.setxattr	= fuse_setxattr,

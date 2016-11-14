@@ -363,6 +363,9 @@ void processMessageReceived(void *parameter){
 					sendMessage(&serverData->socketClient, &posTablaDeArchivos , sizeof(int));
 					break;
 				}
+				case FUSE_MODIFICAR:{
+					break;
+				}
 				case FUSE_OPEN:{
 					log_info(logPokeDexServer, "-------Processing FUSE_OPEN message");
 					printf("******************* Processing FUSE_OPEN message ****************\n");

@@ -62,7 +62,8 @@ typedef enum{
     FUSE_WRITE,
     FUSE_READ,
 	FUSE_END,
-	FUSE_TRUNCATE
+	FUSE_TRUNCATE,
+	FUSE_MODIFICAR
 } enum_FUSEOperations;
 
 typedef struct{
