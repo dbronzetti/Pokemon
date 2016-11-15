@@ -256,7 +256,7 @@ t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
 	return proximo;
 }
 
-osada_block_pointer devolverBloque(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre){
+osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre){
 	char *nac;
 	char *n;
 	nac = string_duplicate(&tablaDeArchivo.fname);
@@ -284,7 +284,7 @@ osada_block_pointer devolverBloque(osada_file tablaDeArchivo, uint16_t parent_di
 
 
 
-osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
+osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory){
 	printf("******************************** ENTRO EN EL buscarArchivo ******************************** \n");
 	int pos=0;
 	osada_block_pointer posicion = 0;
@@ -293,7 +293,7 @@ osada_block_pointer buscarArchivo(char *nombre, uint16_t parent_directory){
 
 	for (pos=0; pos <= 2047; pos++){
 
-		if ((posicion = devolverBloque(TABLA_DE_ARCHIVOS[pos], parent_directory,  file_name)) != -666){
+		if ((posicion = comprobarElNombreDelArchivo(TABLA_DE_ARCHIVOS[pos], parent_directory,  file_name)) != -666){
 			printf("encontro>! , %i\n", pos);
 			return posicion;
 		};

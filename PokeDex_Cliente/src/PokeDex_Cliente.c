@@ -503,65 +503,69 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 	return exitCode;
 }
-void modificarElArchivo(){}
+void modificarElArchivo(const char* path, const char* buf, size_t size){
+	int bytes_escritos = 0;
+	printf("********************************* FUSE_MODIFICAR *********************\n");
+	printf("buf: %s\n", buf);
+	printf("size: %i\n", size);
+	log_info(logPokeCliente, "FUSE_MODIFICAR  - path: %s\n", path);
+		log_info(logPokeCliente, "FUSE_MODIFICAR  - buf: %s\n", buf);
+		log_info(logPokeCliente, "FUSE_MODIFICAR  - size: %i\n", size);
+		int exitCode = EXIT_FAILURE; //DEFAULT Failure
+		//0) Send Fuse Operations
+		enum_FUSEOperations operacion = FUSE_MODIFICAR;
+
+		log_info(logPokeCliente, "FUSE_MODIFICAR -  ENVIO MENSAJE\n");
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+		printf("********************************* sendMessage 1 *********************\n");
+		log_info(logPokeCliente, "FUSE_MODIFICAR -  RECIBIO MENSAJE\n");
+
+		string_append(&path, "\0");
+		log_info(logPokeCliente, "FUSE_MODIFICAR -  &path: %s\n", path);
+		log_info(logPokeCliente, "FUSE_MODIFICAR -  &buf: %s\n", buf);
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		log_info(logPokeCliente, "FUSE_MODIFICAR -  ENVIO MENSAJE: %i\n",pathLength);
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_write - pathLength: %i\n", pathLength);
+		printf("********************************* sendMessage 2 *********************\n");
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , pathLength );
+		log_info(logPokeCliente, "FUSE_MODIFICAR - path: %s\n", path);
+		printf("********************************* sendMessage 3 *********************\n");
+
+		//3) send buffer length (+1 due to \0)
+		int bufferSize = size;
+		exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(int));
+		log_info(logPokeCliente, "FUSE_MODIFICAR - bufferSize: %i\n", bufferSize);
+		printf("********************************* sendMessage \4 *********************\n");
+		//4) send buffer
+		exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
+		printf("********************************* sendMessage 4 *********************\n");
+		log_info(logPokeCliente, "FUSE_MODIFICAR - buffer: %s\n", buf);
+
+		//5) send posDelaTablaDeArchivos
+		exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
+		log_info(logPokeCliente, "FUSE_MODIFICAR - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
+		printf("********************************* sendMessage 5 *********************\n");
+
+		//6) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		log_info(logPokeCliente, "FUSE_MODIFICAR - parent_directory: %i\n", parent_directory);
+		printf("********************************* sendMessage 6 *********************\n");
+
+		//Receive message size
+		int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
+		log_info(logPokeCliente, "FUSE_MODIFICAR - bytes_escritos: %i\n", bytes_escritos);
+		usleep(500000);
+
+}
+
 static int fuse_write(const char* path, const char* buf, size_t size,  int truncate)
 {
 	int bytes_escritos = 0;
-	if (HIZO_TRUNCATE ==1){
-		printf("********************************* FUSE_MODIFICAR *********************\n");
-		printf("buf: %s\n", buf);
-		printf("size: %i\n", size);
-		log_info(logPokeCliente, "FUSE_MODIFICAR  - path: %s\n", path);
-			log_info(logPokeCliente, "FUSE_MODIFICAR  - buf: %s\n", buf);
-			log_info(logPokeCliente, "FUSE_MODIFICAR  - size: %i\n", size);
-			int exitCode = EXIT_FAILURE; //DEFAULT Failure
-			//0) Send Fuse Operations
-			enum_FUSEOperations operacion = FUSE_MODIFICAR;
-
-			log_info(logPokeCliente, "FUSE_MODIFICAR -  ENVIO MENSAJE\n");
-			exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
-			printf("********************************* sendMessage 1 *********************\n");
-			log_info(logPokeCliente, "FUSE_MODIFICAR -  RECIBIO MENSAJE\n");
-
-			string_append(&path, "\0");
-			log_info(logPokeCliente, "FUSE_MODIFICAR -  &path: %s\n", path);
-			log_info(logPokeCliente, "FUSE_MODIFICAR -  &buf: %s\n", buf);
-			//1) send path length (+1 due to \0)
-			int pathLength = strlen(path) + 1;
-			log_info(logPokeCliente, "FUSE_MODIFICAR -  ENVIO MENSAJE: %i\n",pathLength);
-			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-			log_info(logPokeCliente, "fuse_write - pathLength: %i\n", pathLength);
-			printf("********************************* sendMessage 2 *********************\n");
-			//2) send path
-			exitCode = sendMessage(&socketPokeServer, path , pathLength );
-			log_info(logPokeCliente, "FUSE_MODIFICAR - path: %s\n", path);
-			printf("********************************* sendMessage 3 *********************\n");
-
-			//3) send buffer length (+1 due to \0)
-			int bufferSize = size;
-			exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(int));
-			log_info(logPokeCliente, "FUSE_MODIFICAR - bufferSize: %i\n", bufferSize);
-			printf("********************************* sendMessage \4 *********************\n");
-			//4) send buffer
-			exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
-			printf("********************************* sendMessage 4 *********************\n");
-			log_info(logPokeCliente, "FUSE_MODIFICAR - buffer: %s\n", buf);
-
-			//5) send posDelaTablaDeArchivos
-			exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
-			log_info(logPokeCliente, "FUSE_MODIFICAR - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
-			printf("********************************* sendMessage 5 *********************\n");
-
-			//6) send parent_directory
-			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
-			log_info(logPokeCliente, "FUSE_MODIFICAR - parent_directory: %i\n", parent_directory);
-			printf("********************************* sendMessage 6 *********************\n");
-
-			//Receive message size
-			int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
-			log_info(logPokeCliente, "FUSE_MODIFICAR - bytes_escritos: %i\n", bytes_escritos);
-			usleep(500000);
-
+	if (HIZO_TRUNCATE == 1){
+		modificarElArchivo(path, buf, size);
 		return 99;
 	}
 
