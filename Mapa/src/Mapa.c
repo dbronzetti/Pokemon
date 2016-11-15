@@ -1174,9 +1174,11 @@ void detectarDeadlocks() {
 	while (1) {
 		sleep(metadataMapa.tiempoChequeoDeadlock);
 
+		log_info(logMapa,"Checking DEADLOCKS.....");
+
 		pthread_mutex_lock(&colaDeBloqueadosMutex);
 		int tamanioColaBloqueados = queue_size(colaDeBloqueados);
-		pthread_mutex_lock(&colaDeBloqueadosMutex);
+		pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
 		if (tamanioColaBloqueados > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
 
