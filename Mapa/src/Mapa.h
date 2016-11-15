@@ -124,7 +124,7 @@ void cargarEntrenadores(t_list *entrenadores);
 void quitarEntrenadoresSinAsignacion(t_list *asignacion,t_list *entrenadoresNoBloqueados);
 void cargarPokemonesExistentes(t_list *pokemonesList) ;
 void cargarCantidadPokemonesExistentes(t_list *pokemonesList);
-t_list* detectarInterbloque();
+t_list* detectarInterbloqueo();
 bool existePokenest(char idPokemon);
 
 typedef struct {
