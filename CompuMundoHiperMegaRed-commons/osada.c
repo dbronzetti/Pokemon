@@ -686,10 +686,12 @@ void guardarBloqueDeDatos(t_list* listado, char *contenido){
 
 		if(i == (cantidadDeBloques - 1)){
 			//ultimo bloque o contenido < 64
-			//memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], strlen(contenido) );
-			strncpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], strlen(contenido));
-			bloqueConDatos[strlen(contenido) + 1] = string_repeat("\0", OSADA_BLOCK_SIZE - strlen(contenido));
-			printf("ultimo bloqueConDatos -%i: %s\n",j, bloqueConDatos);
+			strncpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
+			printf("ultimo bloqueConDatos1 -%i: %s\n",j, bloqueConDatos);
+			//bloqueConDatos[strlen(contenido) + 1] = string_repeat("0", OSADA_BLOCK_SIZE - strlen(contenido));
+			//bloqueConDatos[strlen(contenido) + 1] = string_repeat("\0", OSADA_BLOCK_SIZE - strlen(contenido));
+			printf("ultimo bloqueConDatos2 -%i: %s\n",j, bloqueConDatos);
+			printf("ultimo bloqueConDatos len -%i: %i\n",j, strlen(bloqueConDatos));
 			j++;
 		}else{
 
@@ -697,6 +699,7 @@ void guardarBloqueDeDatos(t_list* listado, char *contenido){
 			strncpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
 			//bloqueConDatos[OSADA_BLOCK_SIZE + 1]= '\0';
 			printf("contenido bloque - %i: %s\n", j, bloqueConDatos);
+			printf("contenido bloque len -%i: %i\n",j, strlen(bloqueConDatos));
 			j++;
 		}
 
@@ -840,6 +843,11 @@ void guardarLaMismaCantidadDeBloques(int cantidadDeBloquesParaGrabar,
 				posDelaTablaDeArchivos);
 	}
 }
+void recorrerLaListaYBorrarLosBloquesDelBitMap(int bloque){
+
+}
+
+
 
 void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_t parent_directory){
 	int cantidadNuevaDeBloquesParaGrabar = 0;
@@ -866,7 +874,7 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 					conjuntoDeBloquesDelArchivo, contenido, fname);
 
 			if (conjuntoDeBloquesDelArchivo->elements_count <  cantidadNuevaDeBloquesParaGrabar){
-				//SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO
+				//*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n
 				char *nuevoContenido = string_new();
 				printf("*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
 				listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadNuevaDeBloquesParaGrabar);
@@ -881,15 +889,26 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 			Nuevo: 129 -3bloques
 			Desde: 129-65=64
 			*/
-			/*
-			listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
-			guardarEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles);
-			guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
-			escribirEnLaTablaDeArchivos(parent_directory, tamanioNuevo, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
-			*/
 
 		}else{
+			printf("************ HAY MENOS DATOS PARA AGREGAR\n");
+			cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
 
+			guardarLaMismaCantidadDeBloques(cantidadNuevaDeBloquesParaGrabar,
+					parent_directory, tamanioNuevo, posDelaTablaDeArchivos,
+					conjuntoDeBloquesDelArchivo, contenido, fname);
+
+			if (conjuntoDeBloquesDelArchivo->elements_count > cantidadNuevaDeBloquesParaGrabar){
+				//*SI ES MENOR LA CANTIDAD DE BLOQUES, ENTONCES SACO  LOS VIEJO BLOQUES CON EL NUEVO CONTENIDO\n
+				char *nuevoContenido = string_new();
+				printf("*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
+				//borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
+				//modificarEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, conjuntoDeBloquesDelArchivo);
+				//nuevoContenido = string_substring(contenido, elArchivo.file_size, tamanioNuevo);
+				//printf("nuevoContenido: %s\n", nuevoContenido);
+				//guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, nuevoContenido);
+				//modificarEnLaTablaDeArchivos(parent_directory, tamanioNuevo, fname, list_get(conjuntoDeBloquesDelArchivo, 0), posDelaTablaDeArchivos);
+			}
 		}
 
 	}
