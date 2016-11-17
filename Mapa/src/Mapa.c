@@ -84,9 +84,18 @@ int main(int argc, char **argv) {
 	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
-	if(strcmp(metadataMapa.algoritmo, "RR"))
-	pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
-	else pthread_create(&planificador, NULL, (void*) planificarRR, NULL);
+
+	if(strcmp(metadataMapa.algoritmo, "RR")){
+		pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
+		planificandoRR = 0;
+	}
+
+	else {
+		pthread_create(&planificador, NULL, (void*) planificarRR, NULL);
+		planificandoRR = 1;
+
+	}
+
 	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
 	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
 
@@ -647,6 +656,7 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	nuevoEntrenador->seEstaMoviendo = 0;
 	nuevoEntrenador->seMovioEnX = 0;
 	nuevoEntrenador->estaBloqueado = 0;
+	nuevoEntrenador->estaEnTurno = 0;
 
 	//In function CrearPersonaje there is a list_add to items
 	pthread_mutex_lock(&itemsMutex);
@@ -658,14 +668,13 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	list_add(listaDeEntrenadores, nuevoEntrenador);
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 
-	pthread_mutex_lock(&colaDeListosMutex);
-	queue_push(colaDeListos, nuevoEntrenador);
-	pthread_mutex_unlock(&colaDeListosMutex);
-
 	pthread_mutex_lock(&itemsMutex);
 	nivel_gui_dibujar(items, mapa);
 	pthread_mutex_unlock(&itemsMutex);
 
+	pthread_mutex_lock(&colaDeListosMutex);
+	queue_push(colaDeListos, nuevoEntrenador);
+	pthread_mutex_unlock(&colaDeListosMutex);
 }
 
 void eliminarEntrenador(char simbolo) {
@@ -695,6 +704,8 @@ void eliminarEntrenador(char simbolo) {
 }
 
 void planificarRR() {
+
+	log_info(logMapa,"ARRANCO ROUND ROBBIN");
 
 	while (1) {
 
@@ -755,7 +766,7 @@ void planificarRR() {
 						entrenador->estaEnTurno = 0;
 						queue_push(colaDeListos, entrenador); //y aca lo mandamos a la cola de listos.
 						pthread_mutex_unlock(&colaDeListosMutex);
-						pthread_mutex_unlock(&rafagaMutex);
+
 					} else {
 						log_info(logMapa,
 								"End of the turn, trainer: %c goes to colaDeBloqueados",
@@ -764,12 +775,11 @@ void planificarRR() {
 						entrenador->estaEnTurno = 0;
 						queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
 						pthread_mutex_unlock(&colaDeBloqueadosMutex);
-						pthread_mutex_unlock(&rafagaMutex);
 					}
 				}
 
 			}
-
+			pthread_mutex_unlock(&rafagaMutex);
 //			pthread_mutex_lock(&colaDeBloqueadosMutex);
 //			pthread_mutex_lock(&colaDeListosMutex);
 //			if (queue_size(colaDeBloqueados) != 0
@@ -842,6 +852,7 @@ char* convertirPosicionesAString(int posX, int posY) {
 }
 
 void planificarSRDF() {
+	log_info(logMapa,"Arranca SRDF");
 	while (1) {
 
 		pthread_mutex_lock(&colaDeListosMutex);
@@ -851,7 +862,7 @@ void planificarSRDF() {
 		if (tamanioColaListos) {
 			pthread_mutex_lock(&rafagaMutex);
 			ordenarColaEntrenadores();
-			pthread_mutex_lock(&rafagaMutex);
+			pthread_mutex_unlock(&rafagaMutex);
 
 			pthread_mutex_lock(&rafagaMutex);
 			pthread_mutex_lock(&colaDeListosMutex);
@@ -866,15 +877,15 @@ void planificarSRDF() {
 				pthread_mutex_lock(&colaDeListosMutex);
 				queue_push(colaDeListos, entrenador);
 				pthread_mutex_unlock(&colaDeListosMutex);
-				pthread_mutex_lock(&rafagaMutex);
 			}else{
 				pthread_mutex_lock(&colaDeBloqueadosMutex);
 				queue_push(colaDeBloqueados, entrenador);
 				pthread_mutex_unlock(&colaDeBloqueadosMutex);
-				pthread_mutex_lock(&rafagaMutex);
+
 			}
 
 		}
+		pthread_mutex_unlock(&rafagaMutex);
 	}
 }
 
@@ -1669,7 +1680,8 @@ void recibirSignal() {
 
 void switchear(){
 	pthread_mutex_lock(&rafagaMutex);
-	log_info(logMapa, "Recibi la final para switchear");
+	log_info(logMapa, "Recibi la signal para switchear");
+
 	if(planificandoRR){
 		pthread_cancel(planificador);
 		pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
@@ -1677,11 +1689,13 @@ void switchear(){
 		log_info(logMapa,"Planning algorithm changes to SRDF");
 	}
 
+
 	else {
 		pthread_cancel(planificador);
-		pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
+		pthread_create(&planificador, NULL, (void*) planificarRR, NULL);
 		planificandoRR = 1;
 		log_info(logMapa,"Planning algorithm changes to RR");
 	}
-	 pthread_mutex_unlock(&rafagaMutex);
+
+	pthread_mutex_unlock(&rafagaMutex);
 }
