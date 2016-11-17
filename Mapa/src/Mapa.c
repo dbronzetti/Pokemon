@@ -83,12 +83,14 @@ int main(int argc, char **argv) {
 	dibujarMapa();
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
-	pthread_create(&planificador, NULL, (void*) planificar, NULL);
-	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
+	if(strcmp(metadataMapa.algoritmo, "RR"))
+	pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
+	else pthread_create(&planificador, NULL, (void*) planificarRR, NULL);
+//	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
 
 	pthread_join(serverThread, NULL);
 	pthread_join(planificador, NULL);
-	pthread_join(detectorDeadlocks, NULL);
+//	pthread_join(detectorDeadlocks, NULL);
 	return 0;
 
 }
@@ -688,7 +690,7 @@ void eliminarEntrenador(char simbolo) {
 
 }
 
-void planificar() {
+void planificarRR() {
 
 	while (1) {
 
@@ -838,14 +840,13 @@ void planificarSRDF() {
 		pthread_mutex_lock(&colaDeListosMutex);
 		int tamanioColaListos = queue_size(colaDeListos);
 		pthread_mutex_unlock(&colaDeListosMutex);
+
 		if (tamanioColaListos) {
 			ordenarColaEntrenadores();
 
 			pthread_mutex_lock(&colaDeListosMutex);
 			t_entrenador* entrenador = queue_pop(colaDeListos);
 			pthread_mutex_unlock(&colaDeListosMutex);
-
-			//TODO: CORTAR ACCION CON X TIEMPO DE NO CONTESTAR!!!!
 
 			sleep(3);
 
@@ -860,7 +861,6 @@ void planificarSRDF() {
 				queue_push(colaDeBloqueados, entrenador);
 				pthread_mutex_unlock(&colaDeBloqueadosMutex);
 			}
-
 
 		}
 	}
@@ -882,6 +882,7 @@ void ordenarColaEntrenadores() {
 		pthread_mutex_unlock(&colaDeListosMutex);
 		calcularCantidadMovimientos(entrenadorAux);
 		list_add(listAuxOrdenar, entrenadorAux);
+		tamanioColaListos--; //le resto uno al tamanio para que no quede en bucle infinito
 	}
 
 	bool entrenador_menor(t_entrenador *entrenadorA, t_entrenador *entrenadorB) {

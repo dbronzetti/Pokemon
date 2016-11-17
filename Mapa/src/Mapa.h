@@ -105,7 +105,7 @@ void dibujarMapa();
 void crearEntrenadorYDibujar(char simbolo, int socket);
 bool igualarACaracterCondicion(void* paramatrer);
 void eliminarEntrenador(char simbolo);
-void planificar();
+void planificarRR();
 char* convertirPosicionesAString(int posX, int posY);
 void calcularCantidadMovimientos(t_entrenador* entrenador);
 void ordenarColaEntrenadores();
