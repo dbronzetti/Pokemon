@@ -88,12 +88,12 @@ int main(int argc, char **argv) {
 	pthread_create(&planificador, NULL, (void*) planificarSRDF, NULL);
 	else pthread_create(&planificador, NULL, (void*) planificarRR, NULL);
 	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
-//	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
+	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
 
 	pthread_join(serverThread, NULL);
 	pthread_join(planificador, NULL);
 	pthread_join(hiloSignal, NULL);
-//	pthread_join(detectorDeadlocks, NULL);
+	pthread_join(detectorDeadlocks, NULL);
 	return 0;
 
 }
