@@ -25,6 +25,7 @@
 #include <time.h>
 #include <pkmn/battle.h>
 #include <pkmn/factory.h>
+#include <signal.h>
 
 t_log* logMapa;
 char *mapa;
@@ -34,6 +35,7 @@ struct dirent *ditPokenest;
 DIR *dipPokemones;
 struct dirent *ditPokemones;
 int semaforo_wait;
+int planificandoRR; //flag que dice si estamos planificando en RR (1 para RR, 0 para srdf).
 t_list* listaDePokenest;
 t_list* items;
 t_list* listaDeEntrenadores;
@@ -48,6 +50,8 @@ pthread_mutex_t itemsMutex;
 pthread_mutex_t listaDePokenestMutex;
 pthread_mutex_t setRecibirMsj;
 pthread_mutex_t borradoDeEntrenadores;
+pthread_mutex_t rafagaMutex; //se bloquea cuando entra en rafaga para que no se pueda switchear
+pthread_t planificador;
 
 // Estructuras
 typedef struct {
@@ -126,6 +130,8 @@ void cargarPokemonesExistentes(t_list *pokemonesList) ;
 void cargarCantidadPokemonesExistentes(t_list *pokemonesList);
 t_list* detectarInterbloqueo();
 bool existePokenest(char idPokemon);
+void recibirSignal();
+void switchear();
 
 typedef struct {
 	char entrenador;
