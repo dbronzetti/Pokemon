@@ -868,6 +868,12 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 		printf("El archivo size: %i\n", elArchivo.file_size);
 
 		osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
+
+		if (posicion == -999){
+			crearUnArchivo(contenido, tamanioNuevo, fname, posDelaTablaDeArchivos, parent_directory);
+			return;
+		}
+
 		t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 
 		if (hayNuevosDatosParaAgregar(elArchivo.file_size, tamanioNuevo)){

@@ -154,6 +154,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 					stbuf->st_mode = S_IFREG | 0777;
 					stbuf->st_nlink = 1;
 					stbuf->st_size = nodo->file_size;
+					//stbuf->st_atim
 					parent_directory = nodo->parent_directory;
 
 				}
@@ -248,7 +249,8 @@ static int fuse_rmdir(const char* path){
 
 static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * fi){
 	int exitCode = -1; //DEFAULT Failure
-	log_info(logPokeCliente, "****************fuse_create****************\n");
+	log_info(logPokeCliente, "**************** fuse_create ****************\n");
+	printf("********************************* fuse_create *********************\n");
 	// JOEL: NO DEBE GUARDARSE LOS  .swx y swp
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		//0) Send Fuse Operations
@@ -557,6 +559,7 @@ void modificarElArchivo(const char* path, const char* buf, size_t size){
 		//Receive message size
 		int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
 		log_info(logPokeCliente, "FUSE_MODIFICAR - bytes_escritos: %i\n", bytes_escritos);
+		HIZO_TRUNCATE = 0;
 		usleep(500000);
 
 }
@@ -566,7 +569,7 @@ static int fuse_write(const char* path, const char* buf, size_t size,  int trunc
 	int bytes_escritos = 0;
 	if (HIZO_TRUNCATE == 1){
 		modificarElArchivo(path, buf, size);
-		return 99;
+		return size;
 	}
 
 	printf("********************************* fuse_write *********************\n");
@@ -641,12 +644,13 @@ static int fuse_utimens(const char * path, const struct timespec ts[2]){
 }
 
 
-
+/*
 static int fuse_utime (const char *, struct utimbuf *){
 
 	return 1;
 
 }
+*/
 
 /*
 static int fuse_utime(const char * path, const struct timespec ts[2]) {
@@ -702,7 +706,6 @@ static struct fuse_operations xmp_oper = {
     .open		= fuse_open,
     .read		= fuse_read,
     .write		= fuse_write,
-	.utime 		= fuse_utime,
 	.truncate   = fuse_truncate,
 	.utimens    = fuse_utimens,
 	//.mknod		= fuse_mknod,
