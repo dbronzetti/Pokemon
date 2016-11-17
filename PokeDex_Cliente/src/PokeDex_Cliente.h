@@ -30,8 +30,6 @@ t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation);
 
 //Librerias y estructuras pra el FUSE
 #include <fuse/fuse.h>
-#include <fuse/fuse_common.h>
-#include <fuse/fuse_compat.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <sys/stat.h>

@@ -764,7 +764,7 @@ t_dictionary *armarDicDeTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesD
 	return dictionary;
 }
 
-void modificarEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles, t_list* conjuntoDeBloquesDelArchivoViejo){
+void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles, t_list* conjuntoDeBloquesDelArchivoViejo){
 /*	int bloquePos = list_get(conjuntoDeBloquesDelArchivoViejo,  list_size(conjuntoDeBloquesDelArchivoViejo));
 	int bloquePos2 = list_get(conjuntoDeBloquesDelArchivoViejo,  1);
 	int bloqueSiguiente =list_get(listadoLosIndicesDeLosBloquesDisponibles,  0);
@@ -800,6 +800,9 @@ void modificarEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponi
 
 		if(bloqueSig==0){
 			bloqueSig =-1;
+			sprintf(bloquePosStr, "%d", bloquePos);
+			dictionary_put(dictionary, bloquePosStr, bloqueSig);
+			break;
 		}
 
 		sprintf(bloquePosStr, "%d", bloquePos);
@@ -856,6 +859,8 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 	int posDelaTablaDeArchivos = 0;
 	//TODO: ESTE IF NO ES del todo correcto
 
+	int i=0;
+
 	if(elTamanioDelArchivoEntraEnElOsada(tamanioNuevo) && noEsVacio(tamanioNuevo)){
 		printf("Tamanio: %i\n", tamanioNuevo);
 		osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
@@ -878,7 +883,7 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 				char *nuevoContenido = string_new();
 				printf("*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
 				listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadNuevaDeBloquesParaGrabar);
-				modificarEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, conjuntoDeBloquesDelArchivo);
+				modificarAgregandoBloquesEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, conjuntoDeBloquesDelArchivo);
 				nuevoContenido = string_substring(contenido, elArchivo.file_size, tamanioNuevo - elArchivo.file_size);
 				printf("nuevoContenido: %s\n", nuevoContenido);
 				guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, nuevoContenido);
@@ -902,12 +907,31 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 				//*SI ES MENOR LA CANTIDAD DE BLOQUES, ENTONCES SACO  LOS VIEJO BLOQUES CON EL NUEVO CONTENIDO\n
 				char *nuevoContenido = string_new();
 				printf("*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
-				//borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
-				//modificarEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, conjuntoDeBloquesDelArchivo);
+				 t_list* sublist = list_take(conjuntoDeBloquesDelArchivo, cantidadNuevaDeBloquesParaGrabar);
+				borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
+				list_add_in_index(sublist, cantidadNuevaDeBloquesParaGrabar, 0);
+
+				/*
+				for(i=0; i <conjuntoDeBloquesDelArchivo->elements_count; i++ ){
+					printf("conjuntoDeBloquesDelArchivo - pos: %i\n", list_get(conjuntoDeBloquesDelArchivo, i));
+				}
+
+				for(i=0; i < sublist->elements_count; i++ ){
+					printf("sublist - pos: %i\n", list_get(sublist, i));
+				}
+
+
+				int posicionDondeTieneQueHaberUnCero = conjuntoDeBloquesDelArchivo->elements_count - cantidadNuevaDeBloquesParaGrabar;
+					for(i=0; i < sublist->elements_count; i++ ){
+					printf("sublist - pos: %i\n", list_get(sublist, i));
+				}
+				*/
+
+				guardarEnLaTablaDeAsignacion(sublist);
 				//nuevoContenido = string_substring(contenido, elArchivo.file_size, tamanioNuevo);
 				//printf("nuevoContenido: %s\n", nuevoContenido);
 				//guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, nuevoContenido);
-				//modificarEnLaTablaDeArchivos(parent_directory, tamanioNuevo, fname, list_get(conjuntoDeBloquesDelArchivo, 0), posDelaTablaDeArchivos);
+				modificarEnLaTablaDeArchivos(parent_directory, tamanioNuevo, fname, list_get(conjuntoDeBloquesDelArchivo, 0), posDelaTablaDeArchivos);
 			}
 		}
 

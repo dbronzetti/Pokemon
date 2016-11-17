@@ -635,6 +635,10 @@ static int fuse_rename (const char *oldname, const char *newName){
 	return 1;
 
 }
+static int fuse_utimens(const char * path, const struct timespec ts[2]){
+	printf("***************** fuse_utimens - ts[1].tv_nsec: %i***********************\n", ts[1].tv_nsec);
+	return 0;
+}
 
 static struct fuse_operations xmp_oper = {
     .init       = fuse_init,
@@ -649,15 +653,8 @@ static struct fuse_operations xmp_oper = {
     .read		= fuse_read,
     .write		= fuse_write,
 	.truncate   = fuse_truncate,
+	.utimens    = fuse_utimens,
 	//.mknod		= fuse_mknod,
-
-
-	#ifdef HAVE_SETXATTR
-		.setxattr	= fuse_setxattr,
-		.getxattr	= fuse_getxattr,
-		.listxattr	= fuse_listxattr,
-		.removexattr= fuse_removexattr,
-	#endif
 };
 
 
