@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
 	//"large.txt" - basic
 	//archivo - basic
 	//special.mp4 - 138
-	osada_block_pointer posicion = buscarArchivo("/test1", 65535);
+	osada_block_pointer posicion = devolverOsadaBlockPointer("/test1", 65535);
 	//printf("posicion del primer bloque: %i\n", posicion);
 
 	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
