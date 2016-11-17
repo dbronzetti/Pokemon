@@ -16,7 +16,7 @@ static int HIZO_TRUNCATE = 0;
 
 
 int crearDirectorio(char *path){
-	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+			int exitCode = EXIT_FAILURE; //DEFAULT Failure
 			int resultado = 1;
 			t_list *listaBloques = list_create();
 			enum_FUSEOperations fuseOperation =  FUSE_MKDIR;
@@ -636,6 +636,54 @@ static int fuse_rename (const char *oldname, const char *newName){
 
 }
 
+
+
+static int fuse_utime (const char *, struct utimbuf *){
+
+	return 1;
+
+}
+
+static int fuse_utime(const char * path, const struct timespec ts[2]) {
+		int exitCode = EXIT_FAILURE; //DEFAULT Failure
+		int resultado = 1;
+
+		enum_FUSEOperations fuseOperation =  FUSE_UTIMENS;
+
+		//0) Send Fuse Operations
+		exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
+		log_info(logPokeCliente, "fuseOperation: %d\n", fuseOperation);
+		string_append(&path, "\0");
+
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+
+		log_info(logPokeCliente, "pathLength: %i\n", pathLength);
+
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "path: %s\n", path);
+
+		//Receive element Count
+		int elementCount = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+
+		log_info(logPokeCliente, "elementCount: %i\n", elementCount);
+		if (receivedBytes > 0 && elementCount > 0){
+//			NOTA VEAMOS JUNTOS COMO IMPLEMENTARLO LO QUE HAY QUE OBTENER ES EL
+//			uint32_t lastmod;
+//			int messageSize = elementCount * sizeof(osada_file);
+//			uint32_t *messageRcv = malloc(messageSize);
+//			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+//			resultado = atoi(messageRcv);
+//			log_info(logPokeCliente, "messageRcv: %d\n", resultado);
+		}
+		log_info(logPokeCliente, "***********************************************\n");
+		return resultado;
+
+}
+
 static struct fuse_operations xmp_oper = {
     .init       = fuse_init,
     .getattr	= fuse_getattr,
@@ -648,9 +696,10 @@ static struct fuse_operations xmp_oper = {
     .open		= fuse_open,
     .read		= fuse_read,
     .write		= fuse_write,
+	.utime 		= fuse_utime,
 	.truncate   = fuse_truncate,
 	//.mknod		= fuse_mknod,
-
+	//UTIMENS
 
 	#ifdef HAVE_SETXATTR
 		.setxattr	= fuse_setxattr,
