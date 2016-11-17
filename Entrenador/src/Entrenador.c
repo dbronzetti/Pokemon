@@ -341,6 +341,13 @@ void jugar() {
 				break;
 			}
 
+			case MATAR: { //el mapa mando a matar al entrenador
+				log_info(logEntrenador, "Killing trainer after Map kick");
+				//TODO hacer la logica para descontar una vida y volver a conectarse al mapa para seguir jugando
+
+				break;
+			}
+
 			}
 			turno = SIN_MENSAJE;
 
@@ -357,7 +364,7 @@ t_queue* parsearObjetivos(char** objetivos) {
 
 	int i = 0;
 	t_queue* colaDeObjetivos = queue_create();
-	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee todo el array
+	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee to_do el array
 		char* unObjetivo = objetivos[i];
 
 		queue_push(colaDeObjetivos, unObjetivo);
@@ -440,7 +447,14 @@ void recibirMsjs() {
 				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
-
+			case MATAR: { //msj que envia si fue capturado OK !!
+				log_info(logEntrenador,
+						"The trainer has been killed by the Map");
+				pthread_mutex_lock(&turnoMutex);
+				turno = MATAR;
+				pthread_mutex_unlock(&turnoMutex);
+				break;
+			}
 			default: {
 				log_error(logEntrenador,
 						"Process couldn't connect to SERVER - Not able to connect to server %s. Please check if it's down.\n",
