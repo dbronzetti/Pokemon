@@ -10,6 +10,14 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	pthread_t serverThread;
 
+	pthread_mutex_init(&mutexG, NULL);
+    pthread_mutex_init(&OSADAmutex, NULL);
+    pthread_mutex_init(&HEADERmutex, NULL);
+    pthread_mutex_init(&BITMAPmutex, NULL);
+    pthread_mutex_init(&DATA_BLOCKSmutex, NULL);
+    pthread_mutex_init(&ARRAY_TABLA_ASIGNACIONmutex, NULL);
+    pthread_mutex_init(&TABLA_DE_ARCHIVOSmutex, NULL);
+
 	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
@@ -21,13 +29,7 @@ int main(int argc, char **argv) {
 	obtenerBitmap();
     obtenerTablaDeArchivos();
     obtenerTablaDeAsignacion();
-    pthread_mutex_init(&mutexG, NULL);
-    pthread_mutex_init(&OSADAmutex, NULL);
-    pthread_mutex_init(&HEADERmutex, NULL);
-    pthread_mutex_init(&BITMAPmutex, NULL);
-    pthread_mutex_init(&DATA_BLOCKSmutex, NULL);
-    pthread_mutex_init(&ARRAY_TABLA_ASIGNACIONmutex, NULL);
-    pthread_mutex_init(&TABLA_DE_ARCHIVOSmutex, NULL);
+
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -52,6 +54,8 @@ int main(int argc, char **argv) {
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 
 	pthread_join(serverThread, NULL);
+
+	//DAMIAN
 	pthread_mutex_destroy(&mutexG);
 	pthread_mutex_destroy(&OSADAmutex);
 	pthread_mutex_destroy(&HEADERmutex);
@@ -208,7 +212,7 @@ void processMessageReceived(void *parameter){
 	while(1){
 		//0) Receive FUSE Operation
 		int receivedBytes = receiveMessage(&serverData->socketClient, FUSEOperation, sizeof(enum_FUSEOperations));
-		pthread_mutex_lock(&mutexG);
+		//DAMIAN - pthread_mutex_lock(&mutexG);
 		if ( receivedBytes > 0 ){
 
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",*FUSEOperation);
@@ -629,7 +633,7 @@ void processMessageReceived(void *parameter){
 			free(serverData);
 			break;
 		}
-		 pthread_mutex_unlock(&mutexG);
+		//DAMIAN - pthread_mutex_unlock(&mutexG);
 	}
 	free(FUSEOperation);
 }

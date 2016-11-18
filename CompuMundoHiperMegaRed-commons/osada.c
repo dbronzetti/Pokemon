@@ -12,17 +12,17 @@
 
 void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento){
 	printf("iniciio guardarEnOsada2\n");
-	pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
 	memcpy(&OSADA[desde], elemento, tamaniaDelElemento);
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 	printf("fin guardarEnOsada2\n");
 }
 
 void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento){
-	pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
 	memcpy(&osada[desde], elemento, tamaniaDelElemento );
 	int status = munmap(osada, tamaniaDelElemento);
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 
 	if (status == -1)
 		printf("Estado del munmap: %i\n", status);
@@ -33,13 +33,13 @@ void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamania
 
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
 	//unsigned char *bloqueDeDatos = malloc(sizeof(char) * osadaHeaderFile->data_blocks);OLD
-	pthread_mutex_lock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&HEADERmutex);
 	unsigned char *bloqueDeDatos = malloc(sizeof(char) * OSADA_BLOCK_SIZE * osadaHeaderFile->data_blocks);
-	pthread_mutex_unlock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&HEADERmutex);
 
-	pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
 	memcpy(bloqueDeDatos, &osada[DESDE_PARA_BLOQUE_DE_DATOS], TAMANIO_QUE_OCUPA_EL_BLOQUE_DE_DATOS );
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 	return bloqueDeDatos;
 }
 
@@ -58,14 +58,14 @@ void mostrarTodosLosAsignados(int *arrayTabla, int numeroBloques){
 int *obtenerTablaDeAsignacion(){
 	int *arrayTabla = malloc(TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 
-	pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
 	memcpy(arrayTabla, &OSADA[DESDE_PARA_TABLA_ASIGNACION], TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION );
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 
 	//mostrarTodosLosAsignados(arrayTabla, numeroBloques);
-	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 	ARRAY_TABLA_ASIGNACION = arrayTabla;
-	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 	return arrayTabla;
 }
 
@@ -91,16 +91,16 @@ osada_file *obtenerTablaDeArchivos(){
 	osada_file *tablaDeArchivo = malloc(TAMANIO_TABLA_DE_ARCHIVOS);
 
 	//2048*sizeof(osada_file) = 1024 bloques * 64 bytes ptr
-	pthread_mutex_lock(&OSADAmutex);
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	memcpy(tablaDeArchivo, &OSADA[DESDE_PARA_TABLA_DE_ARCHIVOS ], TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 
 	//mostrarTodaLaTablaDeArchivos(tablaDeArchivo);
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	TABLA_DE_ARCHIVOS = tablaDeArchivo;
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	return tablaDeArchivo;
 }
 
@@ -109,24 +109,24 @@ void contarBloques(){
 	int bloquesLibres = 0;
 	int i = 0;
 
-	pthread_mutex_lock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&HEADERmutex);
 	uint32_t fs_blocks = HEADER->fs_blocks;
-	pthread_mutex_unlock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&HEADERmutex);
 	for (i=0; i < fs_blocks; i++){//para 150k
 
-		pthread_mutex_lock(&BITMAPmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 		if(bitarray_test_bit(BITMAP, i) == 0){
 			bloquesLibres++;
 			//printf("Bloque - %i - LIBRE\n",i);
 		}
-		pthread_mutex_unlock(&BITMAPmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
 
-		pthread_mutex_lock(&BITMAPmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 		if(bitarray_test_bit(BITMAP, i) == 1){
 			bloquesOcupados++;
 			//printf("Bloque - %i - OCUPADO\n",i);
 		}
-		pthread_mutex_unlock(&BITMAPmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
 
 	}
 	//printf("Bloques Ocupados: %i\n",bloquesOcupados);
@@ -151,16 +151,16 @@ t_bitarray *obtenerBitmap(){
 	unsigned char *unBitMapSinFormato;
 
 	unBitMapSinFormato = malloc(TAMANIO_DEL_BITMAP );
-	pthread_mutex_lock(&OSADAmutex);
-	pthread_mutex_lock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 	memcpy(unBitMapSinFormato, &OSADA[DESDE_PARA_BITMAP], TAMANIO_DEL_BITMAP );
-	pthread_mutex_unlock(&BITMAPmutex);
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 
-	pthread_mutex_lock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 	bitMap = bitarray_create(unBitMapSinFormato, TAMANIO_DEL_BITMAP );
 	BITMAP = bitMap;
-	pthread_mutex_unlock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
 	contarBloques();
 
 	return bitMap;
@@ -183,14 +183,14 @@ void mostrarHeader(osada_header *osadaHeaderFile){
 
 osada_header *obtenerHeader(){
 	osada_header *osadaHeaderFile = malloc(sizeof(osada_header));
-	pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
 	memcpy(osadaHeaderFile, OSADA, OSADA_BLOCK_SIZE);
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 
 	mostrarHeader(osadaHeaderFile);
-	pthread_mutex_lock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&HEADERmutex);
 	HEADER = osadaHeaderFile;
-	pthread_mutex_unlock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&HEADERmutex);
 	return osadaHeaderFile;
 
 }
@@ -209,21 +209,21 @@ int obtenerIDDelArchivo(char *ruta){
 }
 void setearConstantesDePosicionDeOsada(){
 	TAMANIO_QUE_OCUPA_EL_HEADER = OSADA_BLOCK_SIZE;
-	pthread_mutex_lock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&HEADERmutex);
 	TAMANIO_DEL_BITMAP = HEADER->bitmap_blocks * OSADA_BLOCK_SIZE;
-	pthread_mutex_unlock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&HEADERmutex);
 	TAMANIO_TABLA_DE_ARCHIVOS =  2048 * sizeof(osada_file);
-	pthread_mutex_lock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&HEADERmutex);
 	TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION = (HEADER->fs_blocks - 1 - HEADER->bitmap_blocks - 1024) * 4;
 	TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION_EN_BLOQUES = (HEADER->fs_blocks - 1 - HEADER->bitmap_blocks - 1024) * 4 / OSADA_BLOCK_SIZE;
 	TAMANIO_QUE_OCUPA_EL_BLOQUE_DE_DATOS = OSADA_BLOCK_SIZE* HEADER->data_blocks;
-	pthread_mutex_lock(&DATA_BLOCKSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&DATA_BLOCKSmutex);
 	DATA_BLOCKS= (HEADER->fs_blocks - HEADER->data_blocks)*64;
-	pthread_mutex_unlock(&DATA_BLOCKSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&DATA_BLOCKSmutex);
 	//dataBlocks=  osadaHeaderFile->allocations_table_offset + tamanioQueOcupaLaTablaDeAsignacionEnBloques;
 
 	printf("HEADER->fs_blocks - HEADER->data_blocks: %i\n",HEADER->fs_blocks - HEADER->data_blocks);
-	pthread_mutex_unlock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&HEADERmutex);
 	printf("dataBlocks: %i\n",DATA_BLOCKS);
 
 	DESDE_PARA_BITMAP = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
@@ -247,9 +247,9 @@ unsigned char *inicializarOSADA(int archivoID){
 
 	osada = mmap(0, TAMANIO_DEL_ARCHIVO_OSADA_EN_BYTES, PROT_READ|PROT_WRITE,MAP_SHARED, archivoID, 0);
 	int statusCerrar = close(archivoID);
-	pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
 	OSADA = osada;
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 	return osada;
 
 }
@@ -262,11 +262,11 @@ void _iterarParaVerContenido(int bloque){
 	int i;
 	//tamanioQueOcupaElBloqueDeDatos ir de atras con los bloques.
 	//printf("%i\n", dataBlocks);
-	pthread_mutex_lock(&OSADAmutex);
-	pthread_mutex_lock(&DATA_BLOCKSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&DATA_BLOCKSmutex);
 	memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
-	pthread_mutex_unlock(&DATA_BLOCKSmutex);
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&DATA_BLOCKSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 
 //	for(i=1; i<=64; i++){
 	bloqueDeDatos[OSADA_BLOCK_SIZE + 1] = '\0';
@@ -294,17 +294,17 @@ t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
 	t_list *proximo = list_create();
 
 	list_add(proximo, numeroBloques);
-	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 	elProximo = ARRAY_TABLA_ASIGNACION[numeroBloques];
-	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 
 	while (elProximo != -1){
 		list_add(proximo, elProximo);
 		numeroBloques = elProximo;
 
-		pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
+		//DAMIAN - ACA SE TRABA 	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 		elProximo = ARRAY_TABLA_ASIGNACION[numeroBloques];
-		pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+		//DAMIAN - ACA SE TRABA 	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 	}
 
 	list_iterate(proximo, (void*) _iterarBloques);
@@ -350,12 +350,12 @@ osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_dire
 
 	for (pos=0; pos <= 2047; pos++){
 
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if ((posicion = comprobarElNombreDelArchivo(TABLA_DE_ARCHIVOS[pos], parent_directory,  file_name)) != -666){
 			printf("encontro ARCHIVO:  %i\n", pos);
 			return posicion;
 		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}
 
 	printf("******************************* NO LO ENCONTRO! ******************************* \n");
@@ -372,15 +372,15 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
 		char *n;
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		n = string_duplicate(file_name);
 		string_trim(&nac);
 		string_trim(&n);
 		//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
 
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
 			printf("******************************* LO ENCONTRO! ******************************* \n");
 			break;
@@ -389,7 +389,7 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 			printf("******************************* NO LO ENCONTRO! ******************************* \n");
 
 		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}
 
 	return pos;
@@ -405,14 +405,14 @@ osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_direc
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
 		char *n;
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		n = string_duplicate(file_name);
 		string_trim(&nac);
 		string_trim(&n);
 		//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
 			printf("******************************* LO ENCONTRO! ******************************* \n");
 			break;
@@ -420,7 +420,7 @@ osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_direc
 			printf("******************************* NO LO ENCONTRO! ******************************* \n");
 
 		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}
 
 	return TABLA_DE_ARCHIVOS[pos];
@@ -428,19 +428,19 @@ osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_direc
 
 void borrarBloqueDelBitmap(int bloque){
 
-	pthread_mutex_lock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 	if(bitarray_test_bit(BITMAP, bloque) == 1){
 		bitarray_clean_bit(BITMAP, bloque);
 	}
-	pthread_mutex_unlock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
 
 }
 
 void borrarBloquesDelBitmap(t_list *listado){
 	list_iterate(listado, (void*)borrarBloqueDelBitmap);
-	pthread_mutex_lock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 	guardarEnOsada2(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
-	pthread_mutex_unlock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
 
 }
 
@@ -454,7 +454,7 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
 		char *n;
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		n = string_duplicate(file_name);
@@ -462,19 +462,19 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 		string_trim(&n);
 		printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
 
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
 			printf("******************************* LO ENCONTRO! ******************************* \n");
 			TABLA_DE_ARCHIVOS[pos].state = DELETED;
 			posicion = pos;
 
 		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}
 
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 
 	return posicion;
 }
@@ -494,16 +494,16 @@ int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directo
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
 		char *n;
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		n = string_duplicate(file_name);
 		string_trim(&nac);
 		string_trim(&n);
 
 		//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
 
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
 			printf("******************************* LO ENCONTRO - sobreescribirNombre! ******************************* \n");
 
@@ -513,12 +513,12 @@ int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directo
 			break;
 
 		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}
 
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 
 	return posicion;
 }
@@ -544,19 +544,18 @@ int obtener_bloque_archivo(const char* path)
 
    int j;
    int i=0;
-
+   //DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
    while (vector_path[i] != NULL)
    {
 	   for (j=0;j<2047;j++)
 	   {
-		   pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+
 		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir) && (TABLA_DE_ARCHIVOS[j].state != DELETED))
 		   {
 			   parent_dir = j;
 			   pos_archivo = j;
 			   break;
 		   }
-		   pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	   }
 	   i++;
    }
@@ -566,6 +565,8 @@ int obtener_bloque_archivo(const char* path)
 	   return -666;
    }
    return pos_archivo;
+  // pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+
 }
 
 int obtener_bloque_padre (const char* path)
@@ -583,7 +584,7 @@ int obtener_bloque_padre (const char* path)
 			int j;
 			for (j = 0; j < 2047; j++)
 			{
-				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+				//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
 				{
 					if ((i == 0) && (parent_dir == 65535))
@@ -595,7 +596,7 @@ int obtener_bloque_padre (const char* path)
 						parent_dir = j;
 					}
 				}
-				pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+				//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 			}
 			i++;
 		}
@@ -617,13 +618,13 @@ int elTamanioDelArchivoEntraEnElOsada(int tamanio){
 void modificarEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos){
 	printf("modificarEnLaTablaDeArchivos - posDelaTablaDeArchivos: %i \n", posDelaTablaDeArchivos);
 	printf("modificarEnLaTablaDeArchivos - file_size: %i \n", file_size);
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size = file_size;
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	//TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].lastmod = 1;
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	printf("modificarEnLaTablaDeArchivos - guarda osada 2 fuera\n");
 
 }
@@ -638,7 +639,7 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
     if (posDelaTablaDeArchivos == -999){//SI SE CREA EL ARCHIVO POR PRIMERA VEZ
 		for (k=0; k <= 2047; k++){
 			//printf("EN EL FOR\n");
-			pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+			//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 			if (TABLA_DE_ARCHIVOS[k].state == DELETED){
 					//printf("EN EL if\n");
 					TABLA_DE_ARCHIVOS[k].state = REGULAR;
@@ -664,25 +665,25 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 					break;
 
 			}
-			pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+			//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		}//for (k=0; k <= 2047; k++)
 			//printf("afuera del if\n");
 	}
     else
 	{
-    	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+    	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
     	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size = file_size;
     	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].first_block= first_block;
-    	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+    	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		k=posDelaTablaDeArchivos;
 	}
 
 	//printf("k: %i\n", k);
 	//printf("tablaDeArchivo[k].fname: %s\n", TABLA_DE_ARCHIVOS[k].fname);
 	//printf("tablaDeArchivo[k].first_block: %i\n", TABLA_DE_ARCHIVOS[k].first_block);
-    pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+    //DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	printf("guarda osada 2 fuera\n");
 	return k;
 
@@ -696,19 +697,19 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantidadBloques){
 	int i = 0;
 
 	printf("HEADER->fs_blocks:  %i\n",HEADER->fs_blocks);
-	pthread_mutex_lock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&HEADERmutex);
 	uint32_t fs_blocks = HEADER->fs_blocks;
-	pthread_mutex_unlock(&HEADERmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&HEADERmutex);
 	for (i=0; i < fs_blocks; i++){
 
-		pthread_mutex_lock(&BITMAPmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 		if(bitarray_test_bit(BITMAP, i) == 0){
 			list_add(listDeBloques, i);
 			bloquesLibres++;
 			//printf("Bloque - %i - LIBRE\n",i);
 			bitarray_set_bit(BITMAP, i);
 		}
-		pthread_mutex_unlock(&BITMAPmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
 
 		if (cantidadBloques == bloquesLibres)
 			break;
@@ -717,18 +718,18 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantidadBloques){
 
 	//printf("DESDE_PARA_BITMAP - %i\n",DESDE_PARA_BITMAP);
 	//-printf("TAMANIO_DEL_BITMAP - %i\n",TAMANIO_DEL_BITMAP);
-	pthread_mutex_lock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&BITMAPmutex);
 	guardarEnOsada2(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
-	pthread_mutex_unlock(&BITMAPmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&BITMAPmutex);
 
 	return listDeBloques;
 }
 
 
 void escribirTablaDeAsignacion(int pos, int bloqueSiguiente){
-	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 	ARRAY_TABLA_ASIGNACION[pos] = bloqueSiguiente;
-	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 }
 
 
@@ -760,12 +761,12 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 	//memcpy(bloqueDeDatos, contenido, OSADA_BLOCK_SIZE);
 	printf("_guardarEnTablaDeDatos - bloqueDeDatos: %s\n",contenido);
 	bloque = string_repeat("\0", OSADA_BLOCK_SIZE);
-	pthread_mutex_lock(&OSADAmutex);
-	pthread_mutex_lock(&DATA_BLOCKSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&DATA_BLOCKSmutex);
 	memcpy(&OSADA[DATA_BLOCKS+bloque2], bloque, OSADA_BLOCK_SIZE );
 	memcpy(&OSADA[DATA_BLOCKS+bloque2], contenido, OSADA_BLOCK_SIZE );
-	pthread_mutex_unlock(&DATA_BLOCKSmutex);
-	pthread_mutex_unlock(&OSADAmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&DATA_BLOCKSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&OSADAmutex);
 
 
 }
@@ -922,16 +923,16 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 
 
 	dictionary_iterator(dictionary, (void*) _prepararLaVariableGlobalParaGuadar);
-	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
-	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 }
 
 void guardarEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles){
 	dictionary_iterator(armarDicDeTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles), (void*) _prepararLaVariableGlobalParaGuadar);
-	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
-	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 }
 
 int diferenciaEntreTamanioViejoYNuevo(int tamanioViejo, int tamanioNuevo){
@@ -1146,9 +1147,9 @@ void dameTodosLosDirectorios(osada_file *tablaDeArchivo){
 void dameTodosLosArchivosRegulares(){
 	int pos=0;
 	for (pos=0; pos <= 2047; pos++){
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		mostrarLosRegulares(TABLA_DE_ARCHIVOS[pos], pos);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}
 }
 
@@ -1290,9 +1291,9 @@ t_list* crearArbolAPartirDelPadre(int padre){
 	t_list* lista = list_create();
 
 	for (pos=0; pos <= 2047; pos++){
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		reconocerArchivosParaArbol(&TABLA_DE_ARCHIVOS[pos], pos, padre, lista);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}
 
 	return lista;
@@ -1303,9 +1304,9 @@ void encontrarArbolPadre(int padre){
 	int pos=0;
 
 	//for (pos=0; pos <= 2047; pos++){
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		reconocerDirectorioPadre(&TABLA_DE_ARCHIVOS[pos], pos, padre);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	//}
 
 }
@@ -1320,7 +1321,7 @@ int crearUnDirectorio(char *fname, int parent_directory){
 
 		for (k=0; k <= 2047; k++){
 			//printf("EN EL FOR\n");
-			pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+			//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 			if (TABLA_DE_ARCHIVOS[k].state == DELETED){
 				printf("EN EL if\n");
 				TABLA_DE_ARCHIVOS[k].state = DIRECTORY;
@@ -1346,7 +1347,7 @@ int crearUnDirectorio(char *fname, int parent_directory){
 					break;
 
 			}
-			pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+			//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		}//for (k=0; k <= 2047; k++)
 			//printf("afuera del if\n");
 
@@ -1356,9 +1357,9 @@ int crearUnDirectorio(char *fname, int parent_directory){
 	printf("tablaDeArchivo[k].fname: %s\n", TABLA_DE_ARCHIVOS[k].fname);
 
 
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	printf("guarda osada 2 fuera\n");
 	return k;
 }
@@ -1374,14 +1375,14 @@ int borrarUnDirectorio(char *fname, int parent_directory){
 			char *nac;
 			char *n;
 
-			pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+			//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 			nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
 			pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 			n = string_duplicate(file_name);
 			string_trim(&nac);
 			string_trim(&n);
 
-			pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+			//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 			if (TABLA_DE_ARCHIVOS[pos].state == DIRECTORY && TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
 				printf("EN EL if\n");
 				TABLA_DE_ARCHIVOS[pos].state =  DELETED;
@@ -1392,9 +1393,9 @@ int borrarUnDirectorio(char *fname, int parent_directory){
 			pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		}
 
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	printf("guarda osada 2 fuera\n");
 	return pos;
 }

@@ -12,8 +12,12 @@ static int ESTA_MODIFICANDO = 0;
 static int HIZO_TRUNCATE = 0;
 //TODO: TRUNCATE, HAGO LA MAODIFICACION
 //TODO: SIN TRUNCATE, BORRO
+//TODO: PONER CONTROL DE NOMBRE EL SERVIDOR, O EN EL OSADA
 /************************************* FIN GLOBALES *************************************************/
 
+void nombreNoMayorA17(char *nombre){
+
+}
 
 int crearDirectorio(char *path){
 			int exitCode = EXIT_FAILURE; //DEFAULT Failure
@@ -251,6 +255,13 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 	int exitCode = -1; //DEFAULT Failure
 	log_info(logPokeCliente, "**************** fuse_create ****************\n");
 	printf("********************************* fuse_create *********************\n");
+
+	if (string_length(path)>17){
+		printf("fuse_create - EL fuse_mkdir ES MAYOR A 17: %i\n", string_length(path));
+		log_info(logPokeCliente, "fuse_create - EL RENAME ES MAYOR A 17: %i\n", string_length(path));
+		return -1;
+	}
+
 	// JOEL: NO DEBE GUARDARSE LOS  .swx y swp
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		//0) Send Fuse Operations
@@ -285,6 +296,11 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 static int fuse_mkdir(const char* path, mode_t mode){
 
 	printf("********************************* fuse_mkdir *********************\n");
+	if (string_length(path)>17){
+		printf("fuse_mkdir - EL fuse_mkdir ES MAYOR A 17: %i\n", string_length(path));
+		log_info(logPokeCliente, "fuse_mkdir - EL RENAME ES MAYOR A 17: %i\n", string_length(path));
+		return -1;
+	}
 
     mode = S_IFDIR | 0777;
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
@@ -567,12 +583,20 @@ void modificarElArchivo(const char* path, const char* buf, size_t size){
 static int fuse_write(const char* path, const char* buf, size_t size,  int truncate)
 {
 	int bytes_escritos = 0;
+	printf("********************************* fuse_write *********************\n");
+
+	if (string_length(path)>17){
+		printf("fuse_write - EL fuse_write ES MAYOR A 17: %i\n", string_length(path));
+		log_info(logPokeCliente, "fuse_write - EL RENAME ES MAYOR A 17: %i\n", string_length(path));
+		return -1;
+	}
+
 	if (HIZO_TRUNCATE == 1){
 		modificarElArchivo(path, buf, size);
 		return size;
 	}
 
-	printf("********************************* fuse_write *********************\n");
+
 	//bytes_escritos = enviarArchivo(path,offset);
 	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
 	log_info(logPokeCliente, "fuse_write - buf: %s\n", buf);
@@ -626,12 +650,20 @@ static int fuse_write(const char* path, const char* buf, size_t size,  int trunc
 	usleep(500000);
 	return bytes_escritos;
 }
-
+//TODO
+//resultado esta devolviendo -999
 static int fuse_rename (const char *oldname, const char *newName){
 	printf("********************************* fuse_rename *********************\n");
+	if (string_length(newName)>17){
+		printf("RENAME - EL RENAME ES MAYOR A 17: %i\n", string_length(newName));
+		log_info(logPokeCliente, "RENAME - EL RENAME ES MAYOR A 17: %i\n", string_length(newName));
+		return -1;
+	}
+
 	int resultado = renombrarArchivo(oldname, newName);
+
 	if (resultado!=-999)	{
-			printf("[Error_Fuse] rename(%s,%s)\n", oldname,newName);
+			printf("[Error_Fuse] rename(%s,%s)\n", oldname, newName);
 			return 1;
 		}
 
@@ -640,60 +672,24 @@ static int fuse_rename (const char *oldname, const char *newName){
 }
 static int fuse_utimens(const char * path, const struct timespec ts[2]){
 	printf("***************** fuse_utimens - ts[1].tv_nsec: %i***********************\n", ts[1].tv_nsec);
+	//			NOTA VEAMOS JUNTOS COMO IMPLEMENTARLO LO QUE HAY QUE OBTENER ES EL
+	//			uint32_t lastmod;
+	//			int messageSize = elementCount * sizeof(osada_file);
+	//			uint32_t *messageRcv = malloc(messageSize);
+	//			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+	//			resultado = atoi(messageRcv);
+	//			log_info(logPokeCliente, "messageRcv: %d\n", resultado);
+
 	return 0;
 }
 
 
-/*
-static int fuse_utime (const char *, struct utimbuf *){
 
+static int fuse_mknod(const char* path, mode_t mode, dev_t rdev){
+	printf("***************** FUSE_MKNOD***********************\n");
 	return 1;
-
-}
-*/
-
-/*
-static int fuse_utime(const char * path, const struct timespec ts[2]) {
-		int exitCode = EXIT_FAILURE; //DEFAULT Failure
-		int resultado = 1;
-
-		enum_FUSEOperations fuseOperation =  FUSE_UTIMENS;
-
-		//0) Send Fuse Operations
-		exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
-		log_info(logPokeCliente, "fuseOperation: %d\n", fuseOperation);
-		string_append(&path, "\0");
-
-		//1) send path length (+1 due to \0)
-		int pathLength = strlen(path) + 1;
-		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-
-		log_info(logPokeCliente, "pathLength: %i\n", pathLength);
-
-		//2) send path
-		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-		log_info(logPokeCliente, "path: %s\n", path);
-
-		//Receive element Count
-		int elementCount = -1;
-		int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
-
-		log_info(logPokeCliente, "elementCount: %i\n", elementCount);
-		if (receivedBytes > 0 && elementCount > 0){
-//			NOTA VEAMOS JUNTOS COMO IMPLEMENTARLO LO QUE HAY QUE OBTENER ES EL
-//			uint32_t lastmod;
-//			int messageSize = elementCount * sizeof(osada_file);
-//			uint32_t *messageRcv = malloc(messageSize);
-//			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-//			resultado = atoi(messageRcv);
-//			log_info(logPokeCliente, "messageRcv: %d\n", resultado);
-		}
-		log_info(logPokeCliente, "***********************************************\n");
-		return resultado;
-
 }
 
-*/
 static struct fuse_operations xmp_oper = {
     .init       = fuse_init,
     .getattr	= fuse_getattr,
@@ -708,7 +704,7 @@ static struct fuse_operations xmp_oper = {
     .write		= fuse_write,
 	.truncate   = fuse_truncate,
 	.utimens    = fuse_utimens,
-	//.mknod		= fuse_mknod,
+	.mknod		= fuse_mknod,
 };
 
 
