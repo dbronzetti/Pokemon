@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <pthread.h>
 #include <commons/bitarray.h>
 #include <commons/collections/list.h>
 #include <commons/string.h>
@@ -104,3 +105,14 @@ static t_bitarray *BITMAP;
 static int DATA_BLOCKS;
 static int *ARRAY_TABLA_ASIGNACION;
 static osada_file *TABLA_DE_ARCHIVOS;
+
+pthread_mutex_t OSADAmutex;
+pthread_mutex_t HEADERmutex;
+pthread_mutex_t BITMAPmutex;
+pthread_mutex_t DATA_BLOCKSmutex;
+pthread_mutex_t ARRAY_TABLA_ASIGNACIONmutex;
+pthread_mutex_t TABLA_DE_ARCHIVOSmutex;
+
+
+
+

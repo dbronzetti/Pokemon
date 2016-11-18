@@ -5,8 +5,6 @@
  */
 
 #include "PokeDex_Servidor.h"
-//joel
-pthread_mutex_t mutexG;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
@@ -24,6 +22,12 @@ int main(int argc, char **argv) {
     obtenerTablaDeArchivos();
     obtenerTablaDeAsignacion();
     pthread_mutex_init(&mutexG, NULL);
+    pthread_mutex_init(&OSADAmutex, NULL);
+    pthread_mutex_init(&HEADERmutex, NULL);
+    pthread_mutex_init(&BITMAPmutex, NULL);
+    pthread_mutex_init(&DATA_BLOCKSmutex, NULL);
+    pthread_mutex_init(&ARRAY_TABLA_ASIGNACIONmutex, NULL);
+    pthread_mutex_init(&TABLA_DE_ARCHIVOSmutex, NULL);
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -49,6 +53,12 @@ int main(int argc, char **argv) {
 
 	pthread_join(serverThread, NULL);
 	pthread_mutex_destroy(&mutexG);
+	pthread_mutex_destroy(&OSADAmutex);
+	pthread_mutex_destroy(&HEADERmutex);
+	pthread_mutex_destroy(&BITMAPmutex);
+	pthread_mutex_destroy(&DATA_BLOCKSmutex);
+	pthread_mutex_destroy(&ARRAY_TABLA_ASIGNACIONmutex);
+	pthread_mutex_destroy(&TABLA_DE_ARCHIVOSmutex);
 
 	return EXIT_SUCCESS;
 
