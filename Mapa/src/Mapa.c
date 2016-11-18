@@ -150,7 +150,9 @@ void startServerProg() {
 				if (FD_ISSET(i, &read_fds)) { // we got one!!
 					if (i == socketServer) {
 						// handle new connections
+						pthread_mutex_lock(&setRecibirMsj);
 						newClients(&socketServer, &master, &fdmax);
+						pthread_mutex_unlock(&setRecibirMsj);
 					} else {
 						// handle data from a client
 						//Receive message size
@@ -330,11 +332,18 @@ void processMessageReceived(void *parameter) {
 			// connection closed
 			pthread_mutex_lock(&borradoDeEntrenadores);
 			pthread_mutex_lock(&setEntrenadoresMutex);
-			if (list_any_satisfy(listaDeEntrenadores,
-					(void*) buscarPorSocket)) {
 
+			int existeElEntrenador = list_any_satisfy(listaDeEntrenadores,
+					(void*) buscarPorSocket);
+
+			pthread_mutex_unlock(&setEntrenadoresMutex);
+
+			if (existeElEntrenador) {
+
+				pthread_mutex_lock(&setEntrenadoresMutex);
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
 						(void*) buscarPorSocket);
+				pthread_mutex_unlock(&setEntrenadoresMutex);
 
 				if (entrenador->estaEnTurno == false) { //si no esta en turno lo borramos normal
 
@@ -361,6 +370,7 @@ void processMessageReceived(void *parameter) {
 							socketFD);
 				} else {
 
+					pthread_mutex_lock(&setEntrenadoresMutex);
 					log_error(logMapa,
 							"Trainer '%c' want to disconnect in socket: '%d' on the turn",
 							entrenador->simbolo, entrenador->socket);
@@ -368,6 +378,7 @@ void processMessageReceived(void *parameter) {
 					entrenador->accion = DESCONECTAR;
 					entrenador->socket = -1;
 					entrenador->pokemonD = '0';
+					pthread_mutex_unlock(&setEntrenadoresMutex);
 
 					close(serverData->socketClient); // bye!
 					free(messageRcv);
@@ -380,7 +391,6 @@ void processMessageReceived(void *parameter) {
 				}
 			}
 
-			pthread_mutex_unlock(&setEntrenadoresMutex);
 			pthread_mutex_unlock(&borradoDeEntrenadores);
 		} else {
 //			perror("recv");
@@ -721,9 +731,8 @@ void planificarRR() {
 			t_entrenador* entrenador = queue_pop(colaDeListos);
 			pthread_mutex_unlock(&colaDeListosMutex);
 
-			simbolo = entrenador->simbolo;
-
 			pthread_mutex_lock(&setEntrenadoresMutex);
+			simbolo = entrenador->simbolo;
 			bool seDesconectoAlgunEntrenador = list_any_satisfy(
 					listaDeEntrenadores, (void*) buscarPorSimbolo);
 			pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -736,7 +745,7 @@ void planificarRR() {
 
 				for (i = 0; i < metadataMapa.quantum; i++) {
 
-					sleep(3);
+					sleep(2);
 
 					log_info(logMapa, "Action: %d of trainer : '%c'", i,
 							entrenador->simbolo);
@@ -747,6 +756,7 @@ void planificarRR() {
 						log_info(logMapa, "Trainer: '%c' has free action ",
 								entrenador->simbolo);
 					}
+
 					pthread_mutex_unlock(&setEntrenadoresMutex);
 
 					ejecutarAccionEntrenador(entrenador, &i);
@@ -754,6 +764,7 @@ void planificarRR() {
 				}
 
 				pthread_mutex_lock(&setEntrenadoresMutex);
+				simbolo = entrenador->simbolo;
 				seDesconectoAlgunEntrenador = list_any_satisfy(
 						listaDeEntrenadores, (void*) buscarPorSimbolo);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -946,13 +957,23 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 				entrenador->accion = DESCONECTAR;
 			}
 
-			if (entrenador->accion != SIN_MENSAJE) { //este if verifica que el entrenador respondio :D
+			pthread_mutex_lock(&setEntrenadoresMutex);
+			int siNoTieneMensaje = entrenador->accion != SIN_MENSAJE;
+			pthread_mutex_unlock(&setEntrenadoresMutex);
 
-				switch (entrenador->accion) {
+			if (siNoTieneMensaje) { //este if verifica que el entrenador respondio :D
+
+				pthread_mutex_lock(&setEntrenadoresMutex);
+				int accionDelEntrenador = entrenador->accion;
+				pthread_mutex_unlock(&setEntrenadoresMutex);
+
+				switch (accionDelEntrenador) {
 
 				case CONOCER: {
 
+					pthread_mutex_lock(&setEntrenadoresMutex);
 					char idPokemon = entrenador->pokemonD;
+					pthread_mutex_lock(&setEntrenadoresMutex);
 
 					bool buscarPokenestPorId1(t_pokenest* pokenestParam) {
 						return (pokenestParam->metadata.id == idPokemon); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
@@ -1036,12 +1057,11 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 	if (entrenador->posD_x != -1) {
 		if (entrenador->posD_x == entrenador->pos_x
 				&& entrenador->posD_y == entrenador->pos_y) { //si se encuentra en la posicion deseada le avisamos que llego y asi comienza su movimiento
-			sendClientMessage(&entrenador->socket, "cualquier cosa", LLEGO);
-
-			entrenador->seEstaMoviendo = 0; // si ya llego a la posicion no se esta moviendo mas
-
 			log_info(logMapa, "Trainer: '%c' came to the pokenest",
 					entrenador->simbolo);
+			sendClientMessage(&entrenador->socket, "cualquier cosa", LLEGO);
+			entrenador->seEstaMoviendo = 0; // si ya llego a la posicion no se esta moviendo mas
+			log_info(logMapa, "se hizo bien el send");
 		}
 	}
 	pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -1052,7 +1072,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 		log_info(logMapa, "Trainer: '%c' has not yet reached his position",
 				entrenador->simbolo);
 		sendClientMessage(&entrenador->socket, "cualquiercosa", MOVETE);
-
+		log_info(logMapa, "se mando bien el send");
 	}
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 	time_t tiempo1 = time(0);
@@ -1068,13 +1088,23 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 			entrenador->accion = DESCONECTAR;
 		}
 
-		if (entrenador->accion != SIN_MENSAJE) { //este if verifica que el entrenador respondio :D
+		pthread_mutex_lock(&setEntrenadoresMutex);
+		int siNoTieneMensaje = entrenador->accion != SIN_MENSAJE;
+		pthread_mutex_unlock(&setEntrenadoresMutex);
 
-			switch (entrenador->accion) {
+		if (siNoTieneMensaje) { //este if verifica que el entrenador respondio :D
+
+			pthread_mutex_lock(&setEntrenadoresMutex);
+			int accionDelEntrenador = entrenador->accion;
+			pthread_mutex_unlock(&setEntrenadoresMutex);
+
+			switch (accionDelEntrenador) {
 
 			case CONOCER: {
 
+				pthread_mutex_lock(&setEntrenadoresMutex);
 				char idPokemon = entrenador->pokemonD;
+				pthread_mutex_unlock(&setEntrenadoresMutex);
 
 				bool buscarPokenestPorId1(t_pokenest* pokenestParam) {
 					return (pokenestParam->metadata.id == idPokemon); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
@@ -1115,9 +1145,12 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 				break;
 			case IR: {
 
+				pthread_mutex_lock(&setEntrenadoresMutex);
 				moverEntrenador(&entrenador->pos_x, &entrenador->pos_y,
 						entrenador->posD_x, entrenador->posD_y,
 						&entrenador->seMovioEnX); //mueve el entrenador de a 1 til.
+				pthread_mutex_unlock(&setEntrenadoresMutex);
+
 				pthread_mutex_lock(&itemsMutex);
 				MoverPersonaje(items, entrenador->simbolo, entrenador->pos_x,
 						entrenador->pos_y);
@@ -1178,8 +1211,6 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 							CAPTURADO);
 
 					pthread_mutex_unlock(&setEntrenadoresMutex);
-
-					//TODO agregar if teniendo en cuenta el algoritmo de planificacion
 
 				} else {
 					pthread_mutex_lock(&setEntrenadoresMutex);
@@ -1348,8 +1379,12 @@ void detectarDeadlocks() {
 					}
 
 					//Remuevo al entrenador ganador de la lista de deadlock
-					list_remove_and_destroy_by_condition(listaDeadlock,
-							(void*) _funcBuscarEntrenador, (void*) free);
+//					list_remove_and_destroy_by_condition(listaDeadlock,
+//							(void*) _funcBuscarEntrenador, (void*) free); OJO: lo cambie por un remove porque estabas liberando el mismo entrenador que esta en la listaDeEntrenadores y en la colaDeListos
+
+					list_remove_by_condition(listaDeadlock,
+							(void*) _funcBuscarEntrenador);
+
 					//Liberemos los recursos
 					//Como el puntero loser apunta a alguno de los otros 2, no se lo libera
 					free(pokemonParaBatalla1);
@@ -1393,9 +1428,30 @@ t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador) {
 }
 
 void matar(t_entrenador* entrenador) {
-	sendClientMessage(&entrenador->socket, "cualquiercosa", MATAR); //le avisamos al entrenador que cago fuego
+	int socketE = entrenador->socket;
+	eliminarEntrenador(entrenador->simbolo);
+	sendClientMessage(&socketE, "cualquiercosa", MATAR); //le avisamos al entrenador que cago fuego
 
-	eliminarEntrenador(entrenador->simbolo); //Se debera recuperar todos sus pokemons y devolverlos al mapa
+//	int estaConectado = 1;
+//	while (estaConectado) { //hacemos un buclesito para esperar que se desconecte :D
+//
+//		bool _buscarPorSimbolo(t_entrenador* entrenador) {
+//			return (entrenador->simbolo == id);
+//		}
+//
+//		pthread_mutex_lock(&setEntrenadoresMutex);
+//		int noExisteEntrenador = list_any_satisfy(listaDeEntrenadores,
+//				(void*) _buscarPorSimbolo);
+//		pthread_mutex_unlock(&setEntrenadoresMutex);
+//
+//		if (noExisteEntrenador == 0) {
+//
+//			estaConectado = 0;
+//
+//		}
+//
+//	}
+
 }
 
 void sumarRecurso(t_list* items, char id) { //defino esta funcion porque no esta en la libreria
@@ -1740,19 +1796,20 @@ void switchear() {
 
 	if (planificandoRR) {
 		planificandoRR = 0;
-		log_info(logMapa, "Planning algorithm changed to SRDF, the changes will be noticed when the burst finish");
+		log_info(logMapa,
+				"Planning algorithm changed to SRDF, the changes will be noticed when the burst finish");
 	}
 
 	else {
 		planificandoRR = 1;
-		log_info(logMapa, "Planning algorithm changed to RR, the changes will be noticed when the burst finish");
+		log_info(logMapa,
+				"Planning algorithm changed to RR, the changes will be noticed when the burst finish");
 	}
-
 
 }
 
-void planificar(){
-	while(1){
+void planificar() {
+	while (1) {
 		planificarRR();
 		planificarSRDF();
 	}

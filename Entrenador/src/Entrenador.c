@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
 	colaDeRutasDePokemones = queue_create();
 	colaDeRutasDeMapas = queue_create();
 
-	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
+	exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -267,14 +267,16 @@ void restarVida() {
 
 void desconectarse() {
 	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
-
 	close(socketMapa);
 }
 
 void jugar() {
 	char* objetivoActual;
+	t_queue* colaDeObjetivos_M; //esta es la cola de objetivos modificables
+	colaDeObjetivos_M = queue_create();
+	colaDeObjetivos_M = colaDeObjetivos;
 
-	while ((queue_size(colaDeObjetivos) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
+	while ((queue_size(colaDeObjetivos_M) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
 
 		pthread_mutex_lock(&turnoMutex);
@@ -282,7 +284,7 @@ void jugar() {
 			switch (turno) {
 			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
 				log_info(logEntrenador, "Trainer send the id of the pokenest");
-				objetivoActual = queue_pop(colaDeObjetivos);
+				objetivoActual = queue_pop(colaDeObjetivos_M);
 				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
 				log_info(logEntrenador, "Conocer: Se manda: %s",
 						objetivoActual);
@@ -343,8 +345,15 @@ void jugar() {
 
 			case MATAR: { //el mapa mando a matar al entrenador
 				log_info(logEntrenador, "Killing trainer after Map kick");
-				//TODO hacer la logica para descontar una vida y volver a conectarse al mapa para seguir jugando
+				restarVida();
+				if(metadataEntrenador.vidas > 0){
+					reconectarse();
+					colaDeObjetivos_M = colaDeObjetivos; // la cola se rellena
+				}
 
+				else{
+					puts("No posee mas vidas desea reintentar?");
+				}
 				break;
 			}
 
@@ -531,4 +540,26 @@ void yoYaGane() {
 	desconectarse();
 	pthread_cancel(hiloEscuchar);
 
+}
+
+int reconectarse(){
+	desconectarse();
+	pthread_cancel(hiloEscuchar);
+	exitCode = connectTo(MAPA, &socketMapa);
+
+	if (exitCode == EXIT_SUCCESS) {
+		log_info(logEntrenador,
+				"ENTRENADOR connected to MAPA successfully\n");
+		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
+		sendClientMessage(&socketMapa, metadataEntrenador.simbolo, NUEVO);
+		pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
+
+	} else {
+		log_error(logEntrenador,
+				"No server available - shutting down proces!!\n");
+		return EXIT_FAILURE;
+	}
+
+
+return 0;
 }
