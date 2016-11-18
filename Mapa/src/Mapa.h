@@ -132,6 +132,7 @@ t_list* detectarInterbloqueo();
 bool existePokenest(char idPokemon);
 void recibirSignal();
 void switchear();
+void planificar();
 
 typedef struct {
 	char entrenador;
