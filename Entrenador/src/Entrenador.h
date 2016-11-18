@@ -20,6 +20,9 @@
 //Logger
 t_log* logEntrenador;
 
+//Conexion
+int exitCode;
+
 //Rutas y relacionados
 char* rutaMetadata;
 char* rutaDirDeBill;
@@ -59,6 +62,7 @@ void yoYaGane();
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
 void enviarSimbolo(char* simbolo, int socketClient);
+int reconectarse();
 
 //Funciones de signal
 void recibirSignal();
