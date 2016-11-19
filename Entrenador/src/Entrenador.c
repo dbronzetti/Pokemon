@@ -14,8 +14,6 @@ int main(int argc, char **argv) {
 	pokedex = string_new();
 	pthread_mutex_init(&turnoMutex, NULL);
 	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
-	colaDeRutasDePokemones = queue_create();
-	colaDeRutasDeMapas = queue_create();
 
 	exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -64,7 +62,8 @@ int main(int argc, char **argv) {
 	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
 
 	i = 0;
-	for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
+	//for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
+	while (queue_size(metadataEntrenador.hojaDeViaje)>0){
 		mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
 		char** objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
@@ -275,7 +274,6 @@ void jugar() {
 	t_queue* colaDeObjetivos_M; //esta es la cola de objetivos modificables
 	colaDeObjetivos_M = queue_create();
 	colaDeObjetivos_M = colaDeObjetivos;
-
 	while ((queue_size(colaDeObjetivos_M) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
 
@@ -329,7 +327,6 @@ void jugar() {
 				log_info(logEntrenador, "Trainer has captured: %s",
 						pokemonCapturado);
 				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
-				queue_push(colaDeRutasDePokemones, rutaMetadataPokemon);
 				free(rutaMetadataPokemon);
 				free(rutaMedataPokemonMapa);
 				objetivoActual = NULL;
@@ -351,10 +348,25 @@ void jugar() {
 				if (metadataEntrenador.vidas > 0) {
 					reconectarse();
 					colaDeObjetivos_M = colaDeObjetivos; // la cola se rellena
-				}
+				} else {
+					char respuesta = NULL;
+					printf("No posee mas vidas desea reiniciar el juego?\n tiene %d reintentos hasta el momento\n", metadataEntrenador.reintentos);
+					scanf("%c",respuesta);
+					queue_clean_and_destroy_elements(colaDeObjetivos_M, (void*) free);
+					objetivoActual = NULL;
+					if(respuesta == 'Y'){
+						int reintentos = metadataEntrenador.reintentos++;
+						limpiarColasMetadaEtrenador();
+						desconectarse();
+						borrarArchivos(rutaDirDeBill);
+						borrarArchivos(rutaMedallas);
+						pthread_cancel(hiloEscuchar);
+						crearArchivoMetadata(rutaMetadata);
+						metadataEntrenador.reintentos = reintentos;
+					} else {
 
-				else {
-					puts("No posee mas vidas desea reintentar?");
+					}
+					break;
 				}
 				break;
 			}
@@ -618,4 +630,9 @@ int reconectarse() {
 	}
 
 	return 0;
+}
+
+void limpiarColasMetadaEtrenador(){
+	queue_clean_and_destroy_elements(metadataEntrenador.hojaDeViaje, (void*) free);
+	queue_clean_and_destroy_elements(metadataEntrenador.obj, (void*) free);
 }

@@ -29,8 +29,6 @@ char* rutaDirDeBill;
 char* rutaMedallas;
 char* mapaActual;
 char *pokedex;
-t_queue* colaDeRutasDePokemones; //rutas de pokemones capturados y medallas conseguidas (lo pongo en una cola porque es mas practico, podria ser un array,lista,pila,etc)
-t_queue* colaDeRutasDeMapas;
 
 //Hilos
 pthread_t hiloSignal; //un hio para detectar la signals que se le envia
@@ -75,3 +73,6 @@ void cerrarEntrenador();
 //Chau Blanco
 char* str_replace(const char *strbuf, const char *strold, const char *strnew)  ;
 #endif /* ENTRENADOR_H_ */
+
+//Funcion Limpiar entrenador
+void limpiarColasMetadaEtrenador();
