@@ -265,7 +265,7 @@ void restarVida() {
 }
 
 void desconectarse() {
-	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
+//	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
 	close(socketMapa);
 }
 
@@ -349,12 +349,16 @@ void jugar() {
 					reconectarse();
 					colaDeObjetivos_M = colaDeObjetivos; // la cola se rellena
 				} else {
-					char respuesta = NULL;
-					printf("No posee mas vidas desea reiniciar el juego?\n tiene %d reintentos hasta el momento\n", metadataEntrenador.reintentos);
-					scanf("%c",respuesta);
+					char* respuesta = malloc(3);
+					printf("No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento\n>> ", metadataEntrenador.reintentos);
+					scanf("%s",respuesta);
+					log_info(logEntrenador,"voy a destruir colaDeObjetivos_M");
 					queue_clean_and_destroy_elements(colaDeObjetivos_M, (void*) free);
+					log_info(logEntrenador,"destruida la colaDeObjetivos_M");
 					objetivoActual = NULL;
-					if(respuesta == 'Y'){
+					log_info(logEntrenador,"Se puso el objetivo actual en null");
+					if(strcmp("YES",respuesta) == 0){
+						log_info(logEntrenador,"Ok, se reiniciara toda su hoja de viaje");
 						int reintentos = metadataEntrenador.reintentos++;
 						limpiarColasMetadaEtrenador();
 						desconectarse();
@@ -364,9 +368,10 @@ void jugar() {
 						crearArchivoMetadata(rutaMetadata);
 						metadataEntrenador.reintentos = reintentos;
 					} else {
-
+						log_info(logEntrenador,"El entrenador ha decidido no Reintentar");
+						cerrarEntrenador();//se muere el entrenador
 					}
-					break;
+					free(respuesta);
 				}
 				break;
 			}

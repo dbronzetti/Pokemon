@@ -1215,6 +1215,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i) {
 				} else {
 					pthread_mutex_lock(&setEntrenadoresMutex);
 					entrenador->estaBloqueado = 1;
+					entrenador->accion = SIN_MENSAJE;
 					log_info(logMapa,
 							"Trainer: '%c' couldn't capture the pokemon: '%c'",
 							entrenador->simbolo, entrenador->pokemonD);

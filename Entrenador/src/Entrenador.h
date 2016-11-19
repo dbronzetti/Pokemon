@@ -57,6 +57,7 @@ void jugar();
 void recibirMsjs();
 void copiarArchivos(char* archivoOrigen, char* archivoDestino);
 void yoYaGane();
+void limpiarColasMetadaEtrenador();
 
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
