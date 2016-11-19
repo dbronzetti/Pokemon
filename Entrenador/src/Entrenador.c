@@ -7,17 +7,23 @@
 #include "Entrenador.h"
 
 int socketMapa = 0;
+t_queue* colaDeObjetivos;
+enum_messages turno;
+char* posicionPokenest;
+char* rutaMetadata;
+char* rutaDirDeBill;
+char* mapaActual;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *entrenador = string_new();
-	pokedex = string_new();
+	char *pokedex = string_new();
+	pthread_t hiloSignal; //un hio para detectar la signals que se le envia
+	pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
 	pthread_mutex_init(&turnoMutex, NULL);
-	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
-	colaDeRutasDePokemones = queue_create();
-	colaDeRutasDeMapas = queue_create();
+	int ganoMapa;
 
-	exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
+	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -44,11 +50,7 @@ int main(int argc, char **argv) {
 	rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
 			pokedex, entrenador);
 
-	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill",
-			pokedex, entrenador);
-
-	rutaMedallas = string_from_format("%s/Entrenadores/%s/medallas",
-			pokedex, entrenador);
+	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill");
 
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
 			rutaMetadata);
@@ -85,6 +87,9 @@ int main(int argc, char **argv) {
 			pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
 
 			jugar();
+
+			pthread_join(hiloSignal, NULL);
+			pthread_join(hiloEscuchar, NULL);
 
 		} else {
 			log_error(logEntrenador,
@@ -247,7 +252,6 @@ void recibirSignal() {
 	while (1) {
 		signal(SIGUSR1, sumarVida);
 		signal(SIGTERM, restarVida);
-		signal(SIGINT, cerrarEntrenador);
 	}
 }
 
@@ -266,25 +270,24 @@ void restarVida() {
 }
 
 void desconectarse() {
-	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
+
+	sendClientMessage(&socketMapa, metadataEntrenador.simbolo, DESCONECTAR);
+	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
+	sleep(1); //dormimos un segundo para darle tiempo al mapa de cerrar el socket correctamente y no joder el select.
 	close(socketMapa);
 }
 
 void jugar() {
-	char* objetivoActual;
-	t_queue* colaDeObjetivos_M; //esta es la cola de objetivos modificables
-	colaDeObjetivos_M = queue_create();
-	colaDeObjetivos_M = colaDeObjetivos;
 
-	while ((queue_size(colaDeObjetivos_M) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
+	while (queue_size(colaDeObjetivos)) //mientras queden objetivos se sigue jugando en el mapa
 	{
-
+		char* objetivoActual;
 		pthread_mutex_lock(&turnoMutex);
 		if (turno != SIN_MENSAJE) {
 			switch (turno) {
 			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
 				log_info(logEntrenador, "Trainer send the id of the pokenest");
-				objetivoActual = queue_pop(colaDeObjetivos_M);
+				objetivoActual = queue_pop(colaDeObjetivos);
 				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
 				log_info(logEntrenador, "Conocer: Se manda: %s",
 						objetivoActual);
@@ -309,8 +312,7 @@ void jugar() {
 
 			case MOVETE: {// si estamos yendo a la pokenest le pedimos seguir moviendonos
 				log_info(logEntrenador,
-						"Trainer ask to mapa to move to the pokenest '%s'",
-						objetivoActual);
+						"Trainer ask to mapa to move to the pokenest");
 				sendClientMessage(&socketMapa, objetivoActual, IR);
 //				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
 
@@ -318,42 +320,12 @@ void jugar() {
 			}
 
 			case CAPTURADO: { // si se capturo ok hay que copiar el archivito metadata en el dir de bill
-				char* rutaMetadataPokemon = string_from_format(
-						"%s/metadata%s.dat", rutaDirDeBill, pokemonCapturado); //armamos la ruta de donde se va a copiar el archivo metadata del pokemon capturado :)
+				FILE *archivoMetadataPokemon;
 
-				char* rutaMedataPokemonMapa = string_from_format(
-						"%s/Mapas/%s/Pokenest/%s/metadata.dat", pokedex,
-						mapaActual, pokemonCapturado); //armamos la ruta del archivo metadata que vamos a copiar
-				puts(rutaMedataPokemonMapa);
-
-				log_info(logEntrenador, "Trainer has captured: %s",
-						pokemonCapturado);
-				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
-				queue_push(colaDeRutasDePokemones, rutaMetadataPokemon);
-				objetivoActual = NULL;
-				break;
-			}
-
-			case ERROR_CONOCER: { //si hubo un error cuando queria conocer la pos de la pokenest se vuelva a mandar :)
-				log_info(logEntrenador, "Trainer send the id of the pokenest");
-				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
-				log_info(logEntrenador, "Conocer: Se manda: %s",
-						objetivoActual);
-
-				break;
-			}
-
-			case MATAR: { //el mapa mando a matar al entrenador
-				log_info(logEntrenador, "Killing trainer after Map kick");
-				restarVida();
-				if(metadataEntrenador.vidas > 0){
-					reconectarse();
-					colaDeObjetivos_M = colaDeObjetivos; // la cola se rellena
-				}
-
-				else{
-					puts("No posee mas vidas desea reintentar?");
-				}
+				char* rutaMetadataPokemon = string_from_format("%s/metadata%s.dat",
+						rutaDirDeBill, objetivoActual);
+//				archivoMetadataPokemon = fopen(rutaMetadataPokemon);
+//				char* rutaMedataPokemonMapa = string_from_format()
 				break;
 			}
 
@@ -365,15 +337,14 @@ void jugar() {
 
 	}
 
-	yoYaGane(mapaActual);
-
+	desconectarse();
 }
 
 t_queue* parsearObjetivos(char** objetivos) {
 
 	int i = 0;
 	t_queue* colaDeObjetivos = queue_create();
-	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee to_do el array
+	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee todo el array
 		char* unObjetivo = objetivos[i];
 
 		queue_push(colaDeObjetivos, unObjetivo);
@@ -446,24 +417,12 @@ void recibirMsjs() {
 			case CAPTURADO: { //msj que envia si fue capturado OK !!
 				log_info(logEntrenador,
 						"Trainer captured the pokemon SUCCESSFUL");
-				pthread_mutex_lock(&pokemonCapturadoMutex);
-				puts(message->mensaje);
-				pokemonCapturado = message->mensaje;
-				pthread_mutex_unlock(&pokemonCapturadoMutex);
-
 				pthread_mutex_lock(&turnoMutex);
 				turno = CAPTURADO;
 				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
-			case MATAR: { //msj que envia si fue capturado OK !!
-				log_info(logEntrenador,
-						"The trainer has been killed by the Map");
-				pthread_mutex_lock(&turnoMutex);
-				turno = MATAR;
-				pthread_mutex_unlock(&turnoMutex);
-				break;
-			}
+
 			default: {
 				log_error(logEntrenador,
 						"Process couldn't connect to SERVER - Not able to connect to server %s. Please check if it's down.\n",
@@ -489,77 +448,3 @@ void recibirMsjs() {
 	}
 }
 
-void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
-
-	FILE *fp_org, *fp_dest;
-	char c;
-
-	if (!(fp_org = fopen(archivoOrigen, "rt"))
-			|| !(fp_dest = fopen(archivoDestino, "wt"))) {
-		perror("Error de apertura de ficheros");
-		exit(EXIT_FAILURE);
-	}
-
-	while ((c = fgetc(fp_org)) != EOF && !ferror(fp_org) && !ferror(fp_dest))
-		fputc(c, fp_dest);
-
-	fclose(fp_org);
-	fclose(fp_dest);
-
-}
-
-void borrarArchivos(t_queue* colaDeRutas) { //se borran todos los archivos que se pasa por la cola
-
-	while (queue_size(colaDeRutas)) {
-		char* rutaABorrar = queue_pop(colaDeRutas);
-
-		remove(rutaABorrar);
-	}
-
-}
-
-void cerrarEntrenador() {
-	borrarArchivos(colaDeRutasDePokemones);
-	borrarArchivos(colaDeRutasDeMapas);
-	exit(0);
-}
-
-void yoYaGane() {
-	//suponiendo que las medallas siempre son.jpg
-	char* nombreMedalla = string_from_format("medalla-%s.jpg", mapaActual);
-
-	char* rutaMedallaMapa = string_from_format("%s/Mapas/%s/%s", pokedex,
-			mapaActual, nombreMedalla);
-
-	char* rutaMedallaEntrenador = string_from_format("%s/%s", rutaMedallas,
-			nombreMedalla);
-
-	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
-	queue_push(colaDeRutasDeMapas, rutaMedallaEntrenador);
-
-	desconectarse();
-	pthread_cancel(hiloEscuchar);
-
-}
-
-int reconectarse(){
-	desconectarse();
-	pthread_cancel(hiloEscuchar);
-	exitCode = connectTo(MAPA, &socketMapa);
-
-	if (exitCode == EXIT_SUCCESS) {
-		log_info(logEntrenador,
-				"ENTRENADOR connected to MAPA successfully\n");
-		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
-		sendClientMessage(&socketMapa, metadataEntrenador.simbolo, NUEVO);
-		pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
-
-	} else {
-		log_error(logEntrenador,
-				"No server available - shutting down proces!!\n");
-		return EXIT_FAILURE;
-	}
-
-
-return 0;
-}

@@ -17,14 +17,6 @@
 
 t_log* logPokeDexServer;
 pthread_mutex_t mutexG;
-/*
-pthread_mutex_t OSADAmutex;
-pthread_mutex_t HEADERmutex;
-pthread_mutex_t BITMAPmutex;
-pthread_mutex_t DATA_BLOCKSmutex;
-pthread_mutex_t ARRAY_TABLA_ASIGNACIONmutex;
-pthread_mutex_t TABLA_DE_ARCHIVOSmutex;
-*/
 
 int PORT=0;
 
