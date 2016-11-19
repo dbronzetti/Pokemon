@@ -633,6 +633,6 @@ int reconectarse() {
 }
 
 void limpiarColasMetadaEtrenador(){
-	queue_clean_and_destroy_elements(metadataEntrenador.hojaDeViaje, (void*) free);
-	queue_clean_and_destroy_elements(metadataEntrenador.obj, (void*) free);
+	queue_clean_and_destroy_elements(metadataEntrenador.hojaDeViaje, (void *) free);
+	queue_clean_and_destroy_elements(metadataEntrenador.obj, (void *) free);
 }

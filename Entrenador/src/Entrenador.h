@@ -30,6 +30,7 @@ char* rutaMedallas;
 char* mapaActual;
 char *pokedex;
 
+
 //Hilos
 pthread_t hiloSignal; //un hio para detectar la signals que se le envia
 pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
@@ -73,6 +74,3 @@ void cerrarEntrenador();
 //Chau Blanco
 char* str_replace(const char *strbuf, const char *strold, const char *strnew)  ;
 #endif /* ENTRENADOR_H_ */
-
-//Funcion Limpiar entrenador
-void limpiarColasMetadaEtrenador();
