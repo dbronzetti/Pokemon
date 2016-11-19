@@ -5,6 +5,8 @@
  */
 
 #include "PokeDex_Cliente.h"
+
+static const unsigned long long CUATROGB = 4294967296;
 /************************************* JOEL GLOBALES *************************************************/
 static int posDelaTablaDeArchivos = -999;
 static int parent_directory = -999;
@@ -14,10 +16,6 @@ static int HIZO_TRUNCATE = 0;
 //TODO: SIN TRUNCATE, BORRO
 //TODO: PONER CONTROL DE NOMBRE EL SERVIDOR, O EN EL OSADA
 /************************************* FIN GLOBALES *************************************************/
-
-void nombreNoMayorA17(char *nombre){
-
-}
 
 int crearDirectorio(char *path){
 			int exitCode = EXIT_FAILURE; //DEFAULT Failure
@@ -284,6 +282,12 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 		//Receive message Status
 		int receivedBytes = receiveMessage(&socketPokeServer, &posDelaTablaDeArchivos ,sizeof(posDelaTablaDeArchivos));
 
+		if(posDelaTablaDeArchivos == -1){
+			printf("fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
+			log_info(logPokeCliente, "fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
+			return -1;
+		}
+
 		log_info(logPokeCliente, "fuse_create - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
 
 	}else{
@@ -336,13 +340,27 @@ static int fuse_mkdir(const char* path, mode_t mode){
 }
 
 
-static int fuse_truncate(const char* path,  char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
+static int fuse_truncate(const char* path, off_t offset)
 {
 //	int resultado = borrarArchivo (path);
+	// truncate --size=-5 - ESTO RESTA EL TAMANO ACTUAL CON 5, viejo 12 - 5 =7 - le quito caracteres
+	// truncate --size=+5 - ESTO suma EL TAMANO ACTUAL CON 5, viejo 12 + 5 =17 - agrego espacio
+	// truncate --size=5 - libero 5byes - agreo espacio
+	// truncate -s 2k 6 - libero 2k
+
+	//tengo 17
+	//1024
+
+
 	printf("********************************* fuse_truncate *********************\n");
-	printf("size: %d\n", size);
-	printf("offset: %d\n", offset);
-	printf("buf: %s\n", buf);
+	//-2147483648
+	printf("offset: %llu\n", offset);
+	if (offset > CUATROGB) {
+		printf("NO CUMPLE TAMANIO DE ARCHIVO OSADA: %llu\n", offset);
+		return -1;
+	}
+
+	//printf("buf: %s\n", buf);
 	HIZO_TRUNCATE = 1;
 	//ME FIJO LOS BYTES.
 	//SI ES MAYOR AL ACTUAL, SE LE ASIGNA MAS BLOQUES SI ES NECESARIO
@@ -584,7 +602,12 @@ static int fuse_write(const char* path, const char* buf, size_t size,  int trunc
 {
 	int bytes_escritos = 0;
 	printf("********************************* fuse_write *********************\n");
-
+/*
+	if (size > CUATROGB) {
+		printf("NO CUMPLE TAMANIO DE ARCHIVO OSADA: %i\n", size);
+		return -1;
+	}
+*/
 	if (string_length(path)>17){
 		printf("fuse_write - EL fuse_write ES MAYOR A 17: %i\n", string_length(path));
 		log_info(logPokeCliente, "fuse_write - EL RENAME ES MAYOR A 17: %i\n", string_length(path));
@@ -601,6 +624,7 @@ static int fuse_write(const char* path, const char* buf, size_t size,  int trunc
 	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
 	log_info(logPokeCliente, "fuse_write - buf: %s\n", buf);
 	log_info(logPokeCliente, "fuse_write - size: %i\n", size);
+
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	//0) Send Fuse Operations
 	enum_FUSEOperations operacion = FUSE_WRITE;

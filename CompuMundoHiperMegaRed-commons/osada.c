@@ -630,44 +630,36 @@ void modificarEnLaTablaDeArchivos(int parent_directory, int file_size, char* fna
 }
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos){
 	printf("****** escribirEnLaTablaDeArchivos\n");
-
-	int k=0;
+	int pos=0;
+	int encontroLugar = 0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
 	printf("file_name: %s\n", file_name);
 
     if (posDelaTablaDeArchivos == -999){//SI SE CREA EL ARCHIVO POR PRIMERA VEZ
-		for (k=0; k <= 2047; k++){
-			//printf("EN EL FOR\n");
+		for (pos=0; pos <= 2047; pos++){
+
 			//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-			if (TABLA_DE_ARCHIVOS[k].state == DELETED){
-					//printf("EN EL if\n");
-					TABLA_DE_ARCHIVOS[k].state = REGULAR;
-					//printf("state\n");
+			if (TABLA_DE_ARCHIVOS[pos].state == DELETED){
+					TABLA_DE_ARCHIVOS[pos].state = REGULAR;
 
-					TABLA_DE_ARCHIVOS[k].parent_directory = parent_directory;
-					//printf("parent_directory: %i\n",parent_directory);
+					TABLA_DE_ARCHIVOS[pos].parent_directory = parent_directory;
+					strcpy(TABLA_DE_ARCHIVOS[pos].fname, "\0");
+					strcat(TABLA_DE_ARCHIVOS[pos].fname, file_name);
+					TABLA_DE_ARCHIVOS[pos].file_size = file_size;
+					TABLA_DE_ARCHIVOS[pos].lastmod = 0;
 
-					//printf("fname: %s\n", fname);
-					//printf("sizeof(fname): %i\n", strlen(file_name));
-					strcpy(TABLA_DE_ARCHIVOS[k].fname, "\0");
-					strcat(TABLA_DE_ARCHIVOS[k].fname, file_name);
-
-					//printf("fname: %s\n", file_name);
-					TABLA_DE_ARCHIVOS[k].file_size = file_size;
-					//printf("file_size: %i\n",file_size);
-					TABLA_DE_ARCHIVOS[k].lastmod = 0;
-					//printf("lastmod\n");
-
-					TABLA_DE_ARCHIVOS[k].first_block= first_block;
-					//printf("first_block: %i\n",first_block);
-
+					TABLA_DE_ARCHIVOS[pos].first_block= first_block;
+					encontroLugar = 1;
 					break;
 
 			}
 			//DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		}//for (k=0; k <= 2047; k++)
-			//printf("afuera del if\n");
+
+		if(!encontroLugar){
+			return -1;
+		}
 	}
     else
 	{
@@ -675,17 +667,15 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
     	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size = file_size;
     	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].first_block= first_block;
     	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-		k=posDelaTablaDeArchivos;
+		pos=posDelaTablaDeArchivos;
 	}
 
-	//printf("k: %i\n", k);
-	//printf("tablaDeArchivo[k].fname: %s\n", TABLA_DE_ARCHIVOS[k].fname);
-	//printf("tablaDeArchivo[k].first_block: %i\n", TABLA_DE_ARCHIVOS[k].first_block);
+
     //DAMIAN - ACA SE TRABA pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	//DAMIAN - ACA SE TRABA pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	printf("guarda osada 2 fuera\n");
-	return k;
+	return pos;
 
 }
 
@@ -1056,6 +1046,16 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 
 
 	printf("************************ FIN MODIFICAR UN ARCHIVO ************************\n");
+}
+void hacerElTruncate(int tamanioNuevo, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
+	osada_file osadaFile;
+	osadaFile = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
+	if (osadaFile.file_size < tamanioNuevo){
+		//BORRA BLOQUES
+	}else{
+		//AGREGA BYTES
+	}
+
 }
 
 void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){

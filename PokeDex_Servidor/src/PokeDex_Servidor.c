@@ -212,7 +212,8 @@ void processMessageReceived(void *parameter){
 	while(1){
 		//0) Receive FUSE Operation
 		int receivedBytes = receiveMessage(&serverData->socketClient, FUSEOperation, sizeof(enum_FUSEOperations));
-		//DAMIAN - pthread_mutex_lock(&mutexG);
+		//DAMIAN -
+		pthread_mutex_lock(&mutexG);
 		if ( receivedBytes > 0 ){
 
 			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",*FUSEOperation);
@@ -351,8 +352,41 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 				case FUSE_TRUNCATE:{
+					    log_info(logPokeDexServer, "-------Processing FUSE_TRUNCATE message");
+						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
+						int parent_directory=0;
+						int pathLength = 0;
+						osada_file osadaFile;
+						int newSizeTruncate = 0;
 
-					break;
+						//1) Receive path length
+						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
+						log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+						char *path = malloc(pathLength);
+
+						//2) Receive path
+						receiveMessage(&serverData->socketClient, path, pathLength);
+						log_info(logPokeDexServer, "Message path received : %s\n",path);
+
+						//3) Receive parent_directory
+						log_info(logPokeDexServer, "Message parent_directory received --> \n");
+						receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+						log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
+
+						//4) Receive new size truncate
+						log_info(logPokeDexServer, "Message new size truncate --> \n");
+						receiveMessage(&serverData->socketClient, &newSizeTruncate, sizeof(newSizeTruncate));
+						log_info(logPokeDexServer, "Message new size truncate: %i\n",newSizeTruncate);
+
+						osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory);
+
+						//sendMessage(&serverData->socketClient, &osadaFile.file_size , sizeof(int));
+
+						log_info(logPokeDexServer, "-------FIN FUSE_TRUNCATE message");
+						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
+
+						break;
+
 				}
 				case FUSE_MKDIR:{
 					log_info(logPokeDexServer, "Processing FUSE_MKDIR message");
@@ -497,7 +531,7 @@ void processMessageReceived(void *parameter){
 									printf("bloqueDeDatos[0]: %c\n",bloqueDeDatos[0]);
 									log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);
 
-									bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
+									//bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
 									string_append(&string, bloqueDeDatos);
 									printf("1 - string: %s\n",string);
 								}
@@ -633,7 +667,8 @@ void processMessageReceived(void *parameter){
 			free(serverData);
 			break;
 		}
-		//DAMIAN - pthread_mutex_unlock(&mutexG);
+		//DAMIAN -
+		pthread_mutex_unlock(&mutexG);
 	}
 	free(FUSEOperation);
 }
