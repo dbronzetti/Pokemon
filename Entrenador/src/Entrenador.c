@@ -7,23 +7,15 @@
 #include "Entrenador.h"
 
 int socketMapa = 0;
-t_queue* colaDeObjetivos;
-enum_messages turno;
-char* posicionPokenest;
-char* rutaMetadata;
-char* rutaDirDeBill;
-char* mapaActual;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *entrenador = string_new();
-	char *pokedex = string_new();
-	pthread_t hiloSignal; //un hio para detectar la signals que se le envia
-	pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
+	pokedex = string_new();
 	pthread_mutex_init(&turnoMutex, NULL);
-	int ganoMapa;
+	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
 
-	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
+	exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -50,7 +42,11 @@ int main(int argc, char **argv) {
 	rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
 			pokedex, entrenador);
 
-	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill");
+	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill",
+			pokedex, entrenador);
+
+	rutaMedallas = string_from_format("%s/Entrenadores/%s/medallas", pokedex,
+			entrenador);
 
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
 			rutaMetadata);
@@ -66,7 +62,8 @@ int main(int argc, char **argv) {
 	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
 
 	i = 0;
-	for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
+	//for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
+	while (queue_size(metadataEntrenador.hojaDeViaje)>0){
 		mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
 		char** objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
@@ -87,9 +84,6 @@ int main(int argc, char **argv) {
 			pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
 
 			jugar();
-
-			pthread_join(hiloSignal, NULL);
-			pthread_join(hiloEscuchar, NULL);
 
 		} else {
 			log_error(logEntrenador,
@@ -252,6 +246,7 @@ void recibirSignal() {
 	while (1) {
 		signal(SIGUSR1, sumarVida);
 		signal(SIGTERM, restarVida);
+		signal(SIGINT, cerrarEntrenador);
 	}
 }
 
@@ -270,24 +265,24 @@ void restarVida() {
 }
 
 void desconectarse() {
-
-	sendClientMessage(&socketMapa, metadataEntrenador.simbolo, DESCONECTAR);
-	log_info(logEntrenador, "Se desconecto del mapa y el proceso se cerrara");
-	sleep(1); //dormimos un segundo para darle tiempo al mapa de cerrar el socket correctamente y no joder el select.
+	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
 	close(socketMapa);
 }
 
 void jugar() {
-
-	while (queue_size(colaDeObjetivos)) //mientras queden objetivos se sigue jugando en el mapa
+	char* objetivoActual;
+	t_queue* colaDeObjetivos_M; //esta es la cola de objetivos modificables
+	colaDeObjetivos_M = queue_create();
+	colaDeObjetivos_M = colaDeObjetivos;
+	while ((queue_size(colaDeObjetivos_M) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
-		char* objetivoActual;
+
 		pthread_mutex_lock(&turnoMutex);
 		if (turno != SIN_MENSAJE) {
 			switch (turno) {
 			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
 				log_info(logEntrenador, "Trainer send the id of the pokenest");
-				objetivoActual = queue_pop(colaDeObjetivos);
+				objetivoActual = queue_pop(colaDeObjetivos_M);
 				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
 				log_info(logEntrenador, "Conocer: Se manda: %s",
 						objetivoActual);
@@ -312,7 +307,8 @@ void jugar() {
 
 			case MOVETE: {// si estamos yendo a la pokenest le pedimos seguir moviendonos
 				log_info(logEntrenador,
-						"Trainer ask to mapa to move to the pokenest");
+						"Trainer ask to mapa to move to the pokenest '%s'",
+						objetivoActual);
 				sendClientMessage(&socketMapa, objetivoActual, IR);
 //				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
 
@@ -320,12 +316,58 @@ void jugar() {
 			}
 
 			case CAPTURADO: { // si se capturo ok hay que copiar el archivito metadata en el dir de bill
-				FILE *archivoMetadataPokemon;
+				char* rutaMetadataPokemon = string_from_format(
+						"%s/metadata%s.dat", rutaDirDeBill, pokemonCapturado); //armamos la ruta de donde se va a copiar el archivo metadata del pokemon capturado :)
 
-				char* rutaMetadataPokemon = string_from_format("%s/metadata%s.dat",
-						rutaDirDeBill, objetivoActual);
-//				archivoMetadataPokemon = fopen(rutaMetadataPokemon);
-//				char* rutaMedataPokemonMapa = string_from_format()
+				char* rutaMedataPokemonMapa = string_from_format(
+						"%s/Mapas/%s/Pokenest/%s/metadata.dat", pokedex,
+						mapaActual, pokemonCapturado); //armamos la ruta del archivo metadata que vamos a copiar
+				puts(rutaMedataPokemonMapa);
+
+				log_info(logEntrenador, "Trainer has captured: %s",
+						pokemonCapturado);
+				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
+				free(rutaMetadataPokemon);
+				free(rutaMedataPokemonMapa);
+				objetivoActual = NULL;
+				break;
+			}
+
+			case ERROR_CONOCER: { //si hubo un error cuando queria conocer la pos de la pokenest se vuelva a mandar :)
+				log_info(logEntrenador, "Trainer send the id of the pokenest");
+				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
+				log_info(logEntrenador, "Conocer: Se manda: %s",
+						objetivoActual);
+
+				break;
+			}
+
+			case MATAR: { //el mapa mando a matar al entrenador
+				log_info(logEntrenador, "Killing trainer after Map kick");
+				restarVida();
+				if (metadataEntrenador.vidas > 0) {
+					reconectarse();
+					colaDeObjetivos_M = colaDeObjetivos; // la cola se rellena
+				} else {
+					char respuesta = NULL;
+					printf("No posee mas vidas desea reiniciar el juego?\n tiene %d reintentos hasta el momento\n", metadataEntrenador.reintentos);
+					scanf("%c",respuesta);
+					queue_clean_and_destroy_elements(colaDeObjetivos_M, (void*) free);
+					objetivoActual = NULL;
+					if(respuesta == 'Y'){
+						int reintentos = metadataEntrenador.reintentos++;
+						limpiarColasMetadaEtrenador();
+						desconectarse();
+						borrarArchivos(rutaDirDeBill);
+						borrarArchivos(rutaMedallas);
+						pthread_cancel(hiloEscuchar);
+						crearArchivoMetadata(rutaMetadata);
+						metadataEntrenador.reintentos = reintentos;
+					} else {
+
+					}
+					break;
+				}
 				break;
 			}
 
@@ -337,14 +379,15 @@ void jugar() {
 
 	}
 
-	desconectarse();
+	yoYaGane(mapaActual);
+
 }
 
 t_queue* parsearObjetivos(char** objetivos) {
 
 	int i = 0;
 	t_queue* colaDeObjetivos = queue_create();
-	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee todo el array
+	while (objetivos[i] != '\0') { //el bucle dura hasta que se lee to_do el array
 		char* unObjetivo = objetivos[i];
 
 		queue_push(colaDeObjetivos, unObjetivo);
@@ -417,12 +460,24 @@ void recibirMsjs() {
 			case CAPTURADO: { //msj que envia si fue capturado OK !!
 				log_info(logEntrenador,
 						"Trainer captured the pokemon SUCCESSFUL");
+				pthread_mutex_lock(&pokemonCapturadoMutex);
+				puts(message->mensaje);
+				pokemonCapturado = message->mensaje;
+				pthread_mutex_unlock(&pokemonCapturadoMutex);
+
 				pthread_mutex_lock(&turnoMutex);
 				turno = CAPTURADO;
 				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
-
+			case MATAR: { //msj que envia si fue capturado OK !!
+				log_info(logEntrenador,
+						"The trainer has been killed by the Map");
+				pthread_mutex_lock(&turnoMutex);
+				turno = MATAR;
+				pthread_mutex_unlock(&turnoMutex);
+				break;
+			}
 			default: {
 				log_error(logEntrenador,
 						"Process couldn't connect to SERVER - Not able to connect to server %s. Please check if it's down.\n",
@@ -448,3 +503,136 @@ void recibirMsjs() {
 	}
 }
 
+void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
+	char * archivoOrigenSinBlancos=  str_replace(archivoOrigen," ","\\ ");
+
+	char * archivoDestinoSinBlancos= str_replace(archivoDestino," ", "\\ ");
+
+	char *command  = string_from_format("cp %s %s", archivoOrigenSinBlancos,archivoDestinoSinBlancos);
+
+	printf("----------------------------------------\n");
+	printf("%s \n",command);
+	printf("----------------------------------------\n");
+	system(command);
+//
+//	FILE *fp_org, *fp_dest;
+//	char c;
+//
+//	if (!(fp_org = fopen(archivoOrigen, "rt"))
+//			|| !(fp_dest = fopen(archivoDestino, "wt"))) {
+//		perror("Error de apertura de ficheros");
+//		exit(EXIT_FAILURE);
+//	}
+//
+//	while ((c = fgetc(fp_org)) != EOF && !ferror(fp_org) && !ferror(fp_dest))
+//		fputc(c, fp_dest);
+//
+//	fclose(fp_org);
+//	fclose(fp_dest);
+
+}
+
+
+char* str_replace(const char *strbuf, const char *strold, const char *strnew) {
+	char *strret, *p = NULL;
+	char *posnews, *posold;
+	size_t szold = strlen(strold);
+	size_t sznew = strlen(strnew);
+	size_t n = 1;
+
+	if (!strbuf)
+		return NULL;
+	if (!strold || !strnew || !(p = strstr(strbuf, strold)))
+		return strdup(strbuf);
+
+	while (n > 0) {
+		if (!(p = strstr(p + 1, strold)))
+			break;
+		n++;
+	}
+
+	strret = (char*) malloc(strlen(strbuf) - (n * szold) + (n * sznew) + 1);
+
+	p = strstr(strbuf, strold);
+
+	strncpy(strret, strbuf, (p - strbuf));
+	strret[p - strbuf] = 0;
+	posold = p + szold;
+	posnews = strret + (p - strbuf);
+	strcpy(posnews, strnew);
+	posnews += sznew;
+
+	while (n > 0) {
+		if (!(p = strstr(posold, strold)))
+			break;
+		strncpy(posnews, posold, p - posold);
+		posnews[p - posold] = 0;
+		posnews += (p - posold);
+		strcpy(posnews, strnew);
+		posnews += sznew;
+		posold = p + szold;
+	}
+
+	strcpy(posnews, posold);
+	return strret;
+}
+
+void borrarArchivos(char* rutaDeleted) { //se borran todos los archivos que se pasa por la cola
+
+	char * archivoOrigenSinBlancos=  str_replace(rutaDeleted," ","\\ ");
+
+	char *command  = string_from_format("rm -f %s/*", archivoOrigenSinBlancos);
+
+	printf("----------------------------------------\n");
+	printf("%s \n",command);
+	printf("----------------------------------------\n");
+	system(command);
+
+}
+
+void cerrarEntrenador() {
+	borrarArchivos(rutaDirDeBill);
+	borrarArchivos(rutaMedallas);
+	exit(0);
+}
+
+void yoYaGane() {
+	char* nombreMedalla = "medalla*.*";
+
+	char* rutaMedallaMapa = string_from_format("%s/Mapas/%s/%s", pokedex,
+			mapaActual, nombreMedalla);
+
+	char* rutaMedallaEntrenador = string_from_format("%s/", rutaMedallas);
+
+	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
+	borrarArchivos(rutaDirDeBill);
+	desconectarse();
+	pthread_cancel(hiloEscuchar);
+
+}
+
+int reconectarse() {
+	borrarArchivos(rutaDirDeBill);
+	desconectarse();
+	pthread_cancel(hiloEscuchar);
+	exitCode = connectTo(MAPA, &socketMapa);
+
+	if (exitCode == EXIT_SUCCESS) {
+		log_info(logEntrenador, "ENTRENADOR connected to MAPA successfully\n");
+		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
+		sendClientMessage(&socketMapa, metadataEntrenador.simbolo, NUEVO);
+		pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
+
+	} else {
+		log_error(logEntrenador,
+				"No server available - shutting down proces!!\n");
+		return EXIT_FAILURE;
+	}
+
+	return 0;
+}
+
+void limpiarColasMetadaEtrenador(){
+	queue_clean_and_destroy_elements(metadataEntrenador.hojaDeViaje, (void *) free);
+	queue_clean_and_destroy_elements(metadataEntrenador.obj, (void *) free);
+}
