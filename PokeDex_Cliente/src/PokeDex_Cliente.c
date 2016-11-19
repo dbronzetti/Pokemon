@@ -362,7 +362,7 @@ static int fuse_truncate(const char* path, off_t offset)
 
 	//printf("buf: %s\n", buf);
 	HIZO_TRUNCATE = 1;
-	return 1;
+	return 0;
 	//ME FIJO LOS BYTES.
 	//SI ES MAYOR AL ACTUAL, SE LE ASIGNA MAS BLOQUES SI ES NECESARIO
 	//SI ES MAYOR AL ACTUAL,  SE LE ASGINA MENOS BLOQUES SI ES NECESARIO.

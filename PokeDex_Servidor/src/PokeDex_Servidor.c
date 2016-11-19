@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexG, NULL);
 	initMutexOsada();
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
