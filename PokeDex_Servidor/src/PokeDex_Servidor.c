@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexG, NULL);
 	initMutexOsada();
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -264,6 +264,7 @@ void processMessageReceived(void *parameter){
 						receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
 						log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
+						printf("Damian - crearUnArchivo");
 						crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
 						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
 
@@ -303,7 +304,7 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "FUSE_CREATE - escribirEnLaTablaDeArchivos");
 					posDelaTablaDeArchivos = escribirEnLaTablaDeArchivos(posBloquePadre, 0, path, first_block_init, posDelaTablaDeArchivos);
 
-					//log_info(logPokeDexServer, "FUSE_CREATE - posDelaTablaDeArchivos a enviar %d", posDelaTablaDeArchivos);
+					log_info(logPokeDexServer, "FUSE_CREATE - posDelaTablaDeArchivos a enviar %d", posDelaTablaDeArchivos);
 
 					sendMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(int));
 					log_info(logPokeDexServer, "FUSE_CREATE - TERMINO");
@@ -515,7 +516,9 @@ void processMessageReceived(void *parameter){
 									bloque2 *= 64;
 
 									//TODO agregar mutex OSADA
+									pthread_mutex_lock(&OSADAmutex);
 									memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
+									pthread_mutex_unlock(&OSADAmutex);
 									printf("bloqueDeDatos: %s\n",bloqueDeDatos);
 									printf("bloqueDeDatos[0]: %c\n",bloqueDeDatos[0]);
 									log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);

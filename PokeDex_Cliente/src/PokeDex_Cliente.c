@@ -257,41 +257,43 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 	if (string_length(path)>17){
 		printf("fuse_create - EL fuse_mkdir ES MAYOR A 17: %i\n", string_length(path));
 		log_info(logPokeCliente, "fuse_create - EL RENAME ES MAYOR A 17: %i\n", string_length(path));
-		return -1;
-	}
-
-	// JOEL: NO DEBE GUARDARSE LOS  .swx y swp
-	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
-		//0) Send Fuse Operations
-		enum_FUSEOperations operacion = FUSE_CREATE;
-		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
-
-		string_append(&path, "\0");
-		//1) send path length (+1 due to \0)
-		int pathLength = strlen(path) + 1;
-		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-		log_info(logPokeCliente, "fuse_create - pathLength: %i\n", pathLength);
-		//2) send path
-		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-		log_info(logPokeCliente, "fuse_create - path: %s\n", path);
-
-		//3) send parent_directory
-		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
-		log_info(logPokeCliente, "fuse_create - parent_directory: %i\n", parent_directory);
-
-		//Receive message Status
-		int receivedBytes = receiveMessage(&socketPokeServer, &posDelaTablaDeArchivos ,sizeof(posDelaTablaDeArchivos));
-
-		if(posDelaTablaDeArchivos == -1){
-			printf("fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
-			log_info(logPokeCliente, "fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
-			return -1;
-		}
-
-		log_info(logPokeCliente, "fuse_create - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
-
+		exitCode = -1;
 	}else{
-		exitCode=EXIT_SUCCESS;
+		if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){ 	// JOEL: NO DEBE GUARDARSE LOS  .swx y swp
+			//0) Send Fuse Operations
+			enum_FUSEOperations operacion = FUSE_CREATE;
+			exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+
+			string_append(&path, "\0");
+			//1) send path length (+1 due to \0)
+			int pathLength = strlen(path) + 1;
+			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+			log_info(logPokeCliente, "fuse_create - pathLength: %i\n", pathLength);
+			//2) send path
+			exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+			log_info(logPokeCliente, "fuse_create - path: %s\n", path);
+
+			//3) send parent_directory
+			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+			log_info(logPokeCliente, "fuse_create - parent_directory: %i\n", parent_directory);
+
+			//Receive message Status
+			int receivedBytes = receiveMessage(&socketPokeServer, &posDelaTablaDeArchivos ,sizeof(posDelaTablaDeArchivos));
+
+			log_info(logPokeCliente, "fuse_create - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
+
+			if(posDelaTablaDeArchivos == -1){
+				printf("fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
+				log_info(logPokeCliente, "fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
+				exitCode = -1;
+			}else{
+				printf("fuse_create - Se pudo crear el archivo\n");
+				exitCode = EXIT_SUCCESS; // no se estaba retornando OK al FUSE cuando la posicion era encontrada
+			}
+
+		}else{
+			exitCode = EXIT_SUCCESS;
+		}
 	}
 	return exitCode;
 }
