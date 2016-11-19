@@ -57,8 +57,8 @@ _Static_assert( sizeof(osada_file) == (sizeof(osada_block) / 2.0), "osada_file s
 
 #pragma pack(pop)
 
-#endif __OSADA_H__
-
+void initMutexOsada();
+void destroyMutexOsada();
 unsigned char *inicializarOSADA(int archivoID);
 osada_header *obtenerHeader();
 t_bitarray *obtenerBitmap();
@@ -112,6 +112,10 @@ pthread_mutex_t BITMAPmutex;
 pthread_mutex_t DATA_BLOCKSmutex;
 pthread_mutex_t ARRAY_TABLA_ASIGNACIONmutex;
 pthread_mutex_t TABLA_DE_ARCHIVOSmutex;
+
+#endif __OSADA_H__
+
+
 
 
 
