@@ -352,6 +352,7 @@ void jugar() {
 					char* respuesta = malloc(3);
 					printf("No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento\n>> ", metadataEntrenador.reintentos);
 					scanf("%s",respuesta);
+					string_to_upper(respuesta);
 					log_info(logEntrenador,"voy a destruir colaDeObjetivos_M");
 					queue_clean_and_destroy_elements(colaDeObjetivos_M, (void*) free);
 					log_info(logEntrenador,"destruida la colaDeObjetivos_M");

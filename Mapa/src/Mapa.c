@@ -709,6 +709,25 @@ void eliminarEntrenador(char simbolo) {
 
 	devolverPokemones(pokemones);
 
+	//After returning all pokemons to Map it's needed to reset all the trainers
+	//in order to let them capture the new pokemons available in case it is possible
+	pthread_mutex_lock(&colaDeBloqueadosMutex);
+	while (queue_size(colaDeBloqueados) > 0) { //transformo la cola en una lista para poder manejarla mejor...
+		//se limpia la cola de bloqueados completamente
+		t_entrenador* entrenadorBloqueado = queue_pop(colaDeBloqueados);
+
+		pthread_mutex_lock(&setEntrenadoresMutex);
+		entrenadorBloqueado->estaBloqueado = 0;
+		entrenador->accion = SIN_MENSAJE;
+		pthread_mutex_unlock(&setEntrenadoresMutex);
+
+		pthread_mutex_lock(&colaDeListosMutex);
+		queue_push(colaDeListos, entrenadorBloqueado);
+		pthread_mutex_unlock(&colaDeListosMutex);
+	}
+	pthread_mutex_unlock(&colaDeBloqueadosMutex);
+
+
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	free(entrenador);
 	pthread_mutex_unlock(&setEntrenadoresMutex);
