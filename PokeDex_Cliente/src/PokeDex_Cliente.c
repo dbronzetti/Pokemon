@@ -362,17 +362,18 @@ static int fuse_truncate(const char* path, off_t offset)
 
 	//printf("buf: %s\n", buf);
 	HIZO_TRUNCATE = 1;
+	return 1;
 	//ME FIJO LOS BYTES.
 	//SI ES MAYOR AL ACTUAL, SE LE ASIGNA MAS BLOQUES SI ES NECESARIO
 	//SI ES MAYOR AL ACTUAL,  SE LE ASGINA MENOS BLOQUES SI ES NECESARIO.
 	//SI ES IGUAL AL ACTUAL, NO SE ALTERA NADA.
-	/*
+
 	log_info(logPokeCliente, "--------------------- fuse_truncate ------------ \n");
 	int resultado = 1;
 	int exitCode;
 
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
-		log_info(logPokeCliente, "****************FUSE_UNLINK****************\n");
+		log_info(logPokeCliente, "**************** FUSE_TRUNCATE ****************\n");
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_TRUNCATE;
 		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -391,21 +392,23 @@ static int fuse_truncate(const char* path, off_t offset)
 		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
 		log_info(logPokeCliente, "fuse_truncate - parent_directory: %i\n", parent_directory);
 
+		//4) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &offset , sizeof(offset));
+		log_info(logPokeCliente, "fuse_truncate - parent_directory: %i\n", offset);
+
 		//Receive message size
 		int messageSize = -1;
 		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
 		log_info(logPokeCliente, "fuse_truncate - MessageSize: %i\n", messageSize);
 
-		if (receivedBytes > 0){
-				}
-	}else{
-		exitCode=EXIT_SUCCESS;
+	}
+		else
+	{
+		exitCode = EXIT_SUCCESS;
 	}
 
+	return resultado;
 
-		return resultado;
-		*/
-	return 0;
 }
 
 static int fuse_unlink(const char* path, int hizoElOpen)

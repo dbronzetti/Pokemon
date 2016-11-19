@@ -958,7 +958,6 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 	int restaEntreNuevoTamanioYViejo = 0;
 	int posDelaTablaDeArchivos = 0;
-	//TODO: ESTE IF NO ES del todo correcto
 
 	int i=0;
 
@@ -1049,9 +1048,22 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 }
 void hacerElTruncate(int tamanioNuevo, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	osada_file osadaFile;
+	int cantidadDeBloquesParaGrabar = 0;
+	int cantidadNuevaDeBloquesParaGrabar = 0;
 	osadaFile = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
+	posDelaTablaDeArchivos = buscarElArchivoYDevolverPosicion(fname, parent_directory);
+
+	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
+
+	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+	cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
+
 	if (osadaFile.file_size < tamanioNuevo){
+		printf("************ HAY MENOS DATOS PARA AGREGAR\n");
 		//BORRA BLOQUES
+		char *nuevoContenido = string_new();
+		printf("nuevoContenido: %s\n", nuevoContenido);
+
 	}else{
 		//AGREGA BYTES
 	}

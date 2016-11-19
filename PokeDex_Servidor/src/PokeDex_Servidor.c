@@ -380,7 +380,7 @@ void processMessageReceived(void *parameter){
 
 						osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory);
 
-						//sendMessage(&serverData->socketClient, &osadaFile.file_size , sizeof(int));
+						sendMessage(&serverData->socketClient, &osadaFile.file_size , sizeof(int));
 
 						log_info(logPokeDexServer, "-------FIN FUSE_TRUNCATE message");
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
