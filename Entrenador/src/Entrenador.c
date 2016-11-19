@@ -47,8 +47,8 @@ int main(int argc, char **argv) {
 	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill",
 			pokedex, entrenador);
 
-	rutaMedallas = string_from_format("%s/Entrenadores/%s/medallas",
-			pokedex, entrenador);
+	rutaMedallas = string_from_format("%s/Entrenadores/%s/medallas", pokedex,
+			entrenador);
 
 	printf("Directorio de la metadata del entranador '%s': '%s'\n", entrenador,
 			rutaMetadata);
@@ -330,6 +330,8 @@ void jugar() {
 						pokemonCapturado);
 				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
 				queue_push(colaDeRutasDePokemones, rutaMetadataPokemon);
+				free(rutaMetadataPokemon);
+				free(rutaMedataPokemonMapa);
 				objetivoActual = NULL;
 				break;
 			}
@@ -346,12 +348,12 @@ void jugar() {
 			case MATAR: { //el mapa mando a matar al entrenador
 				log_info(logEntrenador, "Killing trainer after Map kick");
 				restarVida();
-				if(metadataEntrenador.vidas > 0){
+				if (metadataEntrenador.vidas > 0) {
 					reconectarse();
 					colaDeObjetivos_M = colaDeObjetivos; // la cola se rellena
 				}
 
-				else{
+				else {
 					puts("No posee mas vidas desea reintentar?");
 				}
 				break;
@@ -490,66 +492,121 @@ void recibirMsjs() {
 }
 
 void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
+	char * archivoOrigenSinBlancos=  str_replace(archivoOrigen," ","\\ ");
 
-	FILE *fp_org, *fp_dest;
-	char c;
+	char * archivoDestinoSinBlancos= str_replace(archivoDestino," ", "\\ ");
 
-	if (!(fp_org = fopen(archivoOrigen, "rt"))
-			|| !(fp_dest = fopen(archivoDestino, "wt"))) {
-		perror("Error de apertura de ficheros");
-		exit(EXIT_FAILURE);
-	}
+	char *command  = string_from_format("cp %s %s", archivoOrigenSinBlancos,archivoDestinoSinBlancos);
 
-	while ((c = fgetc(fp_org)) != EOF && !ferror(fp_org) && !ferror(fp_dest))
-		fputc(c, fp_dest);
-
-	fclose(fp_org);
-	fclose(fp_dest);
+	printf("----------------------------------------\n");
+	printf("%s \n",command);
+	printf("----------------------------------------\n");
+	system(command);
+//
+//	FILE *fp_org, *fp_dest;
+//	char c;
+//
+//	if (!(fp_org = fopen(archivoOrigen, "rt"))
+//			|| !(fp_dest = fopen(archivoDestino, "wt"))) {
+//		perror("Error de apertura de ficheros");
+//		exit(EXIT_FAILURE);
+//	}
+//
+//	while ((c = fgetc(fp_org)) != EOF && !ferror(fp_org) && !ferror(fp_dest))
+//		fputc(c, fp_dest);
+//
+//	fclose(fp_org);
+//	fclose(fp_dest);
 
 }
 
-void borrarArchivos(t_queue* colaDeRutas) { //se borran todos los archivos que se pasa por la cola
 
-	while (queue_size(colaDeRutas)) {
-		char* rutaABorrar = queue_pop(colaDeRutas);
+char* str_replace(const char *strbuf, const char *strold, const char *strnew) {
+	char *strret, *p = NULL;
+	char *posnews, *posold;
+	size_t szold = strlen(strold);
+	size_t sznew = strlen(strnew);
+	size_t n = 1;
 
-		remove(rutaABorrar);
+	if (!strbuf)
+		return NULL;
+	if (!strold || !strnew || !(p = strstr(strbuf, strold)))
+		return strdup(strbuf);
+
+	while (n > 0) {
+		if (!(p = strstr(p + 1, strold)))
+			break;
+		n++;
 	}
+
+	strret = (char*) malloc(strlen(strbuf) - (n * szold) + (n * sznew) + 1);
+
+	p = strstr(strbuf, strold);
+
+	strncpy(strret, strbuf, (p - strbuf));
+	strret[p - strbuf] = 0;
+	posold = p + szold;
+	posnews = strret + (p - strbuf);
+	strcpy(posnews, strnew);
+	posnews += sznew;
+
+	while (n > 0) {
+		if (!(p = strstr(posold, strold)))
+			break;
+		strncpy(posnews, posold, p - posold);
+		posnews[p - posold] = 0;
+		posnews += (p - posold);
+		strcpy(posnews, strnew);
+		posnews += sznew;
+		posold = p + szold;
+	}
+
+	strcpy(posnews, posold);
+	return strret;
+}
+
+void borrarArchivos(char* rutaDeleted) { //se borran todos los archivos que se pasa por la cola
+
+	char * archivoOrigenSinBlancos=  str_replace(rutaDeleted," ","\\ ");
+
+	char *command  = string_from_format("rm -f %s/*", archivoOrigenSinBlancos);
+
+	printf("----------------------------------------\n");
+	printf("%s \n",command);
+	printf("----------------------------------------\n");
+	system(command);
 
 }
 
 void cerrarEntrenador() {
-	borrarArchivos(colaDeRutasDePokemones);
-	borrarArchivos(colaDeRutasDeMapas);
+	borrarArchivos(rutaDirDeBill);
+	borrarArchivos(rutaMedallas);
 	exit(0);
 }
 
 void yoYaGane() {
-	//suponiendo que las medallas siempre son.jpg
-	char* nombreMedalla = string_from_format("medalla-%s.jpg", mapaActual);
+	char* nombreMedalla = "medalla*.*";
 
 	char* rutaMedallaMapa = string_from_format("%s/Mapas/%s/%s", pokedex,
 			mapaActual, nombreMedalla);
 
-	char* rutaMedallaEntrenador = string_from_format("%s/%s", rutaMedallas,
-			nombreMedalla);
+	char* rutaMedallaEntrenador = string_from_format("%s/", rutaMedallas);
 
 	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
-	queue_push(colaDeRutasDeMapas, rutaMedallaEntrenador);
-
+	borrarArchivos(rutaDirDeBill);
 	desconectarse();
 	pthread_cancel(hiloEscuchar);
 
 }
 
-int reconectarse(){
+int reconectarse() {
+	borrarArchivos(rutaDirDeBill);
 	desconectarse();
 	pthread_cancel(hiloEscuchar);
 	exitCode = connectTo(MAPA, &socketMapa);
 
 	if (exitCode == EXIT_SUCCESS) {
-		log_info(logEntrenador,
-				"ENTRENADOR connected to MAPA successfully\n");
+		log_info(logEntrenador, "ENTRENADOR connected to MAPA successfully\n");
 		printf("Se ha conectado correctamente al mapa: %s\n", mapaActual);
 		sendClientMessage(&socketMapa, metadataEntrenador.simbolo, NUEVO);
 		pthread_create(&hiloEscuchar, NULL, (void*) recibirMsjs, NULL);
@@ -560,6 +617,5 @@ int reconectarse(){
 		return EXIT_FAILURE;
 	}
 
-
-return 0;
+	return 0;
 }

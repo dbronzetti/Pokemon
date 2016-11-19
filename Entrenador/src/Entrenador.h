@@ -69,7 +69,9 @@ void recibirSignal();
 void sumarVida();
 void restarVida();
 void desconectarse();
-void borrarArchivos(t_queue* colaDeRutas);
+void borrarArchivos(char* rutaDeleted);
 void cerrarEntrenador();
 
+//Chau Blanco
+char* str_replace(const char *strbuf, const char *strold, const char *strnew)  ;
 #endif /* ENTRENADOR_H_ */
