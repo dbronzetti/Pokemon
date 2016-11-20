@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
 		char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata.dat",
 				pokedex, mapaActual);
 
-		crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa);
+		crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa, logEntrenador);
 
 		exitCode = connectTo(MAPA, &socketMapa);
 

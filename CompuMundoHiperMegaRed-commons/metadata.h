@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "commons/collections/queue.h"
 #include "commons/config.h"
+#include "commons/log.h"
 
 /*Atencion!: Cada vez que se desencola un elemento de la hojaDeViaje se debe desencolar su objetivo */
 typedef struct {
@@ -43,6 +44,6 @@ typedef struct {
 
 
 //Funciones
-void crearArchivoMetadataDelMapa(char* rutaMetadataMapa, t_metadataMapa* metadataMapa);
+void crearArchivoMetadataDelMapa(char* rutaMetadataMapa, t_metadataMapa* metadataMapa, t_log *log);
 
 #endif /* METADATA_H_ */
