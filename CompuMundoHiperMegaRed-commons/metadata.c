@@ -20,13 +20,13 @@ void crearArchivoMetadataDelMapa(char* rutaMetadataMapa, t_metadataMapa *metadat
 	metadataMapa->puerto = config_get_int_value(metadata, "Puerto");
 
 	log_info(log, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	log_info(log, "Tiempo de checkeo de deadlock: %d\n", metadataMapa.tiempoChequeoDeadlock);
-	log_info(log, "Batalla: %d\n", metadataMapa.batalla);
-	log_info(log, "Algoritmo: %s\n", metadataMapa.algoritmo);
-	log_info(log, "Quantum: %d\n", metadataMapa.quantum);
-	log_info(log, "Retardo: %d\n", metadataMapa.retardo);
-	log_info(log, "IP: %s\n", metadataMapa.ip);
-	log_info(log, "Puerto: %d\n", metadataMapa.puerto);
+	log_info(log, "Tiempo de checkeo de deadlock: %d\n", metadataMapa->tiempoChequeoDeadlock);
+	log_info(log, "Batalla: %d\n", metadataMapa->batalla);
+	log_info(log, "Algoritmo: %s\n", metadataMapa->algoritmo);
+	log_info(log, "Quantum: %d\n", metadataMapa->quantum);
+	log_info(log, "Retardo: %d\n", metadataMapa->retardo);
+	log_info(log, "IP: %s\n", metadataMapa->ip);
+	log_info(log, "Puerto: %d\n", metadataMapa->puerto);
 	log_info(log, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 }
 
