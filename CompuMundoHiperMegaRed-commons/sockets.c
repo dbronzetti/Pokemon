@@ -282,7 +282,7 @@ int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaj
 //	processString = getProcessString(process);
 
 	messageACK->mensaje = string_new();
-	string_append_with_format(&messageACK->mensaje,mensaje);
+	string_append(&messageACK->mensaje,mensaje);
 	messageLen = strlen(messageACK->mensaje);
 
 	payloadSize = sizeof(messageACK->mensaje) + sizeof(messageLen) + messageLen + 1; // process + length message + message + 1 (+1 because of '\0')
