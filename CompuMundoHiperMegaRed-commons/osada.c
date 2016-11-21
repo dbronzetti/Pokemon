@@ -493,7 +493,6 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 		n = string_duplicate(file_name);
 		string_trim(&nac);
 		string_trim(&n);
-		printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){

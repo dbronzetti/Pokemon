@@ -10,8 +10,9 @@ static const unsigned long long CUATROGB = 4294967296;
 /************************************* JOEL GLOBALES *************************************************/
 static int posDelaTablaDeArchivos = -999;
 static int parent_directory = -999;
-static int ESTA_MODIFICANDO = 0;
+static int HABILITAR_MODIFICACION = 0;
 static int HIZO_TRUNCATE = 0;
+static int FILE_SIZE;
 //TODO: TRUNCATE, HAGO LA MAODIFICACION
 //TODO: SIN TRUNCATE, BORRO
 //TODO: PONER CONTROL DE NOMBRE EL SERVIDOR, O EN EL OSADA
@@ -356,9 +357,15 @@ static int fuse_truncate(const char* path, off_t offset)
 	printf("********************************* fuse_truncate *********************\n");
 	//-2147483648
 	printf("offset: %llu\n", offset);
+	printf("FILE_SIZE: %i\n", FILE_SIZE);
 	if (offset > CUATROGB) {
 		printf("NO CUMPLE TAMANIO DE ARCHIVO OSADA: %llu\n", offset);
 		return -1;
+	}
+
+	if (FILE_SIZE == 0 && offset == 0) {
+		printf("ESTA EN TRUNCATE, PERO ACABA DE HACER EL WRITE\n");
+		return 0;
 	}
 
 	//printf("buf: %s\n", buf);
@@ -369,7 +376,7 @@ static int fuse_truncate(const char* path, off_t offset)
 	//SI ES IGUAL AL ACTUAL, NO SE ALTERA NADA.
 
 	log_info(logPokeCliente, "--------------------- fuse_truncate ------------ \n");
-	int resultado = 1;
+	int resultado = 0;
 	int exitCode;
 
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
@@ -462,8 +469,7 @@ static int fuse_unlink(const char* path, int hizoElOpen)
 
 static int fuse_open(const char *path, struct fuse_file_info *fi) {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
-	int file_size;
-	printf("********************************* fuse_open ********************* %i\n");
+	printf("********************************* fuse_open ********************* \n");
 	log_info(logPokeCliente, "--------------------- fuse_open ------------ \n");
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		log_info(logPokeCliente, "****************FUSE_UNLINK****************\n");
@@ -487,9 +493,9 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 		log_info(logPokeCliente, "fuse_open - parent_directory: %i\n", parent_directory);
 
 		//Receive message file_size
-		int receivedBytes = receiveMessage(&socketPokeServer, &file_size ,sizeof(file_size));
-		log_info(logPokeCliente, "fuse_open - file_size: %i\n", file_size);
-		ESTA_MODIFICANDO = 1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &FILE_SIZE ,sizeof(FILE_SIZE));
+		log_info(logPokeCliente, "fuse_open - file_size: %i\n", FILE_SIZE);
+		HABILITAR_MODIFICACION = 1;
 		fuse_unlink(path, 666);
 
 	}else{
@@ -617,7 +623,7 @@ static int fuse_write(const char* path, const char* buf, size_t size,  int trunc
 		return -1;
 	}
 
-	if (HIZO_TRUNCATE == 1){
+	if (HABILITAR_MODIFICACION == 1){
 		modificarElArchivo(path, buf, size);
 		return size;
 	}

@@ -507,7 +507,8 @@ void processMessageReceived(void *parameter){
 								int i;
 
 								log_info(logPokeDexServer, "ENTRA EN EL FOR DE BLOQUES\n");
-								memcpy(string, &conjuntoDeBloquesDelArchivo->elements_count, sizeof(int));
+								//memcpy(string, &conjuntoDeBloquesDelArchivo->elements_count, sizeof(int));
+								//printf("string: %s\n",string);
 								char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
 
 								for (i = 0; i < conjuntoDeBloquesDelArchivo->elements_count; i++) {
@@ -515,7 +516,6 @@ void processMessageReceived(void *parameter){
 									int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
 									bloque2 *= 64;
 
-									//TODO agregar mutex OSADA
 									pthread_mutex_lock(&OSADAmutex);
 									memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
 									pthread_mutex_unlock(&OSADAmutex);
@@ -523,7 +523,7 @@ void processMessageReceived(void *parameter){
 									printf("bloqueDeDatos[0]: %c\n",bloqueDeDatos[0]);
 									log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);
 
-									//bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
+									bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
 									string_append(&string, bloqueDeDatos);
 									printf("1 - string: %s\n",string);
 								}
