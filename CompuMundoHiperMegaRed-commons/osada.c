@@ -718,7 +718,7 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 			}
 		}//for (k=0; k <= 2047; k++)
 
-		if(!encontroLugar){
+		if(!found){
 			return -1;
 		}
 	}

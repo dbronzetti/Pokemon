@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexG, NULL);
 	initMutexOsada();
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -367,7 +367,7 @@ void processMessageReceived(void *parameter){
 						receiveMessage(&serverData->socketClient, &newSizeTruncate, sizeof(newSizeTruncate));
 						log_info(logPokeDexServer, "Message new size truncate: %i\n",newSizeTruncate);
 
-						osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory);
+						//osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory);
 
 						sendMessage(&serverData->socketClient, &osadaFile.file_size , sizeof(int));
 

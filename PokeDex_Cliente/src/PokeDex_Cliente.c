@@ -132,8 +132,7 @@ static void *fuse_init(void)
 static int fuse_getattr(const char *path, struct stat *stbuf)
 {
 	int res = 0;
-	//path = full(path);
-	//printf("[Fuse] getattr(%s)\n", path);
+
 	memset(stbuf, 0, sizeof(struct stat));
 	printf("********************************* fuse_getattr *********************\n");
 	log_info(logPokeCliente, "****************fuse_getattr****************\n");
@@ -282,14 +281,14 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 
 			log_info(logPokeCliente, "fuse_create - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
 
-			if(posDelaTablaDeArchivos == -1){
+			/*if(posDelaTablaDeArchivos == -1){
 				printf("fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
 				log_info(logPokeCliente, "fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
 				exitCode = -1;
 			}else{
 				printf("fuse_create - Se pudo crear el archivo\n");
 				exitCode = EXIT_SUCCESS; // no se estaba retornando OK al FUSE cuando la posicion era encontrada
-			}
+			}*/
 
 		}else{
 			exitCode = EXIT_SUCCESS;
@@ -363,8 +362,7 @@ static int fuse_truncate(const char* path, off_t offset)
 	}
 
 	//printf("buf: %s\n", buf);
-	HIZO_TRUNCATE = 1;
-	return 0;
+
 	//ME FIJO LOS BYTES.
 	//SI ES MAYOR AL ACTUAL, SE LE ASIGNA MAS BLOQUES SI ES NECESARIO
 	//SI ES MAYOR AL ACTUAL,  SE LE ASGINA MENOS BLOQUES SI ES NECESARIO.
