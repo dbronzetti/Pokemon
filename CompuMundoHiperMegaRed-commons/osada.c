@@ -254,7 +254,7 @@ void setearConstantesDePosicionDeOsada(){
 
 unsigned char *inicializarOSADA(int archivoID){
 	unsigned char *osada;
-
+	setlocale(LC_ALL, "es_ES.UTF-8");
 	/************************************************************/
 	printf("Que paso?: %s\n", strerror(errno));
 	printf("archivoID: %i\n", archivoID);

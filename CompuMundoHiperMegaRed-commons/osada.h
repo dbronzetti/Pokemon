@@ -10,6 +10,7 @@
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <commons/collections/dictionary.h>
+#include <locale.h>
 
 #ifndef __OSADA_H__
 #define __OSADA_H__
