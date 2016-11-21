@@ -641,7 +641,7 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 				default:{
-					memset(FUSEOperation ,0 , sizeof(enum_FUSEOperations));
+					//memset(FUSEOperation ,0 , sizeof(enum_FUSEOperations));
 					log_error(logPokeDexServer,"Invalid operation received '%d'", *FUSEOperation);
 					break;
 				}

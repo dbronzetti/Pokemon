@@ -603,7 +603,7 @@ void modificarElArchivo(const char* path, const char* buf, size_t size){
 		int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
 		log_info(logPokeCliente, "FUSE_MODIFICAR - bytes_escritos: %i\n", bytes_escritos);
 		HIZO_TRUNCATE = 0;
-		usleep(500000);
+		//usleep(500000);
 
 }
 
@@ -680,7 +680,7 @@ static int fuse_write(const char* path, const char* buf, size_t size,  int trunc
 	//Receive message size
 	int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
 	log_info(logPokeCliente, "fuse_write - bytes_escritos: %i\n", bytes_escritos);
-	usleep(500000);
+	//usleep(500000);
 	return bytes_escritos;
 }
 //TODO
@@ -723,6 +723,21 @@ static int fuse_mknod(const char* path, mode_t mode, dev_t rdev){
 	return 1;
 }
 
+static int fuse_release(const char *path, struct fuse_file_info *file){
+	printf("***************** fuse_release ***********************\n");
+	return 0;
+}
+
+static int fuse_releasedir(const char *path, struct fuse_file_info *file){
+	printf("***************** fuse_releasedir ***********************\n");
+	return 0;
+}
+
+static int fuse_opendir(const char *path, struct fuse_file_info *file){
+	printf("***************** fuse_opendir ***********************\n");
+	return 0;
+}
+
 static struct fuse_operations xmp_oper = {
     .init       = fuse_init,
     .getattr	= fuse_getattr,
@@ -738,6 +753,9 @@ static struct fuse_operations xmp_oper = {
 	.truncate   = fuse_truncate,
 	.utimens    = fuse_utimens,
 	.mknod		= fuse_mknod,
+	.release	= fuse_release,
+	.opendir	= fuse_opendir,
+	.releasedir	= fuse_releasedir,
 };
 
 
