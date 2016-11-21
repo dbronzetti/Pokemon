@@ -62,17 +62,7 @@ int main(int argc, char **argv) {
 	log_info(logMapa, "Directorio de la metadata del mapa '%s': '%s'\n", mapa,
 			rutaMetadata);
 
-	log_info(logMapa, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa);
-	log_info(logMapa, "Tiempo de checkeo de deadlock: %d\n",
-			metadataMapa.tiempoChequeoDeadlock);
-	log_info(logMapa, "Batalla: %d\n", metadataMapa.batalla);
-	log_info(logMapa, "Algoritmo: %s\n", metadataMapa.algoritmo);
-	log_info(logMapa, "Quantum: %d\n", metadataMapa.quantum);
-	log_info(logMapa, "Retardo: %d\n", metadataMapa.retardo);
-	log_info(logMapa, "IP: %s\n", metadataMapa.ip);
-	log_info(logMapa, "Puerto: %d\n", metadataMapa.puerto);
-	log_info(logMapa, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa, logMapa);
 
 	recorrerdirDePokenest(rutaPokenest);
 
@@ -319,8 +309,7 @@ void processMessageReceived(void *parameter) {
 	//Receive message size
 	int messageSize = 0;
 	char *messageRcv = malloc(sizeof(messageSize));
-	int receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,
-			sizeof(messageSize));
+	int receivedBytes = receiveMessage(&serverData->socketClient, messageRcv,sizeof(messageSize));
 
 	bool buscarPorSocket(t_entrenador* entrenador) {
 		return (entrenador->socket == serverData->socketClient);
@@ -736,7 +725,7 @@ void eliminarEntrenador(char simbolo) {
 void planificarRR() {
 
 	while (planificandoRR == 1) {
-
+		//TODO sincronizar cola aca.
 		while (queue_size(colaDeListos) != 0 && planificandoRR == 1) {
 			int i;
 			char simbolo;
@@ -751,15 +740,13 @@ void planificarRR() {
 
 			pthread_mutex_lock(&setEntrenadoresMutex);
 			simbolo = entrenador->simbolo;
-			bool seDesconectoAlgunEntrenador = list_any_satisfy(
-					listaDeEntrenadores, (void*) buscarPorSimbolo);
+			bool seDesconectoAlgunEntrenador = list_any_satisfy(listaDeEntrenadores, (void*) buscarPorSimbolo);
 			pthread_mutex_unlock(&setEntrenadoresMutex);
 
 			if (seDesconectoAlgunEntrenador) { //hacemos un if por si sacamos un entrenador que se desconecto
 				entrenador->estaEnTurno = 1;
 
-				log_info(logMapa, "Begins the turn of trainer: %c",
-						entrenador->simbolo);
+				log_info(logMapa, "Begins the turn of trainer: %c", entrenador->simbolo);
 
 				for (i = 0; i < metadataMapa.quantum; i++) {
 
@@ -783,8 +770,7 @@ void planificarRR() {
 
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				simbolo = entrenador->simbolo;
-				seDesconectoAlgunEntrenador = list_any_satisfy(
-						listaDeEntrenadores, (void*) buscarPorSimbolo);
+				seDesconectoAlgunEntrenador = list_any_satisfy(listaDeEntrenadores, (void*) buscarPorSimbolo);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
 
 				if (seDesconectoAlgunEntrenador) {
@@ -873,13 +859,10 @@ void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y,
 }
 
 char* convertirPosicionesAString(int posX, int posY) {
-	char* posXstr = "a";
-	char* posYstr = "b";
-//	sprintf(posXstr, "%d", posX);
-//	sprintf(posYstr, "%d", posY);
+	char* posXstr = string_itoa(posX);
+	char* posYstr = string_itoa(posY);
 
 	return string_from_format("%s,%s", posXstr, posYstr);
-
 }
 
 void planificarSRDF() {
@@ -1325,6 +1308,7 @@ void detectarDeadlocks() {
 			}
 			list_sort(listaDeadlock, (void*) _entrenadorMasViejoEnMapa);
 
+			//TODO verificar si esta el modo pelea activado.
 			//1) mandar pokemon 1 y 2 a pelear. El ganador debera pasar a la cola de listo y su flag "estaBloqueado" = 0.
 			bool enBatalla = true;
 			while (enBatalla) {
