@@ -811,7 +811,7 @@ void _guardarEnTablaDeDatos(char* bloquePos, char* contenido){
 	char *bloque;
 	//strcpy(bloqueDeDatos, contenido);
 	//memcpy(bloqueDeDatos, contenido, OSADA_BLOCK_SIZE);
-	printf("_guardarEnTablaDeDatos - bloqueDeDatos: %s\n",contenido);
+	//printf("_guardarEnTablaDeDatos - bloqueDeDatos: %s\n",contenido);
 	bloque = string_repeat("\0", OSADA_BLOCK_SIZE);
 	pthread_mutex_lock(&OSADAmutex);
 	pthread_mutex_lock(&DATA_BLOCKSmutex);
@@ -835,7 +835,7 @@ void guardarBloqueDeDatos(t_list* listado, char *contenido){
 
 	char *bloqueConDatos;
 	bloqueConDatos = malloc(OSADA_BLOCK_SIZE);
-	printf("contenido: %s\n", contenido);
+	//printf("contenido: %s\n", contenido);
 	for(i = 0; i < cantidadDeBloques; i++){
 		bloqueConDatos = string_repeat("\0", OSADA_BLOCK_SIZE);
 		char *bloquePosStr;
@@ -846,19 +846,19 @@ void guardarBloqueDeDatos(t_list* listado, char *contenido){
 		if(i == (cantidadDeBloques - 1)){
 			//ultimo bloque o contenido < 64
 			strncpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
-			printf("ultimo bloqueConDatos1 -%i: %s\n",j, bloqueConDatos);
+			//printf("ultimo bloqueConDatos1 -%i: %s\n",j, bloqueConDatos);
 			//bloqueConDatos[strlen(contenido) + 1] = string_repeat("0", OSADA_BLOCK_SIZE - strlen(contenido));
 			//bloqueConDatos[strlen(contenido) + 1] = string_repeat("\0", OSADA_BLOCK_SIZE - strlen(contenido));
-			printf("ultimo bloqueConDatos2 -%i: %s\n",j, bloqueConDatos);
-			printf("ultimo bloqueConDatos len -%i: %i\n",j, strlen(bloqueConDatos));
+			//printf("ultimo bloqueConDatos2 -%i: %s\n",j, bloqueConDatos);
+			//printf("ultimo bloqueConDatos len -%i: %i\n",j, strlen(bloqueConDatos));
 			j++;
 		}else{
 
 			//memcpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
 			strncpy(bloqueConDatos, &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE);
 			//bloqueConDatos[OSADA_BLOCK_SIZE + 1]= '\0';
-			printf("contenido bloque - %i: %s\n", j, bloqueConDatos);
-			printf("contenido bloque len -%i: %i\n",j, strlen(bloqueConDatos));
+			//printf("contenido bloque - %i: %s\n", j, bloqueConDatos);
+			//printf("contenido bloque len -%i: %i\n",j, strlen(bloqueConDatos));
 			j++;
 		}
 
@@ -944,8 +944,8 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* list
 			bloquePos =ultimoPuntero;
 			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 		}else{
-			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
-			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
+			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i)-1;
+			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 		}
 		printf("bloquePos: %i\n", bloquePos);
 
@@ -1048,7 +1048,7 @@ void guardarLaMismaCantidadDeBloques(int cantidadDeBloquesParaGrabar,
 
 int agregarMasDatosAlArchivos_archivosGrandes(char *contenido, int tamanioNuevo, char* fname,  uint16_t parent_directory, int ultimoPuntero){
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
-
+	printf("*********** agregarMasDatosAlArchivos_archivosGrandes - ultimoPuntero: %i\n", ultimoPuntero);
 	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
 	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
 	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
@@ -1057,11 +1057,11 @@ int agregarMasDatosAlArchivos_archivosGrandes(char *contenido, int tamanioNuevo,
 
 	int nuevoSize = elArchivo.file_size + tamanioNuevo;
 
-	printf("agregarMasDatosAlArchivos- SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
+	//printf("agregarMasDatosAlArchivos_archivosGrandes - SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
 	listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadNuevaDeBloquesParaGrabar);
 	modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(listadoLosIndicesDeLosBloquesDisponibles, ultimoPuntero);
 
-	printf("contenido: %s\n", contenido);
+	printf("*********** agregarMasDatosAlArchivos_archivosGrandes - ultimoPuntero: %i\n", ultimoPuntero);
 	guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
 	modificarEnLaTablaDeArchivos(parent_directory, nuevoSize, fname, list_get(conjuntoDeBloquesDelArchivo, 0), posDelaTablaDeArchivos);
 
