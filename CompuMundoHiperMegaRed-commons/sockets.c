@@ -356,7 +356,10 @@ char *serializeListaBloques(t_list* listaASerializar,int *offset) {
 	for (i = 0; i < listaASerializar->elements_count; i++) {
 		//get the element from the list by index
 		unaPosicion = list_get(listaASerializar,i);
-		printf("unaPosicion: %s\n", unaPosicion->fname);
+		printf("sockek - serializeListaBloques - unaPosicion: %s\n", unaPosicion->fname);
+		if(unaPosicion->fname =="" || unaPosicion->fname == NULL ){
+			break;
+		}
 		//serialize the element to the buffer
 		nuevoElementoSerializado = serializeBloque(unaPosicion, nuevoElementoSerializado, offset);
 	}

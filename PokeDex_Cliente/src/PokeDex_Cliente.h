@@ -37,6 +37,8 @@ t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation);
 #include <time.h>
 
 #define FUSE_USE_VERSION 26
+#define FUSE_CAP_BIG_WRITES	(1 << 1)
+
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

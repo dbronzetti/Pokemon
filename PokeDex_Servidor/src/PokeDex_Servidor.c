@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&mutexG, NULL);
 	initMutexOsada();
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/challenge.bin");
+	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/disco.bin");
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -210,6 +210,7 @@ void processMessageReceived(void *parameter){
 			switch (*FUSEOperation){
 				case FUSE_RMDIR:{
 					log_info(logPokeDexServer, "Processing FUSE_RMDIR message");
+					printf("************************ Processing FUSE_RMDIR message ********************************\n");
 					int parent_directory=0;
 					int pathLength = 0;
 					int posTablaDeArchivos=0;
@@ -235,9 +236,11 @@ void processMessageReceived(void *parameter){
 				}
 				case FUSE_WRITE:{
 						log_info(logPokeDexServer, "Processing FUSE_WRITE message");
+						printf("************************ Processing FUSE_WRITE message ********************************\n");
 						int posDelaTablaDeArchivos = -999;
 						int pathLength = 0;
 						uint16_t parent_directory;
+						int ultimoPunteroDeLosBloques = 1;
 
 						//1) Receive path length
 						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -260,15 +263,19 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "FUSE_WRITE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
 
 						//6) Receive parent_directory
-						log_info(logPokeDexServer, "Message parent_directory received --> \n");
-						receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+						//log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					     receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
 						log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
-						printf("Damian - crearUnArchivo");
-						crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
-						log_info(logPokeDexServer, "FUSE_WRITE - TERMINO DE CREAR\n");
 
-						sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
+
+
+
+						int ultimoPuntero = crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
+						log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
+						printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
+
+						sendMessage(&serverData->socketClient, &ultimoPuntero, sizeof(int));
 
 						log_info(logPokeDexServer, "FUSE_WRITE - FIN sendMessage");
 						printf("********************************* TERMINO EL WRITE *********************\n");
@@ -549,16 +556,21 @@ void processMessageReceived(void *parameter){
 					int pathLength = 0;
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					log_info(logPokeDexServer, "FUSE_READDIR - Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 					char *path = malloc(pathLength);
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
-					log_info(logPokeDexServer, "Message size received : %s\n",path);
+					log_info(logPokeDexServer, "FUSE_READDIR - Message size received : %s\n",path);
 
 					//get padre from path received for passing it to crearArbolAPartirDelPadre
 					int posBloquePadre = obtener_bloque_padre(path);
+					log_info(logPokeDexServer,"FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
+					printf("FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
+
 					lista = crearArbolAPartirDelPadre(posBloquePadre);
-					log_info(logPokeDexServer,"lista->elements_count: %i\n",lista->elements_count);
+
+					log_info(logPokeDexServer,"FUSE_READDIR - lista->elements_count: %i\n",lista->elements_count);
+					printf("FUSE_READDIR - lista->elements_count: %i\n",lista->elements_count);
 
 					int messageSize = 0;
 					char *mensajeOsada = serializeListaBloques(lista, &messageSize);

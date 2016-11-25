@@ -888,6 +888,10 @@ int calcularCantidadDeBloquesParaGrabar(int tamanio){
 			return cantidadDeBloquesParaGrabar + 1;
 		}
 
+		if (moduloTamanio == 0){
+			return cantidadDeBloquesParaGrabar;
+		}
+
 	}
 
 	return 0;
@@ -923,19 +927,51 @@ t_dictionary *armarDicDeTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesD
 	return dictionary;
 }
 
+void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* listadoLosIndicesDeLosBloquesDisponibles, int ultimoPuntero){
+	char *bloquePosStr=malloc(10);
+	int cantidadDeElemento = 0;
+	int bloquePos;
+	int bloqueSig;
+	int i;
+	t_dictionary *dictionary = dictionary_create();
+	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
+
+	printf("cantidadDeElemento: %i\n", cantidadDeElemento);
+	for(i = 0; i < cantidadDeElemento; i++){
+		bloquePosStr = string_repeat("\0", 10);
+
+		if (i==0){
+			bloquePos =ultimoPuntero;
+			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
+		}else{
+			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
+			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
+		}
+		printf("bloquePos: %i\n", bloquePos);
+
+		if(bloqueSig==0){
+			bloqueSig =-1;
+			sprintf(bloquePosStr, "%d", bloquePos);
+			dictionary_put(dictionary, bloquePosStr, bloqueSig);
+			break;
+		}
+
+		sprintf(bloquePosStr, "%d", bloquePos);
+
+		dictionary_put(dictionary, bloquePosStr, bloqueSig);
+
+		printf("bloqueSig: %i\n",bloqueSig);
+
+	}
+	free(bloquePosStr);
+
+	dictionary_iterator(dictionary, (void*) _prepararLaVariableGlobalParaGuadar);
+	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
+	guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
+	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+}
+
 void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles, t_list* conjuntoDeBloquesDelArchivoViejo){
-/*	int bloquePos = list_get(conjuntoDeBloquesDelArchivoViejo,  list_size(conjuntoDeBloquesDelArchivoViejo));
-	int bloquePos2 = list_get(conjuntoDeBloquesDelArchivoViejo,  1);
-	int bloqueSiguiente =list_get(listadoLosIndicesDeLosBloquesDisponibles,  0);
-	int bloqueSiguiente2 =list_get(listadoLosIndicesDeLosBloquesDisponibles,  list_size(listadoLosIndicesDeLosBloquesDisponibles));
-	printf("list_size(conjuntoDeBloquesDelArchivoViejo): %i\n",list_size(conjuntoDeBloquesDelArchivoViejo));
-
-	printf("conjuntoDeBloquesDelArchivo - bloquePos: %i\n",bloquePos);
-	printf("conjuntoDeBloquesDelArchivo - bloquePos2: %i\n",bloquePos2);
-
-	printf("listadoLosIndicesDeLosBloquesDisponibles - bloqueSiguiente: %i\n",bloqueSiguiente);
-	printf("listadoLosIndicesDeLosBloquesDisponibles - bloqueSiguiente2: %i\n",bloqueSiguiente2);
-*/
 	char *bloquePosStr=malloc(10);
 	int cantidadDeElemento = 0;
 	int bloquePos;
@@ -1008,11 +1044,30 @@ void guardarLaMismaCantidadDeBloques(int cantidadDeBloquesParaGrabar,
 				posDelaTablaDeArchivos);
 	}
 }
-void recorrerLaListaYBorrarLosBloquesDelBitMap(int bloque){
 
+
+int agregarMasDatosAlArchivos_archivosGrandes(char *contenido, int tamanioNuevo, char* fname,  uint16_t parent_directory, int ultimoPuntero){
+	t_list* listadoLosIndicesDeLosBloquesDisponibles;
+
+	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
+	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
+	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+	int cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
+	int posDelaTablaDeArchivos = buscarElArchivoYDevolverPosicion(fname, parent_directory);
+
+	int nuevoSize = elArchivo.file_size + tamanioNuevo;
+
+	printf("agregarMasDatosAlArchivos- SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
+	listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadNuevaDeBloquesParaGrabar);
+	modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(listadoLosIndicesDeLosBloquesDisponibles, ultimoPuntero);
+
+	printf("contenido: %s\n", contenido);
+	guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
+	modificarEnLaTablaDeArchivos(parent_directory, nuevoSize, fname, list_get(conjuntoDeBloquesDelArchivo, 0), posDelaTablaDeArchivos);
+
+
+	return list_get(listadoLosIndicesDeLosBloquesDisponibles, listadoLosIndicesDeLosBloquesDisponibles->elements_count-1);
 }
-
-
 
 void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_t parent_directory){
 	int cantidadNuevaDeBloquesParaGrabar = 0;
@@ -1131,15 +1186,30 @@ void hacerElTruncate(int tamanioNuevo, char* fname, int posDelaTablaDeArchivos, 
 
 }
 
-void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
+int crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
+	/*****************************************/
+	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
+	posDelaTablaDeArchivos = buscarElArchivoYDevolverPosicion(fname, parent_directory);
+	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
+	printf("El archivo size: %i\n", elArchivo.file_size);
+
+
+	if (posicion != -999 && elArchivo.file_size != 0){
+		t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+		return agregarMasDatosAlArchivos_archivosGrandes(contenido, tamanio, fname,  parent_directory, list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
+	}
+
+
+
+	/********************************************************/
 
 	if(elTamanioDelArchivoEntraEnElOsada(tamanio) && noEsVacio(tamanio)){
-		printf("tamanio: %i\n", tamanio);
+		printf("crearUnArchivo - tamanio: %i\n", tamanio);
 
 		cantidadDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanio);
-		printf("cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
+		printf("crearUnArchivo - cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
 
 
 		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
@@ -1149,7 +1219,7 @@ void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaD
 		escribirEnLaTablaDeArchivos(parent_directory, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
 
 	}
-
+	return list_get(listadoLosIndicesDeLosBloquesDisponibles, listadoLosIndicesDeLosBloquesDisponibles->elements_count-1);
 	printf("************************ FIN CREAR UN ARCHIVO ************************\n");
 }
 /************************FIN ARCHIVO************************************************/
@@ -1332,7 +1402,7 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list*
 
 
 
-	if (archivo->parent_directory == padre){
+	if (archivo->parent_directory == padre && (archivo->state == DIRECTORY || archivo->state == REGULAR)){
 		printf("EMPIEZA reconocerArchivosParaArbol %i: ****************\n", pos);
 		printf("state_: %c\n", archivo->state);
 		printf("parent_directory_: %i\n", archivo->parent_directory);
@@ -1391,6 +1461,9 @@ int crearUnDirectorio(char *fname, int parent_directory){
 	char *file_name = strrchr (fname, '/') + 1;
 	printf("crearUnDirectorio - file_name: %s\n", file_name);
 
+
+	int bloque = obtener_bloque_padre(fname);
+
 	bool found = false;
 	for (k=0; k <= 2047; k++){
 		//printf("EN EL FOR\n");
@@ -1400,8 +1473,8 @@ int crearUnDirectorio(char *fname, int parent_directory){
 			TABLA_DE_ARCHIVOS[k].state = DIRECTORY;
 			printf("state\n");
 
-			TABLA_DE_ARCHIVOS[k].parent_directory = parent_directory;
-			printf("parent_directory: %i\n",parent_directory);
+			TABLA_DE_ARCHIVOS[k].parent_directory = bloque;
+			printf("parent_directory: %i\n",bloque);
 
 			//printf("fname: %s\n", fname);
 			printf("sizeof(fname): %i\n", strlen(file_name));
