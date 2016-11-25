@@ -974,7 +974,7 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 
 						pthread_mutex_lock(&setEntrenadoresMutex);
 						char idPokemon = entrenador->pokemonD;
-						pthread_mutex_lock(&setEntrenadoresMutex);
+						pthread_mutex_unlock(&setEntrenadoresMutex);
 
 						bool buscarPokenestPorId1(t_pokenest* pokenestParam) {
 							return (pokenestParam->metadata.id == idPokemon); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
