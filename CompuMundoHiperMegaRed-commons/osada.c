@@ -630,6 +630,11 @@ int obtener_bloque_padre (const char* path)
 				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
 				{
+					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s \n",TABLA_DE_ARCHIVOS[j].fname);
+					printf("****************obtener_bloque_padre - vector_path[i]: %s \n",vector_path[i]);
+					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i \n",TABLA_DE_ARCHIVOS[j].parent_directory);
+					printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
+					printf("****************obtener_bloque_padre - j: %i \n", j);
 					if ((i == 0) && (parent_dir == 65535))
 					{
 						parent_dir = j;
@@ -638,13 +643,20 @@ int obtener_bloque_padre (const char* path)
 					{
 						parent_dir = j;
 					}
+
+					//PARCHE: PARA EL TERCER NIVEL
+					if ((i > 0) && (parent_dir == 0) && (j == 1))
+					{
+						parent_dir = j;
+					}
+
 				}
 				pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 			}
 			i++;
 		}
 	}
-
+	printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
 	return parent_dir;
 }
 
@@ -684,7 +696,7 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 		for (pos=0; pos <= 2047; pos++){
 			//printf("EN EL FOR\n");
 			pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-			if (TABLA_DE_ARCHIVOS[pos].state == DELETED){
+			if (TABLA_DE_ARCHIVOS[pos].state == DELETED && TABLA_DE_ARCHIVOS[pos].state != REGULAR && TABLA_DE_ARCHIVOS[pos].state !=DIRECTORY){
 				//printf("EN EL if\n");
 				TABLA_DE_ARCHIVOS[pos].state = REGULAR;
 				//printf("state\n");
@@ -1459,31 +1471,28 @@ int crearUnDirectorio(char *fname, int parent_directory){
 	int k=0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
-	printf("crearUnDirectorio - file_name: %s\n", file_name);
+	printf("**********************************crearUnDirectorio - file: %s\n", fname);
+	printf("**********************************crearUnDirectorio - file_name: %s\n", file_name);
 
 
 	int bloque = obtener_bloque_padre(fname);
+	printf("**********************************crearUnDirectorio - bloque: %i\n", bloque);
 
 	bool found = false;
 	for (k=0; k <= 2047; k++){
 		//printf("EN EL FOR\n");
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		if (TABLA_DE_ARCHIVOS[k].state == DELETED){
-			printf("EN EL if\n");
+		if (TABLA_DE_ARCHIVOS[k].state == DELETED && TABLA_DE_ARCHIVOS[k].state != REGULAR && TABLA_DE_ARCHIVOS[k].state != DIRECTORY){
 			TABLA_DE_ARCHIVOS[k].state = DIRECTORY;
-			printf("state\n");
 
 			TABLA_DE_ARCHIVOS[k].parent_directory = bloque;
 			printf("parent_directory: %i\n",bloque);
 
 			//printf("fname: %s\n", fname);
-			printf("sizeof(fname): %i\n", strlen(file_name));
 			strcpy(TABLA_DE_ARCHIVOS[k].fname, "\0");
 			strcat(TABLA_DE_ARCHIVOS[k].fname, file_name);
 
-			printf("fname: %s\n", file_name);
 			TABLA_DE_ARCHIVOS[k].file_size = 0;
-			printf("file_size: %i\n",0);
 			TABLA_DE_ARCHIVOS[k].lastmod = 0;
 			printf("lastmod\n");
 
