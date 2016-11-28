@@ -48,7 +48,9 @@ pthread_mutex_t listaDePokenestMutex;
 pthread_mutex_t setRecibirMsj;
 pthread_mutex_t metadataMutex;
 sem_t processNextMessageSem;
+sem_t borradoDePersonajesSem;
 int SEM_INIT_VALUE = 1;//This is for receiving the 1st trainer
+
 char* rutaMetadata;//needed as global for reloading metadata file
 
 // Estructuras
@@ -139,5 +141,6 @@ t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador);
 void matar(t_entrenador* entrenador);
 void recibirSignal();
 void reloadMetadata();
+void evaluarEstadoEntrenador(t_entrenador* entrenador); //evalua en que estado se encuentra y segun su estado le indica que tiene que hacer
 
 #endif /* MAPA_H_ */
