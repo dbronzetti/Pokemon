@@ -284,9 +284,9 @@ void startServerProg() {
 					} else {
 						// we got some data from a client
 						//Create thread attribute detached
-						pthread_attr_t processMessageThreadAttr;
-						pthread_attr_init(&processMessageThreadAttr);
-						pthread_attr_setdetachstate(&processMessageThreadAttr, PTHREAD_CREATE_DETACHED);
+//						pthread_attr_t processMessageThreadAttr;
+//						pthread_attr_init(&processMessageThreadAttr);
+//						pthread_attr_setdetachstate(&processMessageThreadAttr, PTHREAD_CREATE_DETACHED);
 
 						//Create thread for checking new connections in server socket
 						pthread_t processMessageThread;
@@ -296,12 +296,12 @@ void startServerProg() {
 
 						serverData->masterFD = &master;
 						log_info(logMapa,"298");
-						pthread_create(&processMessageThread, &processMessageThreadAttr, (void*) processMessageReceived, serverData);
+						pthread_create(&processMessageThread, NULL, (void*) processMessageReceived, serverData);
 						pthread_join(processMessageThread, NULL);
 						//Destroy thread attribute
-						log_info(logMapa,"298");
-						pthread_attr_destroy(&processMessageThreadAttr);
-
+						log_info(logMapa,"302");
+//						pthread_attr_destroy(&processMessageThreadAttr);
+						log_info(logMapa,"304");
 					} // END handle data from client
 				} // END got new incoming connection
 			} // END looping through file descriptors
@@ -824,6 +824,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 
 		pthread_mutex_lock(&setEntrenadoresMutex);
 		int siNoTieneMensaje = entrenador->accion != SIN_MENSAJE;
+//		log_info(logMapa,"sin msj");
 		pthread_mutex_unlock(&setEntrenadoresMutex);
 
 		if (siNoTieneMensaje) { //este if verifica que el entrenador respondio :D
