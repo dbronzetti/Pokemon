@@ -256,6 +256,7 @@ unsigned char *inicializarOSADA(int archivoID){
 	unsigned char *osada;
 	setlocale(LC_ALL, "es_ES.UTF-8");
 	/************************************************************/
+	printf("Locale is: %s\n", setlocale(LC_ALL, "es_ES.UTF-8"));
 	printf("Que paso?: %s\n", strerror(errno));
 	printf("archivoID: %i\n", archivoID);
 	printf("tamanio: %i\n", TAMANIO_DEL_ARCHIVO_OSADA_EN_BYTES);
@@ -1245,21 +1246,23 @@ int crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDe
 	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
 	posDelaTablaDeArchivos = buscarElArchivoYDevolverPosicion(fname, parent_directory);
 	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
-	printf("El archivo size: %i\n", elArchivo.file_size);
+	printf("crearUnArchivo - El archivo size: %i\n", elArchivo.file_size);
 
 
 	if (posicion != -999 && elArchivo.file_size != 0){
-		if (elArchivo.file_size  > tamanio){
+		//if (elArchivo.file_size  > tamanio){
 			//JOEL: CUANDO HAGO EL TRUNCATE CON MENOR SIZE PUEDO REUTILZIAR LA FUNCION DE modificarUnARchivo para bajar contenido;
-			modificarUnArchivo(contenido, tamanio,fname, parent_directory);
-			return 1;
-		}
-			else
-		{
+			//printf("crearUnArchivo - entra para truncate - elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+			//modificarUnArchivo(contenido, tamanio,fname, parent_directory);
+			//return 1;
+		//}
+			//else
+	//	{
+			printf("crearUnArchivo -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
 			t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 			return agregarMasDatosAlArchivos_archivosGrandes(contenido, tamanio, fname,  parent_directory, list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
 
-		}
+	//	}
 	}
 
 

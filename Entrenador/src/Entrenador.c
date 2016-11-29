@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 	//for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
 	while (queue_size(metadataEntrenador.hojaDeViaje)>0){
 		mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
-		char** objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
+		objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
 		colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola de objetivos actuales donde cada elemento es un char
 
@@ -271,18 +271,17 @@ void desconectarse() {
 
 void jugar() {
 	char* objetivoActual;
-	t_queue* colaDeObjetivos_M; //esta es la cola de objetivos modificables
-	colaDeObjetivos_M = queue_create();
-	colaDeObjetivos_M = colaDeObjetivos;
-	while ((queue_size(colaDeObjetivos_M) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
+
+	while ((queue_size(colaDeObjetivos) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
 
 		pthread_mutex_lock(&turnoMutex);
 		if (turno != SIN_MENSAJE) {
 			switch (turno) {
+
 			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
 				log_info(logEntrenador, "Trainer send the id of the pokenest");
-				objetivoActual = queue_pop(colaDeObjetivos_M);
+				objetivoActual = queue_pop(colaDeObjetivos);
 				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
 				log_info(logEntrenador, "Conocer: Se manda: %s",
 						objetivoActual);
@@ -347,17 +346,14 @@ void jugar() {
 				restarVida();
 				if (metadataEntrenador.vidas > 0) {
 					reconectarse();
-					colaDeObjetivos_M = colaDeObjetivos; // la cola se rellena
+					colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola se rellena
 				} else {
 					char* respuesta = malloc(3);
 					printf("No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento\n>> ", metadataEntrenador.reintentos);
 					scanf("%s",respuesta);
 					string_to_upper(respuesta);
-					log_info(logEntrenador,"voy a destruir colaDeObjetivos_M");
-					queue_clean_and_destroy_elements(colaDeObjetivos_M, (void*) free);
-					log_info(logEntrenador,"destruida la colaDeObjetivos_M");
+					queue_clean_and_destroy_elements(colaDeObjetivos, (void*) free);
 					objetivoActual = NULL;
-					log_info(logEntrenador,"Se puso el objetivo actual en null");
 					if(strcmp("YES",respuesta) == 0){
 						log_info(logEntrenador,"Ok, se reiniciara toda su hoja de viaje");
 						int reintentos = metadataEntrenador.reintentos++;

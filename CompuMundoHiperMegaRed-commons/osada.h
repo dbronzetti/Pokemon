@@ -1,3 +1,4 @@
+#include <locale.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -10,7 +11,7 @@
 #include <commons/collections/list.h>
 #include <commons/string.h>
 #include <commons/collections/dictionary.h>
-#include <locale.h>
+
 
 #ifndef __OSADA_H__
 #define __OSADA_H__
