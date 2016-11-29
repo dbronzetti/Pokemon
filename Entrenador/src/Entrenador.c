@@ -187,6 +187,9 @@ void crearArchivoMetadata(char *rutaMetadata) {
 	int i = 0;
 	metadataEntrenador.hojaDeViaje = queue_create();
 	metadataEntrenador.obj = queue_create();
+	metadataEntrenador.comenzoJuego = time(0);
+	metadataEntrenador.cantDeadLock = 0;
+	metadataEntrenador.cantDead = 0;
 	char** hojaDeViaje; //Creo un array auxiliar para poder encolar los objetivos de cada mapa sin desapilar la hojaDeViaje
 
 	metadata = config_create(rutaMetadata);
