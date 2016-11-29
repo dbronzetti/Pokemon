@@ -143,5 +143,6 @@ void matar(t_entrenador* entrenador);
 void recibirSignal();
 void reloadMetadata();
 void evaluarEstadoEntrenador(t_entrenador* entrenador); //evalua en que estado se encuentra y segun su estado le indica que tiene que hacer
+bool noSeBorro(t_entrenador* entrneador);
 
 #endif /* MAPA_H_ */
