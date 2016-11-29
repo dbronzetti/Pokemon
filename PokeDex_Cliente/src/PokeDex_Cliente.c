@@ -81,8 +81,6 @@ int renombrarArchivo(char* oldname,char* newName){
 			exitCode = sendMessage(&socketPokeServer, oldname , strlen(oldname) + 1 );
 			log_info(logPokeCliente, "renombrarArchivo - oldname: %s\n", oldname);
 
-
-
 			//4) send path RENOMBRADO
 			exitCode = sendMessage(&socketPokeServer, newName , newPathLength );
 			log_info(logPokeCliente, "renombrarArchivo - newName: %s\n", newName);
@@ -144,9 +142,12 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 		stbuf->st_nlink = 2;
 	}else {
 		if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
+
 			//Esta funcion llama al socket y pide el bloque
 			t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
+
 			if (listaNodo->elements_count == 1 ){// listaNodo->elements_count SIEMPRE va a ser 1, porque el servidor solo manda 1 elemento
+
 				log_info(logPokeCliente, "FUSE_GETATTR -listaNodo->elements_count: %i\n", listaNodo->elements_count);
 				osada_file *nodo =list_get(listaNodo,0);
 
@@ -159,8 +160,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 					stbuf->st_nlink = 1;
 					stbuf->st_size = nodo->file_size;
 
-					printf("fuse_getattr - nodo->file_size: %i\n",nodo->file_size);
-					//stbuf->st_atim
+					log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->parent_directory: %i\n", nodo->parent_directory);
 					parent_directory = nodo->parent_directory;
 
 				}
@@ -239,7 +239,7 @@ static int fuse_rmdir(const char* path){
 	log_info(logPokeCliente, "fuse_rmdir - path: %s\n", path);
 
 	//3) send parent_directory
-	exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+	exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
 	log_info(logPokeCliente, "fuse_rmdir - parent_directory: %i\n", parent_directory);
 
 	//Receive message size
@@ -258,7 +258,7 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 	log_info(logPokeCliente, "**************** fuse_create ****************\n");
 	printf("********************************* fuse_create *********************\n");
 	char *file_name = strrchr (path, '/') + 1;
-	printf("crearUnDirectorio - path: %s\n", path);
+	printf("crear un archivo - path: %s\n", path);
 
 	if (string_length(file_name)>17){
 		printf("fuse_create - EL fuse_mkdir ES MAYOR A 17: %i\n", string_length(file_name));
@@ -279,23 +279,19 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 			exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
 			log_info(logPokeCliente, "fuse_create - path: %s\n", path);
 
-			//3) send parent_directory
-			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
-			log_info(logPokeCliente, "fuse_create - parent_directory: %i\n", parent_directory);
-
 			//Receive message Status
 			int receivedBytes = receiveMessage(&socketPokeServer, &posDelaTablaDeArchivos ,sizeof(posDelaTablaDeArchivos));
 
 			log_info(logPokeCliente, "fuse_create - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
 
-			/*if(posDelaTablaDeArchivos == -1){
+			if(posDelaTablaDeArchivos == -1){
 				printf("fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
 				log_info(logPokeCliente, "fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
 				exitCode = -1;
 			}else{
 				printf("fuse_create - Se pudo crear el archivo\n");
 				exitCode = EXIT_SUCCESS; // no se estaba retornando OK al FUSE cuando la posicion era encontrada
-			}*/
+			}
 
 		}else{
 			exitCode = EXIT_SUCCESS;
@@ -335,7 +331,7 @@ static int fuse_mkdir(const char* path, mode_t mode){
 	log_info(logPokeCliente, "fuse_mkdir - path: %s\n", path);
 
 	//3) send parent_directory
-	exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+	exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
 	log_info(logPokeCliente, "fuse_mkdir - parent_directory: %i\n", parent_directory);
 
 	//Receive message size
@@ -404,7 +400,7 @@ static int fuse_truncate(const char* path, off_t offset)
 		log_info(logPokeCliente, "fuse_truncate - path: %s\n", path);
 
 		//3) send parent_directory
-		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
 		log_info(logPokeCliente, "fuse_truncate - parent_directory: %i\n", parent_directory);
 
 		//4) send parent_directory
@@ -460,7 +456,7 @@ static int fuse_unlink(const char* path, int hizoElOpen)
 				log_info(logPokeCliente, "fuse_unlink - path: %s\n", path);
 
 				//3) send parent_directory
-				exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+				exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
 				log_info(logPokeCliente, "fuse_unlink - parent_directory: %i\n", parent_directory);
 
 				//Receive message size
@@ -498,7 +494,7 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 		log_info(logPokeCliente, "fuse_open - path: %s\n", path);
 
 		//3) send parent_directory
-		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
 		log_info(logPokeCliente, "fuse_open - parent_directory: %i\n", parent_directory);
 
 		//Receive message file_size
@@ -539,21 +535,39 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
 
 		//3) send parent_directory
-		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
 		log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
 
 		//Receive message size
-		unsigned long int messageSize = -1;
-		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-		log_info(logPokeCliente, "fuse_read - MessageSize: %lu\n", messageSize);
+		int cantidadBloques = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &cantidadBloques ,sizeof(cantidadBloques));
+		log_info(logPokeCliente, "fuse_read - cantidad Bloques: %d\n", cantidadBloques);
 
 		if (receivedBytes > 0){
-			char *messageRcv = malloc(messageSize);
-			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-			//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
-			memcpy(buf, messageRcv, messageSize);
-			log_info(logPokeCliente, "fuse_read - HIZO MEMCPY \n");
-			return messageSize;
+			if (cantidadBloques != -999){//el archivo no fue encontrado por el server
+				//Receive message size
+				int messageSize = 0;
+				int i, fileSize = 0;
+				for (i = 0 ; i < cantidadBloques; i++){
+					int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+					log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
+					fileSize += messageSize;
+
+					char *messageRcv = malloc(messageSize);
+					receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+					string_append(&buf, messageRcv);
+
+					free(messageRcv);
+				}
+
+				//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
+				//memcpy(buf, messageRcv, messageSize);
+				//log_info(logPokeCliente, "fuse_read - HIZO MEMCPY \n");
+
+				return fileSize;
+			}else{
+				exitCode = EXIT_SUCCESS;
+			}
 		}
 	}else{
 		exitCode=EXIT_SUCCESS;
@@ -585,7 +599,7 @@ void modificarElArchivo(const char* path, const char* buf, size_t size){
 		int pathLength = strlen(path) + 1;
 		log_info(logPokeCliente, "FUSE_MODIFICAR -  ENVIO MENSAJE: %i\n",pathLength);
 		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-		log_info(logPokeCliente, "fuse_write - pathLength: %i\n", pathLength);
+		log_info(logPokeCliente, "FUSE_MODIFICAR - pathLength: %i\n", pathLength);
 		printf("********************************* sendMessage 2 *********************\n");
 		//2) send path
 		exitCode = sendMessage(&socketPokeServer, path , pathLength );
@@ -602,13 +616,8 @@ void modificarElArchivo(const char* path, const char* buf, size_t size){
 		printf("********************************* sendMessage 4 *********************\n");
 		log_info(logPokeCliente, "FUSE_MODIFICAR - buffer: %s\n", buf);
 
-		//5) send posDelaTablaDeArchivos
-		exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
-		log_info(logPokeCliente, "FUSE_MODIFICAR - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
-		printf("********************************* sendMessage 5 *********************\n");
-
 		//6) send parent_directory
-		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
 		log_info(logPokeCliente, "FUSE_MODIFICAR - parent_directory: %i\n", parent_directory);
 		printf("********************************* sendMessage 6 *********************\n");
 

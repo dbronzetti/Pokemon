@@ -8,11 +8,30 @@
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
+	char *diskFile = NULL;
 	pthread_t serverThread;
 	pthread_mutex_init(&mutexG, NULL);
 	initMutexOsada();
 
-	int archivoID = obtenerIDDelArchivo("/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed/PokeDex_Servidor/Debug/disco.bin");
+	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
+
+	//get parameters
+	int i;
+	for (i = 0; i < argc; i++) {
+
+		//check log file parameter
+		if (strcmp(argv[i], "-l") == 0) {
+			logFile = argv[i + 1];
+			printf("Log File: '%s'\n", logFile);
+		}
+
+		if (strcmp(argv[i], "-d") == 0) {
+			diskFile = argv[i + 1];
+			printf("disk File: '%s'\n", diskFile);
+		}
+	}
+
+	int archivoID = obtenerIDDelArchivo(diskFile);
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
 	inicializarOSADA(archivoID);
@@ -23,19 +42,6 @@ int main(int argc, char **argv) {
 	obtenerBitmap();
     obtenerTablaDeArchivos();
     obtenerTablaDeAsignacion();
-
-	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
-
-	//get parameter
-	int i;
-	for (i = 0; i < argc; i++) {
-
-		//check log file parameter
-		if (strcmp(argv[i], "-l") == 0) {
-			logFile = argv[i + 1];
-			printf("Log File: '%s'\n", logFile);
-		}
-	}
 
 	logPokeDexServer = log_create(logFile, "POKEDEX_SERVER", 0, LOG_LEVEL_TRACE);
 
@@ -84,8 +90,7 @@ void newClients(void *parameter) {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 
 	t_serverData *serverData = malloc(sizeof(t_serverData));
-	memcpy(&serverData->socketServer, parameter,
-			sizeof(serverData->socketServer));
+	memcpy(&serverData->socketServer, parameter, sizeof(serverData->socketServer));
 
 	// disparar un thread para acceptar cada cliente nuevo (debido a que el accept es bloqueante) y para hacer el handshake
 	/**************************************/
@@ -286,7 +291,6 @@ void processMessageReceived(void *parameter){
 					int pathLength = 0;
 					int posDelaTablaDeArchivos = -999;
 					int first_block_init = -999;
-					uint16_t parent_directory;
 
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -295,11 +299,6 @@ void processMessageReceived(void *parameter){
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message received : %s\n",path);
-
-					//3) Receive parent_directory
-					log_info(logPokeDexServer, "Message parent_directory received --> \n");
-					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
-					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
 					int posBloquePadre = obtener_bloque_padre(path);
@@ -427,10 +426,6 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, content, contentSize);
 					log_info(logPokeDexServer, "FUSE_MODIFICAR - Message content received : %s\n",content);
 
-					//5) posDelaTablaDeArchivos
-					receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
-					log_info(logPokeDexServer, "FUSE_MODIFICAR - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
-
 					//6) Receive parent_directory
 					log_info(logPokeDexServer, "Message parent_directory received --> \n");
 					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
@@ -485,66 +480,78 @@ void processMessageReceived(void *parameter){
 					//1) Receive path length
 					printf("******************* FUSE_READ - Receive path length ****************\n");
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-					log_info(logPokeDexServer, "FUSE_READ - Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
+					log_info(logPokeDexServer, "FUSE_READ - path Length received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 					char *path = malloc(pathLength);
 
 					//2) Receive path
 					printf("******************* FUSE_READ - Receive path ****************\n");
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					if (path != NULL){
-							log_info(logPokeDexServer, "FUSE_READ - Message path received : %s\n",path);
+						log_info(logPokeDexServer, "FUSE_READ - Message path received : %s\n",path);
 
-							//3) Receive parent_directory
-							printf("******************* FUSE_READ - Receive parent_directory ****************\n");
-							receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
-							log_info(logPokeDexServer, "FUSE_READ - Message parent_directory received : %i\n",parent_directory);
+						//3) Receive parent_directory
+						printf("******************* FUSE_READ - Receive parent_directory ****************\n");
+						receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+						log_info(logPokeDexServer, "FUSE_READ - Message parent_directory received : %i\n",parent_directory);
 
-							osada_block_pointer posicion = devolverOsadaBlockPointer(path, parent_directory);
+						osada_block_pointer posicion = devolverOsadaBlockPointer(path, parent_directory);
 
-							printf("FUSE_READ - posicion: %i\n",posicion);
-							char *string = string_new();
-							if (posicion != -999){//NO LO ENCONTRO
-								t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
-								printf("FUSE_READ - conjuntoDeBloquesDelArchivo first: %i\n",list_get(conjuntoDeBloquesDelArchivo, 0));
-								printf("FUSE_READ - conjuntoDeBloquesDelArchivo last: %i\n",list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
-								int i;
-								printf("FUSE_READ - conjuntoDeBloquesDelArchivo: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
-								log_info(logPokeDexServer, "FUSE_READ - conjuntoDeBloquesDelArchivo: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
-								//memcpy(string, &conjuntoDeBloquesDelArchivo->elements_count, sizeof(int));
-								//printf("string: %s\n",string);
-								char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+						printf("FUSE_READ - posicion: %i\n",posicion);
+						//char *string = string_new();
+						if (posicion != -999){// -999 = NO LO ENCONTRO
+							t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+							printf("FUSE_READ - conjuntoDeBloquesDelArchivo first: %i\n",list_get(conjuntoDeBloquesDelArchivo, 0));
+							printf("FUSE_READ - conjuntoDeBloquesDelArchivo last: %i\n",list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
+							int i;
+							printf("FUSE_READ - conjuntoDeBloquesDelArchivo: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
+							log_info(logPokeDexServer, "FUSE_READ - conjuntoDeBloquesDelArchivo: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
+							//memcpy(string, &conjuntoDeBloquesDelArchivo->elements_count, sizeof(int));
+							//printf("string: %s\n",string);
+							char *bloqueDeDatos = malloc(OSADA_BLOCK_SIZE);
+							int cantidadBloques = conjuntoDeBloquesDelArchivo->elements_count;
+							sendMessage(&serverData->socketClient, &cantidadBloques , sizeof(cantidadBloques));
 
-								for (i = 0; i < conjuntoDeBloquesDelArchivo->elements_count; i++) {
+							for (i = 0; i < conjuntoDeBloquesDelArchivo->elements_count; i++) {
 
-									int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
-									bloque2 *= 64;
+								int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
+								bloque2 *= 64;
 
-									pthread_mutex_lock(&OSADAmutex);
-									memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
-									pthread_mutex_unlock(&OSADAmutex);
-									//printf("bloqueDeDatos: %s\n",bloqueDeDatos);
-									//printf("bloqueDeDatos[0]: %c\n",bloqueDeDatos[0]);
-									log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);
+								pthread_mutex_lock(&OSADAmutex);
+								memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
+								pthread_mutex_unlock(&OSADAmutex);
+								//printf("bloqueDeDatos: %s\n",bloqueDeDatos);
+								//printf("bloqueDeDatos[0]: %c\n",bloqueDeDatos[0]);
+								log_info(logPokeDexServer, "bloqueDeDatos: %s\n", bloqueDeDatos);
 
-									bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
-									string_append(&string, bloqueDeDatos);
-									//printf("1 - string: %s\n",string);
-								}
+								bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
+								int messageSize = strlen(bloqueDeDatos);
+								log_info(logPokeDexServer, "messageSize: %i\n", messageSize);
 
-								free(bloqueDeDatos);
+								sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
+
+								sendMessage(&serverData->socketClient, bloqueDeDatos , messageSize);
+								//string_append(&string, bloqueDeDatos);
+
 							}
+
+							free(bloqueDeDatos);
 							//TODO: CUANDO HAGO EL APPEND EL PRIMER ELEMENTO DEL STRING CONTIENE UNA BASURA
 							//printf("******************* string to be sent for file ****************\n");
-							string_append(&string, "\0");
+							//string_append(&string, "\0");
 							//log_info(logPokeDexServer, "string to be sent for file '%s': %s\n", path, string);
 
-							int messageSize = strlen(string) +1; //+1 due to /0
-							log_info(logPokeDexServer, "messageSize: %i\n", messageSize);
-							sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
+							//int messageSize = strlen(string) +1; //+1 due to /0
+							//log_info(logPokeDexServer, "messageSize: %i\n", messageSize);
+							//sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
 							//printf("2 - string: %s\n",string);
-							sendMessage(&serverData->socketClient, string , messageSize);
+							//sendMessage(&serverData->socketClient, string , messageSize);
+						}else{
+							log_info(logPokeDexServer, "file %s not found",path);
+							int error = posicion;
+							sendMessage(&serverData->socketClient, &error , sizeof(error));//si no encontro el file retorno -999 como error al fuse
+						}
 
-							printf("******************* termino ****************\n");
+						printf("******************* termino ****************\n");
 					}
 					break;
 				}
@@ -673,7 +680,6 @@ void processMessageReceived(void *parameter){
 		if (exitLoop){
 			break;
 		}
-		pthread_mutex_unlock(&mutexG);
 
 	}
 	free(FUSEOperation);
