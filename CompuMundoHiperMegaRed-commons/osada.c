@@ -477,6 +477,40 @@ void borrarBloquesDelBitmap(t_list *listado){
 
 }
 
+int ingresarElUTIMENS(char *nombre, uint16_t parent_directory, int tv_nsec){
+	printf("******************************** ENTRO EN borrarUnArchivo  ******************************** \n");
+	int pos=0;
+	osada_block_pointer posicion = 0;
+	char *file_name = strrchr (nombre, '/') + 1;
+	printf("file_name: %s\n", file_name);
+
+	for (pos=0; pos <= 2047; pos++){
+		char *nac;
+		char *n;
+		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
+		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		n = string_duplicate(file_name);
+		string_trim(&nac);
+		string_trim(&n);
+
+		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
+			printf("******************************* LO ENCONTRO! ******************************* \n");
+			TABLA_DE_ARCHIVOS[pos].lastmod = tv_nsec;
+			posicion = pos;
+
+		}
+		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	}
+
+	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+
+	return posicion;
+}
+
 int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 	printf("******************************** ENTRO EN borrarUnArchivo  ******************************** \n");
 	int pos=0;
@@ -557,6 +591,10 @@ int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directo
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada2(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	if (!found){
+		//NO LO ENCONTRO
+		return -999;
+	}
 
 	return posicion;
 }
@@ -630,11 +668,13 @@ int obtener_bloque_padre (const char* path)
 				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
 				{
+					/*
 					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s \n",TABLA_DE_ARCHIVOS[j].fname);
 					printf("****************obtener_bloque_padre - vector_path[i]: %s \n",vector_path[i]);
 					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i \n",TABLA_DE_ARCHIVOS[j].parent_directory);
 					printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
 					printf("****************obtener_bloque_padre - j: %i \n", j);
+					*/
 					if ((i == 0) && (parent_dir == 65535))
 					{
 						parent_dir = j;
@@ -1209,8 +1249,17 @@ int crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDe
 
 
 	if (posicion != -999 && elArchivo.file_size != 0){
-		t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
-		return agregarMasDatosAlArchivos_archivosGrandes(contenido, tamanio, fname,  parent_directory, list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
+		if (elArchivo.file_size  > tamanio){
+			//JOEL: CUANDO HAGO EL TRUNCATE CON MENOR SIZE PUEDO REUTILZIAR LA FUNCION DE modificarUnARchivo para bajar contenido;
+			modificarUnArchivo(contenido, tamanio,fname, parent_directory);
+			return 1;
+		}
+			else
+		{
+			t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+			return agregarMasDatosAlArchivos_archivosGrandes(contenido, tamanio, fname,  parent_directory, list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
+
+		}
 	}
 
 

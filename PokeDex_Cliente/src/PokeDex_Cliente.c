@@ -137,7 +137,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 	int res = 0;
 
 	memset(stbuf, 0, sizeof(struct stat));
-	printf("********************************* fuse_getattr *********************\n");
+	printf("********************************* INICIO: fuse_getattr *********************\n");
 	log_info(logPokeCliente, "****************fuse_getattr****************\n");
 	if (strcmp(path, DIRECTORIO_RAIZ) == 0){
 		stbuf->st_mode = S_IFDIR | 0777;
@@ -158,6 +158,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 					stbuf->st_mode = S_IFREG | 0777;
 					stbuf->st_nlink = 1;
 					stbuf->st_size = nodo->file_size;
+					stbuf->st_atim.tv_nsec = nodo->lastmod;
 
 					printf("fuse_getattr - nodo->file_size: %i\n",nodo->file_size);
 					//stbuf->st_atim
@@ -172,6 +173,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 					log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: DIRECTORY\n");
 					stbuf->st_mode = S_IFDIR | 0777;
 					stbuf->st_nlink = 2;
+					stbuf->st_atim.tv_nsec = nodo->lastmod;
 				}
 			}else{
 				res = -ENOENT;
@@ -182,7 +184,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 		}
 
 	}
-
+	printf("********************************* FIN - fuse_getattr *********************\n");
 	return res;
 }
 
@@ -222,7 +224,7 @@ static int fuse_rmdir(const char* path){
 
 
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
-	log_info(logPokeCliente, "****************fuse_mkdir****************\n");
+	log_info(logPokeCliente, "****************fuse_rmdir****************\n");
 	//0) Send Fuse Operations
 	enum_FUSEOperations operacion = FUSE_RMDIR;
 	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -258,10 +260,10 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 	log_info(logPokeCliente, "**************** fuse_create ****************\n");
 	printf("********************************* fuse_create *********************\n");
 	char *file_name = strrchr (path, '/') + 1;
-	printf("crearUnDirectorio - path: %s\n", path);
+	printf("fuse_create - path: %s\n", path);
 
 	if (string_length(file_name)>17){
-		printf("fuse_create - EL fuse_mkdir ES MAYOR A 17: %i\n", string_length(file_name));
+		printf("fuse_create - EL fuse_create ES MAYOR A 17: %i\n", string_length(file_name));
 		log_info(logPokeCliente, "fuse_create - EL RENAME ES MAYOR A 17: %i\n", string_length(file_name));
 		exitCode = -1;
 	}else{
@@ -389,10 +391,58 @@ static int fuse_truncate(const char* path, off_t offset)
 
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		log_info(logPokeCliente, "**************** FUSE_TRUNCATE ****************\n");
+
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_TRUNCATE;
 		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
+		log_info(logPokeCliente, "fuse_truncate - path: %s\n", path);
+		log_info(logPokeCliente, "fuse_truncate - offset: %i\n", offset);
+
+		int exitCode = EXIT_FAILURE; //DEFAULT Failure
+
+
+		//1) send path length (+1 due to \0)
+		string_append(&path, "\0");
+		int pathLength = strlen(path) + 1;
+
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_truncate - pathLength: %i\n", pathLength);
+
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , pathLength );
+		log_info(logPokeCliente, "fuse_truncate - path: %s\n", path);
+
+		//3) send buffer length (+1 due to \0)
+		int bufferSize = offset;
+		exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(int));
+		log_info(logPokeCliente, "fuse_truncate - bufferSize: %i\n", bufferSize);
+
+
+		//4) send buffer
+		char *buf =  string_repeat('\0', offset);
+		exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
+
+		//5) send posDelaTablaDeArchivos
+		exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
+		log_info(logPokeCliente, "fuse_truncate - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
+		//printf("********************************* sendMessage 5 *********************\n");
+
+		//6) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
+		log_info(logPokeCliente, "fuse_truncate - parent_directory: %i\n", parent_directory);
+
+		//Receive message size
+		int ultimoPunteroDeLosBloques_write2;
+		int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write2 ,sizeof(int));
+		log_info(logPokeCliente, "fuse_truncate -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
+		printf("fuse_truncate - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
+		usleep(500000);
+		buf="";
+		return 0;
+
+		//printf("********************************* sendMessage 6 *********************\n");
+		/*
 		string_append(&path, "\0");
 		//1) send path length (+1 due to \0)
 		int pathLength = strlen(path) + 1;
@@ -415,6 +465,7 @@ static int fuse_truncate(const char* path, off_t offset)
 		int messageSize = -1;
 		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
 		log_info(logPokeCliente, "fuse_truncate - MessageSize: %i\n", messageSize);
+		*/
 
 	}
 		else
@@ -523,43 +574,62 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		printf("********************************* fuse_read - size: %i\n", size);
 		printf("********************************* fuse_read - offset: %i\n", offset);
 
-		log_info(logPokeCliente, "****************fuse_read****************\n");
-		//0) Send Fuse Operations
-		enum_FUSEOperations operacion = FUSE_READ;
-		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+		if(offset == 0){
+			//TODO, HACER UN WHILE DEL CONTENIDO QUE VINO EN EL PAQUETE HASTA LELGAR AL NULL Y AL SIZE
 
-		string_append(&path, "\0");
-		//1) send path length (+1 due to \0)
-		int pathLength = strlen(path) + 1;
-		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
 
-		//2) send path
-		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
 
-		//3) send parent_directory
-		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
-		log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
+			log_info(logPokeCliente, "****************fuse_read****************\n");
+			//0) Send Fuse Operations
+			enum_FUSEOperations operacion = FUSE_READ;
+			exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
-		//Receive message size
-		unsigned long int messageSize = -1;
-		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-		log_info(logPokeCliente, "fuse_read - MessageSize: %lu\n", messageSize);
+			string_append(&path, "\0");
+			//1) send path length (+1 due to \0)
+			int pathLength = strlen(path) + 1;
+			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+			log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
 
-		if (receivedBytes > 0){
-			char *messageRcv = malloc(messageSize);
-			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-			//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
-			memcpy(buf, messageRcv, messageSize);
-			log_info(logPokeCliente, "fuse_read - HIZO MEMCPY \n");
-			return messageSize;
-		}
+			//2) send path
+			exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+			log_info(logPokeCliente, "fuse_read - path: %s\n", path);
+
+			//3) send parent_directory
+			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+			log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
+
+			//Receive message size
+			unsigned long int messageSize = -1;
+			int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+			log_info(logPokeCliente, "fuse_read - MessageSize: %lu\n", messageSize);
+
+			if (receivedBytes > 0){
+				char *messageRcv = malloc(messageSize);
+				receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+				//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
+				memcpy(buf, messageRcv, size);
+				//memcpy(buf, messageRcv, size);
+
+				log_info(logPokeCliente, "fuse_read - HIZO MEMCPY \n");
+				return size;
+			}
+		}//if(offset == 0)
 	}else{
 		exitCode=EXIT_SUCCESS;
 	}
 
-	return exitCode;
+
+	if (size + offset == 1048576){
+		printf("********************************* 1048576: %i\n", size + offset);
+		return 0;
+	}
+
+
+	//return offset- size;//falla
+	//return size;//fala
+	return size;//no falla
+
+	//return exitCode;
 }
 void modificarElArchivo(const char* path, const char* buf, size_t size){
 	int bytes_escritos = 0;
@@ -720,35 +790,60 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 	buf="";
 	return size;
 }
-//TODO
-//resultado esta devolviendo -999
+
 static int fuse_rename (const char *oldname, const char *newName){
 	printf("********************************* fuse_rename *********************\n");
-	if (string_length(newName)>17){
-		printf("RENAME - EL RENAME ES MAYOR A 17: %i\n", string_length(newName));
-		log_info(logPokeCliente, "RENAME - EL RENAME ES MAYOR A 17: %i\n", string_length(newName));
+	char *file_name = strrchr (newName, '/') + 1;
+	printf("fuse_rename - path: %s\n", file_name);
+
+	if (string_length(file_name)>17){
+		printf("RENAME - EL RENAME ES MAYOR A 17: %i\n", string_length(file_name));
+		log_info(logPokeCliente, "RENAME - EL RENAME ES MAYOR A 17: %i\n", string_length(file_name));
 		return -1;
 	}
 
 	int resultado = renombrarArchivo(oldname, newName);
 
-	if (resultado!=-999)	{
+	if (resultado == -999)	{
 			printf("[Error_Fuse] rename(%s,%s)\n", oldname, newName);
 			return 1;
 		}
 
-	return 1;
+	return 0;
 
 }
-static int fuse_utimens(const char * path, const struct timespec ts[2]){
+static int fuse_utimens(const char *path, const struct timespec ts[2]){
 	printf("***************** fuse_utimens - ts[1].tv_nsec: %i***********************\n", ts[1].tv_nsec);
 	//			NOTA VEAMOS JUNTOS COMO IMPLEMENTARLO LO QUE HAY QUE OBTENER ES EL
 	//			uint32_t lastmod;
-	//			int messageSize = elementCount * sizeof(osada_file);
-	//			uint32_t *messageRcv = malloc(messageSize);
-	//			receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-	//			resultado = atoi(messageRcv);
-	//			log_info(logPokeCliente, "messageRcv: %d\n", resultado);
+
+		//0) Send Fuse Operations
+
+	enum_FUSEOperations operacion = FUSE_UTIMENS;
+		int exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_utimens - pathLength: %i\n", pathLength);
+
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
+		log_info(logPokeCliente, "fuse_utimens - path: %s\n", path);
+
+		//3) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(parent_directory));
+		log_info(logPokeCliente, "fuse_utimens - parent_directory: %i\n", parent_directory);
+
+		//4) send time
+		exitCode = sendMessage(&socketPokeServer, &ts[1].tv_nsec , sizeof(parent_directory));
+		log_info(logPokeCliente, "fuse_utimens - time: %i\n", ts[1].tv_nsec);
+
+		//Receive message size
+		int messageSize = -1;
+		int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+		log_info(logPokeCliente, "fuse_utimens - MessageSize: %i\n", messageSize);
 
 	return 0;
 }
@@ -950,18 +1045,27 @@ t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation){
 	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
 	log_info(logPokeCliente, "pathLength: %i\n", pathLength);
 	//2) send path
+
+
 	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
 	log_info(logPokeCliente, "path: %s\n", path);
 
 	//Receive element Count
 	int elementCount = -1;
-	int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+	usleep(500000);
+
+	char *test  = malloc(strlen("hola\0")+1);
+	int receivedBytes = receiveMessage(&socketPokeServer, test , strlen("hola\0")+1);
+	printf("**************** test: %s\n", test);
+
+	receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+
 	log_info(logPokeCliente, "elementCount: %i\n", elementCount);
 	if (receivedBytes > 0 && elementCount > 0){
 		int messageSize = elementCount * sizeof(osada_file);
 		char *messageRcv = malloc(messageSize);
 		receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-		log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
+		//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
 		deserializeListaBloques(listaBloques,messageRcv,elementCount);
 	}
 	log_info(logPokeCliente, "*********************************\n");
