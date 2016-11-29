@@ -1598,6 +1598,9 @@ t_list* detectarInterbloqueo() {
 	t_list* pokemonesDisponibles = list_create();
 	cargarCantidadPokemonesExistentes(pokemonesDisponibles);
 
+	//4.1) Informamos el estado de todas las Listas
+	iformarEstadosRecursos(asignacion,solicitud,pokemonesDisponibles);
+
 	//5)Recorrer matriz asignacion buscando que tenga recursos <= a la lista creada previamente (pokemonesExistentes)
 	bool notFound = true;
 	while (notFound) {
@@ -2053,4 +2056,87 @@ void saleColaBloqueados(t_entrenador* entrenador){
 	// Al Sacarlo de la lista debemos calcular tiempos en cola.
 	time_t tiempo2 = time(0);
 	entrenador->tiempoBloqueado = entrenador->tiempoBloqueado+(difftime(tiempo2, entrenador->timeIngresoBloq));
+}
+
+void iformarEstadosRecursos(t_list* asignacion,t_list* solicitud,t_list* pokemonesDisponibles){
+	log_info(logMapa, "========================================");
+	log_info(logMapa, "==   Estado de Recursos en DEADLOCK   ==");
+	log_info(logMapa, "========================================");
+	log_info(logMapa, " ");
+	log_info(logMapa, "* Tabla De Asignacion");
+	log_info(logMapa, "  -------------------");
+	loguearEntrenadorAsignacion(asignacion);
+
+	log_info(logMapa, " ");
+	log_info(logMapa, "* Tabla De solicitud");
+	log_info(logMapa, "  -------------------");
+	loguearEntrenadorAsignacion(solicitud);
+
+	log_info(logMapa, " ");
+	log_info(logMapa, "* Tabla De Disponibilidad");
+	log_info(logMapa, "  -----------------------");
+	loguearPokemonesAsignacion(pokemonesDisponibles);
+
+	log_info(logMapa, " ");
+	log_info(logMapa, "========================================");
+
+}
+
+void loguearEntrenadorAsignacion(t_list* asignacion){
+	int i;
+
+	for (i = 0; i < list_size(asignacion); i++) {
+
+		char* cabecera = string_new();
+		char* lineaDato = string_new();
+
+		t_entrenador_Asignacion* entrenadorAux = list_get(asignacion, i);
+
+		string_append(&cabecera,"Entrenador             |");
+
+		string_append(&lineaDato, string_from_format("%c", entrenadorAux->entrenador)  );
+		//Para que todos comiencen la matriz en el mismo lugar
+
+		int cantBlancos = 22 - string_length(entrenadorAux->entrenador);
+		while(cantBlancos>0){
+			string_append(&lineaDato," ");
+			cantBlancos--;
+		}
+		string_append(&lineaDato,"|");
+
+		int j;
+		for (j = 0; j < list_size(entrenadorAux->pokemonesAsignados); j++) {
+			t_pokemones_Asignacion* auxPok = list_get(entrenadorAux->pokemonesAsignados, j);
+			if(i == 0){
+				//Obtengo La cabecera para mostrar Solo una vez
+				string_append(&cabecera, string_from_format("%c", auxPok->pokemon_id)  );
+				string_append(&cabecera,"|");
+			}
+			string_append(&lineaDato,string_itoa(auxPok->cantidad));
+			string_append(&lineaDato," |");
+		}
+
+		if(i == 0){
+			//Solo si estoy en el primer debo armar la cabecera
+			log_info(logMapa,cabecera);
+		}
+		log_info(logMapa,lineaDato);
+	}
+}
+
+void loguearPokemonesAsignacion(t_list* asignacion){
+	int i;
+	char* cabecera = string_new();
+	char* lineaDato = string_new();
+
+	for (i = 0; i < list_size(asignacion); i++) {
+		t_pokemones_Asignacion* auxPok = list_get(asignacion, i);
+		string_append(&cabecera, string_from_format("%c", auxPok->pokemon_id)  );
+		string_append(&cabecera," |");
+		string_append(&lineaDato,string_itoa(auxPok->cantidad));
+		string_append(&lineaDato," |");
+	}
+
+	log_info(logMapa,cabecera);
+	log_info(logMapa,lineaDato);
 }

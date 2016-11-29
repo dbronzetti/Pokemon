@@ -89,6 +89,9 @@ typedef struct {
 	int distancia;
 	int	seMovioEnX;
 	int estaBloqueado;
+	time_t timeIngresoBloq;
+	double tiempoBloqueado; //Tiempo Total en Cola de bloqueados
+	int cantDeadLock; // Cantidad de veces en deadLock
 } t_entrenador;
 
 // Funciones de conexion

@@ -148,4 +148,7 @@ void reloadMetadata();
 void evaluarEstadoEntrenador(t_entrenador* entrenador); //evalua en que estado se encuentra y segun su estado le indica que tiene que hacer
 bool noSeBorro(t_entrenador* entrneador);
 void saleColaBloqueados(t_entrenador* entrenador);
+void iformarEstadosRecursos(t_list* asignacion,t_list* solicitud,t_list* pokemonesDisponibles);
+void loguearEntrenadorAsignacion(t_list* asignacion);
+void loguearPokemonesAsignacion(t_list* asignacion);
 #endif /* MAPA_H_ */
