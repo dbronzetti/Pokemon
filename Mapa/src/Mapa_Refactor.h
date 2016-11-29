@@ -151,4 +151,7 @@ void saleColaBloqueados(t_entrenador* entrenador);
 void iformarEstadosRecursos(t_list* asignacion,t_list* solicitud,t_list* pokemonesDisponibles);
 void loguearEntrenadorAsignacion(t_list* asignacion);
 void loguearPokemonesAsignacion(t_list* asignacion);
+void iformarEstadosColas();
+void loguearColaListos();
+void loguearColaBloqueados();
 #endif /* MAPA_H_ */
