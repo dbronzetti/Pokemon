@@ -689,19 +689,15 @@ void sumarRecurso(t_list* items, char id) { //defino esta funcion porque no esta
 void planificar() {
 	char *prevPlanificador = "";
 	char *planificador;
-	int retardoTurno;
 	while (1) {
 		pthread_mutex_lock(&metadataMutex);
 		planificador = metadataMapa.algoritmo;
-		retardoTurno = metadataMapa.retardo;
 		pthread_mutex_unlock(&metadataMutex);
 
 		if (strcmp(planificador,prevPlanificador) != 0){
 			log_info(logMapa, "Planificador %s",planificador);
 			//TODO informar estado de las colas
 		}
-
-		sleep(retardoTurno/1000); //Retardo entre turnos antes de asignar entrenador
 
 		if(strcmp(planificador, "RR") == 0){
 			planificarRR();
@@ -753,7 +749,10 @@ void planificarRR() {
 
 			pthread_mutex_lock(&metadataMutex);
 			int quantum = metadataMapa.quantum;
+			int retardoTurno = (metadataMapa.retardo * 1000);
 			pthread_mutex_unlock(&metadataMutex);
+
+			usleep(retardoTurno); //Retardo entre turnos antes de asignar entrenador
 
 			int i = 0;
 			while ( i < quantum ) {
@@ -1112,7 +1111,6 @@ void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovi
 }
 
 void planificarSRDF() {
-
 	pthread_mutex_lock(&colaDeListosMutex);
 	int tamanioColaListos = queue_size(colaDeListos);
 	pthread_mutex_unlock(&colaDeListosMutex);
@@ -1125,11 +1123,19 @@ void planificarSRDF() {
 		t_entrenador* entrenador = queue_pop(colaDeListos);
 		pthread_mutex_unlock(&colaDeListosMutex);
 
-		ejecutarAccionEntrenador(entrenador, 0); //0 it's not needed for this planificador
+		pthread_mutex_lock(&metadataMutex);
+		int retardoTurno = (metadataMapa.retardo * 1000);
+		pthread_mutex_unlock(&metadataMutex);
+
+		if(entrenadorAnterior != entrenador->simbolo) //si cambio de entrenador => se corto su rafaga => se retarda
+		usleep(retardoTurno);
+		int a = 0;
+		ejecutarAccionEntrenador(entrenador, &a); //0 it's not needed for this planificador
 
 		pthread_mutex_lock(&setEntrenadoresMutex);
 		if (entrenador->estaBloqueado != 1) {
 			pthread_mutex_lock(&colaDeListosMutex);
+			 entrenadorAnterior = entrenador->simbolo;
 			queue_push(colaDeListos, entrenador);
 			pthread_mutex_unlock(&colaDeListosMutex);
 		} else {
