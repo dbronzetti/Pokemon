@@ -90,6 +90,10 @@ typedef struct {
 	int distancia;
 	int	seMovioEnX;
 	int estaBloqueado;
+	time_t timeIngresoBloq;
+	double tiempoBloqueado;
+	int cantDeadLock;
+	int	cantDead;
 } t_entrenador;
 
 typedef struct {
@@ -144,5 +148,5 @@ void recibirSignal();
 void reloadMetadata();
 void evaluarEstadoEntrenador(t_entrenador* entrenador); //evalua en que estado se encuentra y segun su estado le indica que tiene que hacer
 bool noSeBorro(t_entrenador* entrneador);
-
+void saleColaBloqueados(t_entrenador* entrenador);
 #endif /* MAPA_H_ */

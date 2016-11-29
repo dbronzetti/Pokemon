@@ -643,6 +643,9 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	nuevoEntrenador->seMovioEnX = 0;
 	nuevoEntrenador->estaBloqueado = 0;
 	nuevoEntrenador->estaEnTurno = 0;
+	nuevoEntrenador->tiempoBloqueado = 0;
+	nuevoEntrenador->cantDeadLock = 0;
+	nuevoEntrenador->cantDead = 0;
 
 	//In function CrearPersonaje there is a list_add to items
 	pthread_mutex_lock(&itemsMutex);
@@ -678,6 +681,10 @@ void eliminarEntrenador(char simbolo) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	t_entrenador* entrenador = list_remove_by_condition(listaDeEntrenadores,
 			(void*) igualarACaracterCondicion);
+
+	// Al Sacarlo de la lista debemos calcular tiempos en cola.
+	saleColaBloqueados(entrenador);
+
 	t_list* pokemones = entrenador->listaDePokemonesCapturados;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 
@@ -692,6 +699,7 @@ void eliminarEntrenador(char simbolo) {
 		pthread_mutex_lock(&setEntrenadoresMutex);
 		entrenadorBloqueado->estaBloqueado = 0;
 		entrenador->accion = SIN_MENSAJE;
+		saleColaBloqueados(entrenadorBloqueado);
 		pthread_mutex_unlock(&setEntrenadoresMutex);
 
 		pthread_mutex_lock(&colaDeListosMutex);
@@ -830,6 +838,7 @@ void planificarRR() {
 							entrenador->simbolo);
 					pthread_mutex_lock(&colaDeBloqueadosMutex);
 					entrenador->estaEnTurno = 0;
+					entrenador->timeIngresoBloq = time(0);
 					queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
 					pthread_mutex_unlock(&colaDeBloqueadosMutex);
 				}
@@ -1243,6 +1252,7 @@ void planificarSRDF() {
 						entrenador->simbolo);
 				pthread_mutex_lock(&colaDeBloqueadosMutex);
 				entrenador->estaEnTurno = 0;
+				entrenador->timeIngresoBloq = time(0); // Empezamos a contar el tiempo en la cola.
 				queue_push(colaDeBloqueados, entrenador); //y aca lo mandamos a la cola de bloqueados.
 				pthread_mutex_unlock(&colaDeBloqueadosMutex);
 			}
@@ -1393,12 +1403,14 @@ void detectarDeadlocks() {
 
 				if (entrenadorFlag != NULL) {
 					pthread_mutex_lock(&setEntrenadoresMutex);
+					entrenadorBloqueado->cantDeadLock++;
 					list_add(listaDeadlock, entrenadorBloqueado);
 					pthread_mutex_unlock(&setEntrenadoresMutex);
 				} else {
 					//Los devuelvo a la cola de Listo. TODOS los entrenadores no DEADLOCK vuelven a competir
 					pthread_mutex_lock(&setEntrenadoresMutex);
 					entrenadorBloqueado->estaBloqueado = 0;
+					saleColaBloqueados(entrenadorBloqueado);
 					pthread_mutex_unlock(&setEntrenadoresMutex);
 
 					pthread_mutex_lock(&colaDeListosMutex);
@@ -1510,6 +1522,7 @@ void detectarDeadlocks() {
 						pthread_mutex_lock(&colaDeListosMutex);
 						pthread_mutex_lock(&setEntrenadoresMutex);
 						entrenadorGanador->estaBloqueado = 0;
+						saleColaBloqueados(entrenadorGanador);
 						queue_push(colaDeListos, entrenadorGanador);
 						pthread_mutex_unlock(&setEntrenadoresMutex);
 						pthread_mutex_unlock(&colaDeListosMutex);
@@ -1956,6 +1969,7 @@ void matar(t_entrenador* entrenador) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	int socketE = entrenador->socket;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
+	entrenador->cantDead++;
 
 	eliminarEntrenador(entrenador->simbolo);
 
@@ -2037,3 +2051,8 @@ bool noSeBorro(t_entrenador* entrenador){
 	return noSeDesconectoNadie;
 }
 
+void saleColaBloqueados(t_entrenador* entrenador){
+	// Al Sacarlo de la lista debemos calcular tiempos en cola.
+	time_t tiempo2 = time(0);
+	entrenador->tiempoBloqueado = entrenador->tiempoBloqueado+(difftime(tiempo2, entrenador->timeIngresoBloq));
+}
