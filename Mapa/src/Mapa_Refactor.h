@@ -91,9 +91,8 @@ typedef struct {
 	int	seMovioEnX;
 	int estaBloqueado;
 	time_t timeIngresoBloq;
-	double tiempoBloqueado;
-	int cantDeadLock;
-	int	cantDead;
+	double tiempoBloqueado; //Tiempo Total en Cola de bloqueados
+	int cantDeadLock; // Cantidad de veces en deadLock
 } t_entrenador;
 
 typedef struct {

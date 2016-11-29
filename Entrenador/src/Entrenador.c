@@ -347,6 +347,7 @@ void jugar() {
 			case MATAR: { //el mapa mando a matar al entrenador
 				log_info(logEntrenador, "Killing trainer after Map kick");
 				restarVida();
+				metadataEntrenador.cantDead++;
 				if (metadataEntrenador.vidas > 0) {
 					reconectarse();
 					colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola se rellena
@@ -384,7 +385,7 @@ void jugar() {
 
 	}
 
-	yoYaGane(mapaActual);
+	yoYaGane();
 
 }
 
@@ -609,6 +610,8 @@ void yoYaGane() {
 
 	char* rutaMedallaEntrenador = string_from_format("%s/", rutaMedallas);
 
+	cargarMetadataFinMapa();
+
 	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
 	borrarArchivos(rutaDirDeBill);
 	desconectarse();
@@ -640,4 +643,11 @@ int reconectarse() {
 void limpiarColasMetadaEtrenador(){
 	queue_clean_and_destroy_elements(metadataEntrenador.hojaDeViaje, (void *) free);
 	queue_clean_and_destroy_elements(metadataEntrenador.obj, (void *) free);
+}
+
+void cargarMetadataFinMapa(){
+	//Nos comunicamos con el mapa para solicitarle el resultado final de los siguientes PTS
+	//Tiempo Bloqueado en Pokenets, cantidad de DeadLock.
+	//	double tiempoBloqueado;
+//	int cantDeadLock;
 }
