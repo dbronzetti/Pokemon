@@ -51,8 +51,9 @@ sem_t processNextMessageSem;
 sem_t borradoDePersonajesSem;
 int SEM_INIT_VALUE = 1;//This is for receiving the 1st trainer
 
-char* rutaMetadata;//needed as global for reloading metadata file
 
+char* rutaMetadata;//needed as global for reloading metadata file
+char entrenadorAnterior;
 // Estructuras
 typedef struct {
 	int socketServer;
