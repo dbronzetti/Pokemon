@@ -39,6 +39,7 @@ pthread_t hiloEscuchar; //un hilo para escuchar los msjs del server
 char* pokemonCapturado;
 char* posicionPokenest;
 t_queue* colaDeObjetivos;
+char** objetivosActuales;
 enum_messages turno;
 
 //Mutex
