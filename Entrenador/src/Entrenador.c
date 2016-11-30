@@ -497,8 +497,8 @@ void recibirMsjs() {
 				log_info(logEntrenador,
 						"Map send the stats");
 				char** stats = string_split(message->mensaje,",");
-				metadataEntrenador.cantDeadLock = atoi(stats[0]);
-				metadataEntrenador.tiempoBloqueado = atoi(stats[1]);
+				metadataEntrenador.cantDeadLock = metadataEntrenador.cantDeadLock + atoi(stats[0]);
+				metadataEntrenador.tiempoBloqueado = metadataEntrenador.tiempoBloqueado + atoi(stats[1]);
 				sem_post(&semEstadisticas);
 				break;
 			}

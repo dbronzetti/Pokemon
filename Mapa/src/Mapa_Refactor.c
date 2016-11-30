@@ -312,14 +312,12 @@ void startServerProg() {
 								sizeof(serverData->socketClient));
 
 						serverData->masterFD = &master;
-						log_info(logMapa, "298");
+
 						pthread_create(&processMessageThread, NULL,
 								(void*) processMessageReceived, serverData);
 						pthread_join(processMessageThread, NULL);
 						//Destroy thread attribute
-						log_info(logMapa, "302");
 //						pthread_attr_destroy(&processMessageThreadAttr);
-						log_info(logMapa, "304");
 					} // END handle data from client
 				} // END got new incoming connection
 			} // END looping through file descriptors
@@ -634,7 +632,6 @@ void processMessageReceived(void *parameter) {
 		free(messageRcv);
 	}
 
-	log_info(logMapa, "fin de la funcion");
 }
 
 void crearEntrenadorYDibujar(char simbolo, int socket) {
@@ -1983,6 +1980,9 @@ void matar(t_entrenador* entrenador) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	int socketE = entrenador->socket;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
+	// antes de matarlo se le manda las estadisticas por si se reeconecta.
+	char* stats = convertirAString(entrenador->cantDeadLock,entrenador->tiempoBloqueado);
+	sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
 
 	eliminarEntrenador(entrenador->simbolo);
 
