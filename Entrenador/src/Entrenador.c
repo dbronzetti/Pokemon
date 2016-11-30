@@ -289,15 +289,13 @@ void jugar() {
 				log_info(logEntrenador, "Trainer send the id of the pokenest");
 				objetivoActual = queue_pop(colaDeObjetivos);
 				sendClientMessage(&socketMapa, objetivoActual, CONOCER);
-				log_info(logEntrenador, "Conocer: Se manda: %s",
-						objetivoActual);
 
 				break;
 			}
 
 			case CONOCER: {	// no se hace nada...
 				log_info(logEntrenador, "Trainer receive the position");
-				//		sendClientMessage(&socketMapa, posicionPokenest, IR);
+
 
 				break;
 			}
@@ -314,8 +312,8 @@ void jugar() {
 				log_info(logEntrenador,
 						"Trainer ask to mapa to move to the pokenest '%s'",
 						objetivoActual);
-				sendClientMessage(&socketMapa, objetivoActual, IR);
-//				log_info(logEntrenador, "IR: Se manda: %s", objetivoActual);
+				sendClientMessage(&socketMapa, posicionPokenest, IR);
+
 
 				break;
 			}
@@ -327,11 +325,11 @@ void jugar() {
 				char* rutaMedataPokemonMapa = string_from_format(
 						"%s/Mapas/%s/Pokenest/%s/metadata.dat", pokedex,
 						mapaActual, pokemonCapturado); //armamos la ruta del archivo metadata que vamos a copiar
-				puts(rutaMedataPokemonMapa);
 
 				log_info(logEntrenador, "Trainer has captured: %s",
 						pokemonCapturado);
 				copiarArchivos(rutaMedataPokemonMapa, rutaMetadataPokemon);
+				printf(ANSI_COLOR_GREEN     "El pokemon: %s ha sido capturado"     ANSI_COLOR_RESET "\n",pokemonCapturado);
 				free(rutaMetadataPokemon);
 				free(rutaMedataPokemonMapa);
 				objetivoActual = NULL;
@@ -356,9 +354,7 @@ void jugar() {
 					colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola se rellena
 				} else {
 					char* respuesta = malloc(3);
-					printf(
-							"No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento\n>> ",
-							metadataEntrenador.reintentos);
+					printf(ANSI_COLOR_RED     "No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento"     ANSI_COLOR_RESET "\n",metadataEntrenador.reintentos);
 					scanf("%s", respuesta);
 					string_to_upper(respuesta);
 					queue_clean_and_destroy_elements(colaDeObjetivos,
@@ -455,6 +451,7 @@ void recibirMsjs() {
 				log_info(logEntrenador,
 						"New action begins: the position of the pokenest is: %s\n",
 						message->mensaje);
+				posicionPokenest = message->mensaje;
 				pthread_mutex_lock(&turnoMutex);
 				turno = CONOCER;
 				pthread_mutex_unlock(&turnoMutex);
@@ -475,7 +472,6 @@ void recibirMsjs() {
 				log_info(logEntrenador,
 						"Trainer captured the pokemon SUCCESSFUL");
 				pthread_mutex_lock(&pokemonCapturadoMutex);
-				puts(message->mensaje);
 				pokemonCapturado = message->mensaje;
 				pthread_mutex_unlock(&pokemonCapturadoMutex);
 
@@ -536,25 +532,10 @@ void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
 	char *command = string_from_format("cp %s %s", archivoOrigenSinBlancos,
 			archivoDestinoSinBlancos);
 
-	printf("----------------------------------------\n");
-	printf("%s \n", command);
-	printf("----------------------------------------\n");
+//	printf("----------------------------------------\n");
+//	printf("%s \n", command);
+//	printf("----------------------------------------\n");
 	system(command);
-//
-//	FILE *fp_org, *fp_dest;
-//	char c;
-//
-//	if (!(fp_org = fopen(archivoOrigen, "rt"))
-//			|| !(fp_dest = fopen(archivoDestino, "wt"))) {
-//		perror("Error de apertura de ficheros");
-//		exit(EXIT_FAILURE);
-//	}
-//
-//	while ((c = fgetc(fp_org)) != EOF && !ferror(fp_org) && !ferror(fp_dest))
-//		fputc(c, fp_dest);
-//
-//	fclose(fp_org);
-//	fclose(fp_dest);
 
 }
 
@@ -608,9 +589,9 @@ void borrarArchivos(char* rutaDeleted) { //se borran todos los archivos que se p
 
 	char *command = string_from_format("rm -f %s/*", archivoOrigenSinBlancos);
 
-	printf("----------------------------------------\n");
-	printf("%s \n", command);
-	printf("----------------------------------------\n");
+//	printf("----------------------------------------\n");
+//	printf("%s \n", command);
+//	printf("----------------------------------------\n");
 	system(command);
 
 }

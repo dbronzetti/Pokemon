@@ -574,13 +574,10 @@ void processMessageReceived(void *parameter) {
 				break;
 			}
 			case IR: {
-				log_info(logMapa, "526");
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
 						(void*) buscarPorSocket);
-				log_info(logMapa, "527");
 				entrenador->accion = IR;
-				log_info(logMapa, "528");
 				pthread_mutex_unlock(&setEntrenadoresMutex);
 
 				log_info(logMapa, "Trainer want: '%c' to go to: '%s'",
@@ -688,9 +685,6 @@ void eliminarEntrenador(char simbolo) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	t_entrenador* entrenador = list_remove_by_condition(listaDeEntrenadores,
 			(void*) igualarACaracterCondicion);
-
-	// Al Sacarlo de la lista debemos calcular tiempos en cola.
-	saleColaBloqueados(entrenador);
 
 	t_list* pokemones = entrenador->listaDePokemonesCapturados;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -873,7 +867,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 
 	evaluarEstadoEntrenador(entrenador);
 	time_t tiempo1 = time(0);
-	log_info(logMapa, "809");
+
 	while (estaEnAccion) { //una accion que puede llevar acabo el usuario dentro del turno
 
 		time_t tiempo2 = time(0);
@@ -1113,6 +1107,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 				log_info(logMapa, "Deleting trainer: '%c'", simbolo);
 
 				eliminarEntrenador(simbolo);
+
 
 				log_info(logMapa, "Trainer: '%c' deleted SUCCESSFUL", simbolo);
 
@@ -1980,6 +1975,10 @@ void matar(t_entrenador* entrenador) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	int socketE = entrenador->socket;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
+
+	// Al Sacarlo de la lista debemos calcular tiempos en cola.
+	saleColaBloqueados(entrenador);
+
 	// antes de matarlo se le manda las estadisticas por si se reeconecta.
 	char* stats = convertirAString(entrenador->cantDeadLock,entrenador->tiempoBloqueado);
 	sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
