@@ -574,65 +574,147 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp") && !string_is_empty(path)){
-		printf("********************************* fuse_read *********************\n");
-		printf("********************************* fuse_read - size: %i\n", size);
-		printf("********************************* fuse_read - offset: %i\n", offset);
 
-		log_info(logPokeCliente, "****************fuse_read****************\n");
-		//0) Send Fuse Operations
-		enum_FUSEOperations operacion = FUSE_READ;
-		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
-
-		string_append(&path, "\0");
-		//1) send path length (+1 due to \0)
-		int pathLength = strlen(path) + 1;
-		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
-
-		//2) send path
-		exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
-		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
-
-		//3) send parent_directory
-		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
-		log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
-
-		//Receive message size
 		int cantidadBloques = -1;
-		int receivedBytes = receiveMessage(&socketPokeServer, &cantidadBloques ,sizeof(cantidadBloques));
-		log_info(logPokeCliente, "fuse_read - cantidad Bloques: %d\n", cantidadBloques);
+		int receivedBytes;
+		log_info(logPokeCliente, "****************fuse_read****************\n");
+		log_info(logPokeCliente,"********************************* fuse_read - size: %i\n", size);
+		log_info(logPokeCliente,"********************************* fuse_read - offset: %i\n", offset);
+
+		if (offset == 0){//checking if this is a callback
+
+			//0) Send Fuse Operations
+			enum_FUSEOperations operacion = FUSE_READ;
+			exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+
+			string_append(&path, "\0");
+			//1) send path length (+1 due to \0)
+			int pathLength = strlen(path) + 1;
+			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+			log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
+
+			//2) send path
+			exitCode = sendMessage(&socketPokeServer, path , pathLength );
+			log_info(logPokeCliente, "fuse_read - path: %s\n", path);
+
+			//3) send parent_directory
+			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
+			log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
+
+			//Receive message size
+			receivedBytes = receiveMessage(&socketPokeServer, &cantidadBloques ,sizeof(cantidadBloques));
+			log_info(logPokeCliente, "fuse_read - cantidad Bloques: %d\n", cantidadBloques);
+
+		}else{
+
+			receivedBytes = 1; //setting this as >0 in order to pass the next if, because this is a callback from a file previously found
+		}
 
 		if (receivedBytes > 0){
 			if (cantidadBloques != -999){//el archivo no fue encontrado por el server
-				//Receive message size
+
+				int cant_bloques = (offset / OSADA_BLOCK_SIZE);
+				int off_bloque = (offset % OSADA_BLOCK_SIZE);
+
 				int messageSize = 0;
-				int i, fileSize = 0;
-				for (i = 0 ; i < cantidadBloques; i++){
-					int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-					//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
-					fileSize += messageSize;
+				bzero(buf, size); //Limpio el buffer
+				int bytes_leidos = 0;
+
+				if ((OSADA_BLOCK_SIZE - off_bloque) >= size){
+					//Receive message size
+					receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
 
 					char *messageRcv = malloc(messageSize);
 					receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-					string_append(&buf, messageRcv);
+
+					memcpy(buf, messageRcv, size);
+					free(messageRcv);
+
+					bytes_leidos = size;
+				}else{
+
+					//Receive message size
+					receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+
+					char *messageRcv = malloc(messageSize);
+					receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+
+					memcpy(buf, messageRcv, OSADA_BLOCK_SIZE - off_bloque);
+					bytes_leidos += OSADA_BLOCK_SIZE - off_bloque;
+					size -= OSADA_BLOCK_SIZE - off_bloque;
 
 					free(messageRcv);
+
+					int cant_bloques_por_leer = size / OSADA_BLOCK_SIZE;
+					int bytes_por_leer = size % OSADA_BLOCK_SIZE;
+
+					log_info(logPokeCliente, "fuse_read - cant_bloques_por_leer: %d\n", cant_bloques_por_leer);
+
+					if (cant_bloques_por_leer == 0){
+						//Receive message size
+						receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+
+						char *messageRcv = malloc(messageSize);
+						receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+
+						memcpy(buf + bytes_leidos, messageRcv, bytes_por_leer);
+
+						bytes_leidos += bytes_por_leer;
+						size -= bytes_por_leer;
+
+						free(messageRcv);
+
+					}else{
+
+//						for (i = 0 ; i < cantidadBloques; i++){
+						int k;
+						for (k = 1; k <= cant_bloques_por_leer; k++){
+							//Receive message size
+							receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
+							//bytes_leidos += messageSize;
+
+							char *messageRcv = malloc(messageSize);
+							receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+							memcpy(buf + bytes_leidos, messageRcv, OSADA_BLOCK_SIZE);
+							bytes_leidos += OSADA_BLOCK_SIZE;
+							size -= OSADA_BLOCK_SIZE;
+							//string_append(&buf, messageRcv);
+
+							free(messageRcv);
+						}
+
+						if(bytes_por_leer > 0){
+							//Receive message size
+							receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
+							//bytes_leidos += messageSize;
+
+							char *messageRcv = malloc(messageSize);
+							receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+							memcpy(buf + bytes_leidos, messageRcv, bytes_por_leer);
+							bytes_leidos += bytes_por_leer;
+							size -= bytes_por_leer;
+
+							free(messageRcv);
+						}
+					}
 				}
 
 				//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
 				//memcpy(buf, "hola\0", strlen("hola\0")+1);
-				log_info(logPokeCliente, "fuse_read - buf: %s\n", buf);
+//				log_info(logPokeCliente, "fuse_read - buf: %s\n", buf);
 
-				return fileSize;
-			}
-				else
-			{
+				return bytes_leidos;
+
+			}else{
 				exitCode = EXIT_SUCCESS;
-			}
-		}
-	}
-		else
-	{
+			}//if (cantidadBloques != -999)
+		}else{
+			exitCode=EXIT_SUCCESS;
+		}//if (receivedBytes > 0)
+
+	}else{
 		exitCode=EXIT_SUCCESS;
 	}
 
