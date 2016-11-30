@@ -22,6 +22,10 @@ typedef struct {
 	t_queue* obj; //Una cola en la que cada elementos son los pokemones que debe capturar del mapa, ejemplo de elementos: "A, B , C", "F , H , J"
 	int vidas;
 	int reintentos;
+	time_t comenzoJuego;
+	double tiempoBloqueado;
+	int cantDeadLock;
+	int	cantDead;
 } t_metadataEntrenador;
 
 typedef struct {

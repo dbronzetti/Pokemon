@@ -645,7 +645,6 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 	nuevoEntrenador->estaEnTurno = 0;
 	nuevoEntrenador->tiempoBloqueado = 0;
 	nuevoEntrenador->cantDeadLock = 0;
-	nuevoEntrenador->cantDead = 0;
 
 	//In function CrearPersonaje there is a list_add to items
 	pthread_mutex_lock(&itemsMutex);
@@ -1969,7 +1968,6 @@ void matar(t_entrenador* entrenador) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	int socketE = entrenador->socket;
 	pthread_mutex_unlock(&setEntrenadoresMutex);
-	entrenador->cantDead++;
 
 	eliminarEntrenador(entrenador->simbolo);
 
