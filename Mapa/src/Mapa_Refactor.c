@@ -780,6 +780,7 @@ void planificar() {
 		if (strcmp(planificador, prevPlanificador) != 0) {
 			log_info(logMapa, "Planificador %s", planificador);
 			//TODO informar estado de las colas
+			iformarEstadosColas();
 		}
 
 		if (strcmp(planificador, "RR") == 0) {
@@ -2150,4 +2151,98 @@ void loguearPokemonesAsignacion(t_list* asignacion){
 
 	log_info(logMapa,cabecera);
 	log_info(logMapa,lineaDato);
+}
+
+void iformarEstadosColas(){
+	/*	colaDeListos
+		colaDeBloqueados	*/
+	log_info(logMapa, "========================================");
+	log_info(logMapa, "==           Estado de Colas          ==");
+	log_info(logMapa, "========================================");
+	log_info(logMapa, " ");
+	log_info(logMapa, "* Cola De Listos");
+	log_info(logMapa, "  -------------------");
+	loguearColaListos();
+	log_info(logMapa, "* Cola De Bloqueados");
+	log_info(logMapa, "  -------------------");
+	loguearColaBloqueados();
+}
+void loguearColaListos(){
+	t_list* listAuxOrdenar = list_create();
+	int i;
+	char simbolo;
+
+	//obtenemos todos los entrenadores y determinamos su distancia.
+	pthread_mutex_lock(&colaDeListosMutex);
+	int tamanioColaListos = queue_size(colaDeListos);
+	pthread_mutex_unlock(&colaDeListosMutex);
+
+	while (tamanioColaListos) {
+
+		pthread_mutex_lock(&colaDeListosMutex);
+		t_entrenador* entrenadorAux = queue_pop(colaDeListos);
+		pthread_mutex_unlock(&colaDeListosMutex);
+
+		if (noSeBorro(entrenadorAux)) {
+			pthread_mutex_lock(&setEntrenadoresMutex);
+			list_add(listAuxOrdenar, entrenadorAux);
+			pthread_mutex_unlock(&setEntrenadoresMutex);
+
+		}
+		tamanioColaListos--; //le resto uno al tamanio para que no quede en bucle infinito
+	}
+
+	//Volvemos a regenerar la Cola con los entrenadores ya ordenados.
+	pthread_mutex_lock(&setEntrenadoresMutex);
+	for (i = 0; i < list_size(listAuxOrdenar); i++) {
+		t_entrenador* entrenadorAux = list_get(listAuxOrdenar, i);
+		log_info(logMapa, string_from_format("%c", entrenadorAux->simbolo));
+		pthread_mutex_lock(&colaDeListosMutex);
+		queue_push(colaDeListos, entrenadorAux);
+		pthread_mutex_unlock(&colaDeListosMutex);
+	}
+	pthread_mutex_unlock(&setEntrenadoresMutex);
+
+	list_destroy(listAuxOrdenar);
+
+}
+
+void loguearColaBloqueados(){
+	t_list* listAuxOrdenar = list_create();
+	int i;
+	char simbolo;
+
+	//obtenemos todos los entrenadores y determinamos su distancia.
+	pthread_mutex_lock(&colaDeBloqueadosMutex);
+	int tamanioColaListos = queue_size(colaDeBloqueados);
+	pthread_mutex_unlock(&colaDeBloqueadosMutex);
+
+	while (tamanioColaListos) {
+
+		pthread_mutex_lock(&colaDeBloqueadosMutex);
+		t_entrenador* entrenadorAux = queue_pop(colaDeBloqueados);
+		pthread_mutex_unlock(&colaDeBloqueadosMutex);
+
+		if (noSeBorro(entrenadorAux)) {
+			pthread_mutex_lock(&setEntrenadoresMutex);
+			list_add(listAuxOrdenar, entrenadorAux);
+			pthread_mutex_unlock(&setEntrenadoresMutex);
+
+		}
+		tamanioColaListos--; //le resto uno al tamanio para que no quede en bucle infinito
+	}
+
+	//Volvemos a regenerar la Cola con los entrenadores ya ordenados.
+	pthread_mutex_lock(&setEntrenadoresMutex);
+	for (i = 0; i < list_size(listAuxOrdenar); i++) {
+		t_entrenador* entrenadorAux = list_get(listAuxOrdenar, i);
+		log_info(logMapa, string_from_format("%c", entrenadorAux->simbolo));
+		pthread_mutex_lock(&colaDeBloqueadosMutex);
+		queue_push(colaDeBloqueados, entrenadorAux);
+		pthread_mutex_unlock(&colaDeBloqueadosMutex);
+	}
+	pthread_mutex_unlock(&setEntrenadoresMutex);
+
+	list_destroy(listAuxOrdenar);
+
 }
