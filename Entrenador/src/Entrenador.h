@@ -17,6 +17,11 @@
 #include "metadata.h"
 #include <signal.h>
 #include <pthread.h>
+#include "semaphore.h"
+
+
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 //Logger
 t_log* logEntrenador;
@@ -47,6 +52,9 @@ enum_messages turno;
 pthread_mutex_t turnoMutex;
 pthread_mutex_t pokemonCapturadoMutex;
 
+//Semaforos
+sem_t semEstadisticas;
+
 //Metadata
 t_metadataEntrenador metadataEntrenador;
 t_metadataMapa metadataMapa;
@@ -60,6 +68,7 @@ void recibirMsjs();
 void copiarArchivos(char* archivoOrigen, char* archivoDestino);
 void yoYaGane();
 void limpiarColasMetadaEtrenador();
+void mostrarEstadisticas();
 
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);

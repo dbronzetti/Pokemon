@@ -75,13 +75,13 @@ int main(int argc, char **argv) {
 
 	pthread_create(&serverThread, NULL, (void*) startServerProg, NULL);
 	pthread_create(&planificador, NULL, (void*) planificar, NULL);
-//	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
+	pthread_create(&detectorDeadlocks, NULL, (void*) detectarDeadlocks, NULL);
 	pthread_create(&hiloSignal, NULL, (void*) recibirSignal, NULL);
 
 	pthread_join(serverThread, NULL);
 	pthread_join(planificador, NULL);
 	pthread_join(hiloSignal, NULL);
-//	pthread_join(detectorDeadlocks, NULL);
+	pthread_join(detectorDeadlocks, NULL);
 
 	pthread_mutex_destroy(&setEntrenadoresMutex);
 	pthread_mutex_destroy(&colaDeListosMutex);
@@ -602,6 +602,17 @@ void processMessageReceived(void *parameter) {
 
 				break;
 			}
+
+			case ESTADISTICAS:{
+				pthread_mutex_lock(&setEntrenadoresMutex);
+				t_entrenador* entrenador = list_find(listaDeEntrenadores,
+						(void*) buscarPorSocket);
+				char* stats = convertirAString(entrenador->cantDeadLock,entrenador->tiempoBloqueado);
+
+				sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
+				pthread_mutex_unlock(&setEntrenadoresMutex);
+				break;
+			}
 			default: {
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
@@ -941,7 +952,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 					entrenador->posD_y = posY;
 					entrenador->accion = SIN_MENSAJE;
 					entrenador->seEstaMoviendo = 1;
-					char* mensajeAEnviar = convertirPosicionesAString(posX,
+					char* mensajeAEnviar = convertirAString(posX,
 							posY);
 					sendClientMessage(&entrenador->socket, mensajeAEnviar,
 							CONOCER);
@@ -1151,7 +1162,7 @@ bool existePokenest(char idPokemon) {
 
 }
 
-char* convertirPosicionesAString(int posX, int posY) {
+char* convertirAString(int posX, int posY) {
 	char* posXstr = string_itoa(posX);
 	char* posYstr = string_itoa(posY);
 
@@ -2097,7 +2108,7 @@ void loguearEntrenadorAsignacion(t_list* asignacion){
 		string_append(&lineaDato, string_from_format("%c", entrenadorAux->entrenador)  );
 		//Para que todos comiencen la matriz en el mismo lugar
 
-		int cantBlancos = 22 - string_length(entrenadorAux->entrenador);
+		int cantBlancos = 22 - 1;
 		while(cantBlancos>0){
 			string_append(&lineaDato," ");
 			cantBlancos--;

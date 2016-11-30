@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
 	pokedex = string_new();
 	pthread_mutex_init(&turnoMutex, NULL);
 	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
+	sem_init(&semEstadisticas, 0, 0);
 
 	exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
 
 	i = 0;
 	//for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
-	while (queue_size(metadataEntrenador.hojaDeViaje)>0){
+	while (queue_size(metadataEntrenador.hojaDeViaje) > 0) {
 		mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
 		objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
@@ -72,7 +73,8 @@ int main(int argc, char **argv) {
 		char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata.dat",
 				pokedex, mapaActual);
 
-		crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa, logEntrenador);
+		crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa,
+				logEntrenador);
 
 		exitCode = connectTo(MAPA, &socketMapa);
 
@@ -92,6 +94,7 @@ int main(int argc, char **argv) {
 		}
 
 	}
+	mostrarEstadisticas();
 	return 0;
 }
 
@@ -353,13 +356,17 @@ void jugar() {
 					colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola se rellena
 				} else {
 					char* respuesta = malloc(3);
-					printf("No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento\n>> ", metadataEntrenador.reintentos);
-					scanf("%s",respuesta);
+					printf(
+							"No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento\n>> ",
+							metadataEntrenador.reintentos);
+					scanf("%s", respuesta);
 					string_to_upper(respuesta);
-					queue_clean_and_destroy_elements(colaDeObjetivos, (void*) free);
+					queue_clean_and_destroy_elements(colaDeObjetivos,
+							(void*) free);
 					objetivoActual = NULL;
-					if(strcmp("YES",respuesta) == 0){
-						log_info(logEntrenador,"Ok, se reiniciara toda su hoja de viaje");
+					if (strcmp("YES", respuesta) == 0) {
+						log_info(logEntrenador,
+								"Ok, se reiniciara toda su hoja de viaje");
 						int reintentos = metadataEntrenador.reintentos++;
 						limpiarColasMetadaEtrenador();
 						desconectarse();
@@ -369,8 +376,9 @@ void jugar() {
 						crearArchivoMetadata(rutaMetadata);
 						metadataEntrenador.reintentos = reintentos;
 					} else {
-						log_info(logEntrenador,"El entrenador ha decidido no Reintentar");
-						cerrarEntrenador();//se muere el entrenador
+						log_info(logEntrenador,
+								"El entrenador ha decidido no Reintentar");
+						cerrarEntrenador(); //se muere el entrenador
 					}
 					free(respuesta);
 				}
@@ -484,6 +492,17 @@ void recibirMsjs() {
 				pthread_mutex_unlock(&turnoMutex);
 				break;
 			}
+
+			case ESTADISTICAS: {
+				log_info(logEntrenador,
+						"Map send the stats");
+				char** stats = string_split(message->mensaje,",");
+				metadataEntrenador.cantDeadLock = atoi(stats[0]);
+				metadataEntrenador.tiempoBloqueado = atoi(stats[1]);
+				sem_post(&semEstadisticas);
+				break;
+			}
+
 			default: {
 				log_error(logEntrenador,
 						"Process couldn't connect to SERVER - Not able to connect to server %s. Please check if it's down.\n",
@@ -510,14 +529,15 @@ void recibirMsjs() {
 }
 
 void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
-	char * archivoOrigenSinBlancos=  str_replace(archivoOrigen," ","\\ ");
+	char * archivoOrigenSinBlancos = str_replace(archivoOrigen, " ", "\\ ");
 
-	char * archivoDestinoSinBlancos= str_replace(archivoDestino," ", "\\ ");
+	char * archivoDestinoSinBlancos = str_replace(archivoDestino, " ", "\\ ");
 
-	char *command  = string_from_format("cp %s %s", archivoOrigenSinBlancos,archivoDestinoSinBlancos);
+	char *command = string_from_format("cp %s %s", archivoOrigenSinBlancos,
+			archivoDestinoSinBlancos);
 
 	printf("----------------------------------------\n");
-	printf("%s \n",command);
+	printf("%s \n", command);
 	printf("----------------------------------------\n");
 	system(command);
 //
@@ -537,7 +557,6 @@ void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
 //	fclose(fp_dest);
 
 }
-
 
 char* str_replace(const char *strbuf, const char *strold, const char *strnew) {
 	char *strret, *p = NULL;
@@ -585,12 +604,12 @@ char* str_replace(const char *strbuf, const char *strold, const char *strnew) {
 
 void borrarArchivos(char* rutaDeleted) { //se borran todos los archivos que se pasa por la cola
 
-	char * archivoOrigenSinBlancos=  str_replace(rutaDeleted," ","\\ ");
+	char * archivoOrigenSinBlancos = str_replace(rutaDeleted, " ", "\\ ");
 
-	char *command  = string_from_format("rm -f %s/*", archivoOrigenSinBlancos);
+	char *command = string_from_format("rm -f %s/*", archivoOrigenSinBlancos);
 
 	printf("----------------------------------------\n");
-	printf("%s \n",command);
+	printf("%s \n", command);
 	printf("----------------------------------------\n");
 	system(command);
 
@@ -610,8 +629,9 @@ void yoYaGane() {
 
 	char* rutaMedallaEntrenador = string_from_format("%s/", rutaMedallas);
 
-	cargarMetadataFinMapa();
+	sendClientMessage(&socketMapa, "ESTADISTICAS", ESTADISTICAS);
 
+	sem_wait(&semEstadisticas);
 	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
 	borrarArchivos(rutaDirDeBill);
 	desconectarse();
@@ -640,14 +660,19 @@ int reconectarse() {
 	return 0;
 }
 
-void limpiarColasMetadaEtrenador(){
-	queue_clean_and_destroy_elements(metadataEntrenador.hojaDeViaje, (void *) free);
+void limpiarColasMetadaEtrenador() {
+	queue_clean_and_destroy_elements(metadataEntrenador.hojaDeViaje,
+			(void *) free);
 	queue_clean_and_destroy_elements(metadataEntrenador.obj, (void *) free);
 }
 
-void cargarMetadataFinMapa(){
-	//Nos comunicamos con el mapa para solicitarle el resultado final de los siguientes PTS
-	//Tiempo Bloqueado en Pokenets, cantidad de DeadLock.
-	//	double tiempoBloqueado;
-//	int cantDeadLock;
+void mostrarEstadisticas(){
+	time_t horaEnQueGano = time(0);
+	double tiempoQueTardo = difftime(horaEnQueGano, metadataEntrenador.comenzoJuego);
+	  printf(ANSI_COLOR_GREEN   "%s te has convertido en un maestro pokemon!"   ANSI_COLOR_RESET "\n",metadataEntrenador.nombre);
+	  printf(ANSI_COLOR_GREEN   "Participaste en: %d deadlocks"   ANSI_COLOR_RESET "\n",metadataEntrenador.cantDeadLock);
+	  printf(ANSI_COLOR_GREEN   "Perdiste: %d vidas"   ANSI_COLOR_RESET "\n",metadataEntrenador.cantDead);
+	  printf(ANSI_COLOR_GREEN   "Estuviste: %lf segundos bloqueado"   ANSI_COLOR_RESET "\n",metadataEntrenador.tiempoBloqueado);
+	  printf(ANSI_COLOR_GREEN   "Tardaste: %lf segundos en terminar tu hoja de viaje"   ANSI_COLOR_RESET "\n",tiempoQueTardo);
+	  sleep(10);
 }

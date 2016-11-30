@@ -127,7 +127,7 @@ void planificar();
 void planificarRR();
 void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i);
 bool existePokenest(char idPokemon);
-char* convertirPosicionesAString(int posX, int posY);
+char* convertirAString(int posX, int posY);
 void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX);
 void planificarSRDF();
 void ordenarColaEntrenadores();

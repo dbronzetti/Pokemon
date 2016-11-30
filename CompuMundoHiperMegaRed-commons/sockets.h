@@ -45,7 +45,8 @@ typedef enum{
 	CAPTURADO,
 	ERROR,
 	ERROR_CONOCER,
-	MATAR
+	MATAR,
+	ESTADISTICAS
 } enum_messages;
 
 typedef enum{
