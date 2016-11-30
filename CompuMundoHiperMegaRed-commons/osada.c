@@ -312,17 +312,21 @@ t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
 	t_list *proximo = list_create();
 
 	list_add(proximo, numeroBloques);
+	printf("1 crearPosicionesDeBloquesParaUnArchivo: %i\n", numeroBloques);
 	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 	elProximo = ARRAY_TABLA_ASIGNACION[numeroBloques];
+	printf("2 crearPosicionesDeBloquesParaUnArchivo: %i\n", numeroBloques);
 	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+	printf("3 crearPosicionesDeBloquesParaUnArchivo: %i\n", numeroBloques);
 
 	while (elProximo != -1){
 		list_add(proximo, elProximo);
 		numeroBloques = elProximo;
-
+		printf("4 crearPosicionesDeBloquesParaUnArchivo: %i\n", numeroBloques);
 		pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 		elProximo = ARRAY_TABLA_ASIGNACION[numeroBloques];
 		pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
+		printf("5 crearPosicionesDeBloquesParaUnArchivo: %i\n", numeroBloques);
 	}
 
 	list_iterate(proximo, (void*) _iterarBloques);
@@ -360,7 +364,7 @@ osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint1
 
 
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory){
-	printf("******************************** ENTRO EN EL buscarArchivo ******************************** \n");
+	printf("******************************** ENTRO EN EL devolverOsadaBlockPointer ******************************** \n");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
@@ -370,7 +374,7 @@ osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_dire
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if ((posicion = comprobarElNombreDelArchivo(TABLA_DE_ARCHIVOS[pos], parent_directory,  file_name)) != -666){
-			printf("encontro ARCHIVO:  %i\n", pos);
+			printf("devolverOsadaBlockPointer - Encontro archivo - pos:  %i\n", pos);
 			found = true;
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -1215,28 +1219,53 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 
 	printf("************************ FIN MODIFICAR UN ARCHIVO ************************\n");
 }
-void hacerElTruncate(int tamanioNuevo, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
-	osada_file osadaFile;
+
+int hacerElTruncate(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	int cantidadDeBloquesParaGrabar = 0;
-	int cantidadNuevaDeBloquesParaGrabar = 0;
-	osadaFile = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
+	t_list* listadoLosIndicesDeLosBloquesDisponibles;
+	/*****************************************/
+	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
 	posDelaTablaDeArchivos = buscarElArchivoYDevolverPosicion(fname, parent_directory);
-
 	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
+	printf("crearUnArchivo - El archivo size: %i\n", elArchivo.file_size);
 
-	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
-	cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
 
-	if (osadaFile.file_size < tamanioNuevo){
-		printf("************ HAY MENOS DATOS PARA AGREGAR\n");
-		//BORRA BLOQUES
-		char *nuevoContenido = string_new();
-		printf("nuevoContenido: %s\n", nuevoContenido);
+	if (posicion != -999 && elArchivo.file_size != 0){
+		if (elArchivo.file_size  > tamanio){
+			//JOEL: CUANDO HAGO EL TRUNCATE CON MENOR SIZE PUEDO REUTILZIAR LA FUNCION DE modificarUnARchivo para bajar contenido;
+			printf("crearUnArchivo - entra para truncate - elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+			modificarUnArchivo(contenido, tamanio,fname, parent_directory);
+			return 1;
+		}
+			else
+		{
+			printf("crearUnArchivo -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+			t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+			return agregarMasDatosAlArchivos_archivosGrandes(contenido, tamanio, fname,  parent_directory, list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
 
-	}else{
-		//AGREGA BYTES
+		}
 	}
 
+
+
+	/********************************************************/
+
+	if(elTamanioDelArchivoEntraEnElOsada(tamanio) && noEsVacio(tamanio)){
+		printf("crearUnArchivo - tamanio: %i\n", tamanio);
+
+		cantidadDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanio);
+		printf("crearUnArchivo - cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
+
+
+		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
+
+		guardarEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles);
+		guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
+		escribirEnLaTablaDeArchivos(parent_directory, tamanio, fname, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0), posDelaTablaDeArchivos);
+
+	}
+	return list_get(listadoLosIndicesDeLosBloquesDisponibles, listadoLosIndicesDeLosBloquesDisponibles->elements_count-1);
+	printf("************************ FIN CREAR UN ARCHIVO ************************\n");
 }
 
 int crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){

@@ -353,12 +353,12 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "Message path received : %s\n",path);
 
 					//3) Receive parent_directory
-					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+
 					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
 					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					osada_block_pointer posicion = devolverOsadaBlockPointer(path, parent_directory);
-					printf("posicion: %i\n",posicion);
+					printf("FUSE_UNLINK - posicion: %i\n",posicion);
 					if (posicion != -999){
 						t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 						borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
@@ -404,7 +404,7 @@ void processMessageReceived(void *parameter){
 					     receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
 						log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
-						int ultimoPuntero = crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
+						int ultimoPuntero = hacerElTruncate(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", ultimoPuntero);
 						printf("FUSE_TRUNCATE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
 
