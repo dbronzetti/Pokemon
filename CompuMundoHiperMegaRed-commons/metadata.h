@@ -21,7 +21,6 @@ typedef struct {
 	t_queue* hojaDeViaje; //Una cola en la que cada elemento es el nombre de un mapa, ejemplo de elementos: "Pueblo Paleta", "Ciudad Verde"
 	t_queue* obj; //Una cola en la que cada elementos son los pokemones que debe capturar del mapa, ejemplo de elementos: "A, B , C", "F , H , J"
 	int vidas;
-	int reintentos;
 	time_t comenzoJuego;
 	double tiempoBloqueado;
 	int cantDeadLock;

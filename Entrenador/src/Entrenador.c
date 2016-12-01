@@ -7,6 +7,7 @@
 #include "Entrenador.h"
 
 int socketMapa = 0;
+int reintentos = 0;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
@@ -228,10 +229,6 @@ void crearArchivoMetadata(char *rutaMetadata) {
 	metadataEntrenador.vidas = config_get_int_value(metadata, "vidas");
 	printf("Cantidad de vidas: %d\n", metadataEntrenador.vidas);
 
-	metadataEntrenador.reintentos = config_get_int_value(metadata,
-			"reintentos");
-	printf("Cantidad de reintentos: %d\n", metadataEntrenador.reintentos);
-
 }
 
 void imprimirArray(char** array) {
@@ -358,7 +355,7 @@ void jugar() {
 					colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola se rellena
 				} else {
 					char* respuesta = malloc(3);
-					printf(ANSI_COLOR_RED     "No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento"     ANSI_COLOR_RESET "\n",metadataEntrenador.reintentos);
+					printf(ANSI_COLOR_RED     "No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento"     ANSI_COLOR_RESET "\n",reintentos);
 					scanf("%s", respuesta);
 					string_to_upper(respuesta);
 					queue_clean_and_destroy_elements(colaDeObjetivos,
@@ -367,14 +364,13 @@ void jugar() {
 					if (strcmp("YES", respuesta) == 0) {
 						log_info(logEntrenador,
 								"Ok, se reiniciara toda su hoja de viaje");
-						int reintentos = metadataEntrenador.reintentos++;
+						 reintentos++;
 						limpiarColasMetadaEtrenador();
 						desconectarse();
 						borrarArchivos(rutaDirDeBill);
 						borrarArchivos(rutaMedallas);
 						pthread_cancel(hiloEscuchar);
 						crearArchivoMetadata(rutaMetadata);
-						metadataEntrenador.reintentos = reintentos;
 					} else {
 						log_info(logEntrenador,
 								"El entrenador ha decidido no Reintentar");
