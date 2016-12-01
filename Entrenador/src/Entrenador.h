@@ -52,9 +52,11 @@ enum_messages turno;
 //Mutex
 pthread_mutex_t turnoMutex;
 pthread_mutex_t pokemonCapturadoMutex;
+pthread_mutex_t msjMutex;
 
 //Semaforos
 sem_t semEstadisticas;
+sem_t semProcesarMsjs;
 
 //Metadata
 t_metadataEntrenador metadataEntrenador;

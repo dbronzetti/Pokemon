@@ -478,11 +478,7 @@ void processMessageReceived(void *parameter) {
 				&& (serverData != NULL && serverData->socketClient != NULL)) {
 			return (entrenador->socket == serverData->socketClient);
 		} else {
-			printf("Fallo variable NULL _funcBuscarPokemon\n");
-			printf("variable 1 %d\n",
-					(entrenador != NULL && entrenador->socket != NULL));
-			printf("variable 2 %d\n",
-					(serverData != NULL && serverData->socketClient != NULL));
+			log_info(logMapa,"481");
 		}
 		return false;
 	}
@@ -630,7 +626,7 @@ void processMessageReceived(void *parameter) {
 						(void*) buscarPorSocket);
 				char* stats = convertirAString(entrenador->cantDeadLock,
 						entrenador->tiempoBloqueado);
-
+				entrenador->accion = ESTADISTICAS;
 				sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
 				break;
@@ -723,16 +719,17 @@ void eliminarEntrenador(char simbolo) {
 	pthread_mutex_lock(&colaDeBloqueadosMutex);
 	while (queue_size(colaDeBloqueados) > 0) {//se limpia la cola de bloqueados completamente
 		t_entrenador* entrenadorBloqueado = queue_pop(colaDeBloqueados);
+		if(noSeBorro(entrenadorBloqueado)){
+			pthread_mutex_lock(&setEntrenadoresMutex);
+			entrenadorBloqueado->estaBloqueado = 0;
+			entrenador->accion = SIN_MENSAJE;
+			saleColaBloqueados(entrenadorBloqueado);
+			pthread_mutex_unlock(&setEntrenadoresMutex);
 
-		pthread_mutex_lock(&setEntrenadoresMutex);
-		entrenadorBloqueado->estaBloqueado = 0;
-		entrenador->accion = SIN_MENSAJE;
-		saleColaBloqueados(entrenadorBloqueado);
-		pthread_mutex_unlock(&setEntrenadoresMutex);
-
-		pthread_mutex_lock(&colaDeListosMutex);
-		queue_push(colaDeListos, entrenadorBloqueado);
-		pthread_mutex_unlock(&colaDeListosMutex);
+			pthread_mutex_lock(&colaDeListosMutex);
+			queue_push(colaDeListos, entrenadorBloqueado);
+			pthread_mutex_unlock(&colaDeListosMutex);
+		}
 	}
 	pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
@@ -752,11 +749,7 @@ void devolverPokemones(t_list* pokemones) {
 					&& (pokemon != NULL && pokemon->id != NULL)) {
 				return pokenest->metadata.id == pokemon->id;
 			} else {
-				printf("Fallo variable NULL _funcBuscarPokemon\n");
-				printf("variable 1 %d\n",
-						(pokenest != NULL && pokenest->metadata.id != NULL));
-				printf("variable 2 %d\n",
-						(pokemon != NULL && pokemon->id != NULL));
+				log_info(logMapa,"751");
 			}
 			return false;
 
@@ -944,11 +937,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 							&& (idPokemon != NULL)) {
 						return (pokenestParam->metadata.id == idPokemon); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
 					} else {
-						printf("Fallo variable NULL buscarPokenestPorId1\n");
-						printf("variable 1 %d\n",
-								(pokenestParam != NULL
-										&& pokenestParam->metadata.id != NULL));
-						printf("variable 2 %d\n", (idPokemon != NULL));
+						log_info(logMapa,"939");
 					}
 					return false;
 
@@ -1048,13 +1037,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 						return (pokenestParam->metadata.id
 								== entrenador->pokemonD); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario
 					} else {
-						printf("Fallo variable NULL buscarPokenestPorId1\n");
-						printf("variable 1 %d\n",
-								(pokenestParam != NULL
-										&& pokenestParam->metadata.id != NULL));
-						printf("variable 2 %d\n",
-								(entrenador != NULL
-										&& entrenador->pokemonD != NULL));
+						log_info(logMapa,"1039");
 					}
 					return false;
 				}
@@ -1170,9 +1153,7 @@ bool existePokenest(char idPokemon) {
 				&& (idPokemon != NULL)) {
 			return (pokenestParam->metadata.id == idPokemon); //comparo si el identificador del pokemon es igual al pokemon que desea el usuario		}
 		} else {
-			printf("Fallo variable NULL \n");
-			printf("variable 1 %d\n", pokenestParam->metadata.id != NULL);
-			printf("variable 2 %d\n", idPokemon != NULL);
+			log_info(logMapa,"1039");
 		}
 		return false;
 	}
@@ -1245,10 +1226,6 @@ void planificarSRDF() {
 		t_entrenador* entrenador = queue_pop(colaDeListos);
 		pthread_mutex_unlock(&colaDeListosMutex);
 
-		pthread_mutex_lock(&setEntrenadoresMutex);
-		entrenador->estaEnTurno = 1;
-		pthread_mutex_unlock(&setEntrenadoresMutex);
-
 		pthread_mutex_lock(&metadataMutex);
 		int retardoTurno = (metadataMapa.retardo * 1000);
 		pthread_mutex_unlock(&metadataMutex);
@@ -1294,7 +1271,6 @@ void planificarSRDF() {
 void ordenarColaEntrenadores() {
 	t_list* listAuxOrdenar = list_create();
 	int i;
-	char simbolo;
 
 	//obtenemos todos los entrenadores y determinamos su distancia.
 	pthread_mutex_lock(&colaDeListosMutex);
@@ -1416,10 +1392,7 @@ void detectarDeadlocks() {
 							&& (*entrenador != NULL)) {
 						return *entrenador == entrenadorBloqueado->simbolo;
 					} else {
-						printf("Fallo variable NULL funcBuscarEntrenador\n");
-						printf("variable 1 %d\n",
-								entrenadorBloqueado->simbolo != NULL);
-						printf("variable 2 %d\n", *entrenador != NULL);
+						log_info(logMapa,"1399");
 					}
 					return false;
 				}
@@ -1491,12 +1464,15 @@ void detectarDeadlocks() {
 						//La misma sirve para crear pokémons con solo el nombre y el nivel
 						t_pkmn_factory* pokemon_factory = create_pkmn_factory();
 
+						char* nombrePokemon1 = dameElNombre(pokemon1->id);
+						char* nombrePokemon2 = dameElNombre(pokemon2->id);
+
 						//Nótese que empieza con letra mayúscula y no debe tener errores de nombre
 						t_pokemon * pokemonParaBatalla1 = create_pokemon(
-								pokemon_factory, pokemon1->nombre,
+								pokemon_factory, nombrePokemon1,
 								pokemon1->nivel);
 						t_pokemon * pokemonParaBatalla2 = create_pokemon(
-								pokemon_factory, pokemon2->nombre,
+								pokemon_factory, nombrePokemon2,
 								pokemon2->nivel);
 
 						log_info(logMapa, "\n========Batalla!========\n");
@@ -1525,7 +1501,7 @@ void detectarDeadlocks() {
 						t_entrenador* entrenadorGanador;
 						t_pokemones* pokemonGanador;
 						if (string_equals_ignore_case(loser->species,
-								pokemon1->nombre)) { //comparo el pokemon que perdio contra el pokemon de entrenador 1 obtenido antes
+								nombrePokemon1)) { //comparo el pokemon que perdio contra el pokemon de entrenador 1 obtenido antes
 							pthread_mutex_lock(&setEntrenadoresMutex);
 							entrenadorGanador = entrenador2;
 							pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -1545,7 +1521,7 @@ void detectarDeadlocks() {
 
 						log_info(logMapa,
 								"El GANADOR el entrenador '%c' con el pokemon '%s'",
-								entrenadorGanador->simbolo, pokemon1->nombre);
+								entrenadorGanador->simbolo, nombrePokemon1);
 
 						//Devuelvo a la cola de Listo al entrenador contrario que fue quien gano la batalla
 						pthread_mutex_lock(&colaDeListosMutex);
@@ -1563,11 +1539,7 @@ void detectarDeadlocks() {
 								return (*listElement
 										== entrenadorGanador->simbolo);
 							} else {
-								printf(
-										"Fallo variable NULL _funcBuscarEntrenador\n");
-								printf("variable 1 %d\n",
-										entrenadorGanador->simbolo != NULL);
-								printf("variable 2 %d\n", *listElement != NULL);
+								log_info(logMapa,"1039");
 							}
 							return false;
 
@@ -1643,17 +1615,11 @@ t_list* detectarInterbloqueo() {
 				if ((pokemonAux != NULL && pokemonAux->pokemon_id != NULL)
 						&& (listElement != NULL
 								&& listElement->pokemon_id != NULL)) {
-					log_info(logMapa, "pokemonAux %c listElement %c",
-							pokemonAux->pokemon_id, listElement->pokemon_id);
+//					log_info(logMapa, "pokemonAux %c listElement %c",
+//							pokemonAux->pokemon_id, listElement->pokemon_id);
 					return pokemonAux->pokemon_id == listElement->pokemon_id;
 				} else {
-					printf("Fallo variable NULL _funcBuscarPokemon\n");
-					printf("variable 1 %d\n",
-							(pokemonAux != NULL
-									&& pokemonAux->pokemon_id != NULL));
-					printf("variable 2 %d\n",
-							(listElement != NULL
-									&& listElement->pokemon_id != NULL));
+					log_info(logMapa,"1623");
 				}
 				return false;
 			}
@@ -1690,14 +1656,7 @@ t_list* detectarInterbloqueo() {
 							return listElement->pokemon_id
 									== pokemonAsignado->pokemon_id;
 						} else {
-							printf("Fallo variable NULL _funcBuscarPokemon\n");
-							printf("variable 1 %d\n",
-									(listElement != NULL
-											&& listElement->pokemon_id != NULL));
-							printf("variable 2 %d\n",
-									(pokemonAsignado != NULL
-											&& pokemonAsignado->pokemon_id
-													!= NULL));
+							log_info(logMapa,"1660");
 						}
 						return false;
 
@@ -1719,11 +1678,7 @@ t_list* detectarInterbloqueo() {
 							&& (*listElement != NULL)) {
 						return (*listElement == entrenadorAux->entrenador);
 					} else {
-						printf("Fallo variable NULL _funcBuscarEntrenador\n");
-						printf("variable 1 %d\n",
-								(entrenadorAux != NULL
-										&& entrenadorAux->entrenador != NULL));
-						printf("variable 2 %d\n", (*listElement != NULL));
+						log_info(logMapa,"1682");
 					}
 					return false;
 				}
@@ -1778,12 +1733,7 @@ void cargarListaAsignacion(t_list *asignacion) {
 						&& (pokemon != NULL && pokemon->id != NULL)) {
 					return pokemonAux->pokemon_id == pokemon->id;
 				} else {
-					printf("Fallo variable NULL _funcBuscarPokemon\n");
-					printf("variable 1 %d\n",
-							(pokemonAux != NULL
-									&& pokemonAux->pokemon_id != NULL));
-					printf("variable 2 %d\n",
-							(pokemon != NULL && pokemon->id != NULL));
+					log_info(logMapa,"1741");
 				}
 				return false;
 			}
@@ -1855,12 +1805,7 @@ void cargarListaSolicitud(t_list *solicitud) {
 					&& (entrenadorAux != NULL && entrenadorAux->pokemonD != NULL)) {
 				return pokemonAux->pokemon_id == entrenadorAux->pokemonD;
 			} else {
-				printf("Fallo variable NULL _funcBuscarPokemon\n");
-				printf("variable 1 %d\n",
-						(pokemonAux != NULL && pokemonAux->pokemon_id != NULL));
-				printf("variable 2 %d\n",
-						(entrenadorAux != NULL
-								&& entrenadorAux->pokemonD != NULL));
+				log_info(logMapa,"1809");
 			}
 			return false;
 		}
@@ -1918,11 +1863,7 @@ void quitarEntrenadoresSinAsignacion(t_list *asignacion,
 							&& entrenadorAux->entrenador != NULL)) {
 				return *entrenador == entrenadorAux->entrenador;
 			} else {
-				printf("Fallo variable NULL _funcBuscarEntrenador\n");
-				printf("variable 1 %d\n", (*entrenador != NULL));
-				printf("variable 2 %d\n",
-						(entrenadorAux != NULL
-								&& entrenadorAux->entrenador != NULL));
+				log_info(logMapa,"1867");
 			}
 			return false;
 		}
@@ -1959,11 +1900,7 @@ void cargarCantidadPokemonesExistentes(t_list *pokemonesList) {
 						&& (pokAux != NULL && pokAux->pokemon_id != NULL)) {
 					return element->pokemon_id == pokAux->pokemon_id;
 				} else {
-					printf("Fallo variable NULL _funcBuscarPokemon\n");
-					printf("variable 1 %d\n",
-							(element != NULL && element->pokemon_id != NULL));
-					printf("variable 2 %d\n",
-							(pokAux != NULL && pokAux->pokemon_id != NULL));
+					log_info(logMapa,"1904");
 				}
 				return false;
 
@@ -2005,10 +1942,13 @@ void matar(t_entrenador* entrenador) {
 	// Al Sacarlo de la lista debemos calcular tiempos en cola.
 	saleColaBloqueados(entrenador);
 
+	pthread_mutex_lock(&setEntrenadoresMutex);
 	// antes de matarlo se le manda las estadisticas por si se reeconecta.
 	char* stats = convertirAString(entrenador->cantDeadLock,
 			entrenador->tiempoBloqueado);
 	sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
+	entrenador->accion= ESTADISTICAS;
+	pthread_mutex_unlock(&setEntrenadoresMutex);
 
 	eliminarEntrenador(entrenador->simbolo);
 
@@ -2068,11 +2008,7 @@ bool noSeBorro(t_entrenador* entrenador) {
 				&& (simbolo != NULL)) {
 			return (entrenadorDeLaLista->simbolo == simbolo);
 		} else {
-			printf("Fallo variable NULL buscarPorSimbolo\n");
-			printf("variable 1 %d\n",
-					(entrenadorDeLaLista != NULL
-							&& entrenadorDeLaLista->simbolo != NULL));
-			printf("variable 2 %d\n", (simbolo != NULL));
+			log_info(logMapa,"2026");
 		}
 		return false;
 
@@ -2084,7 +2020,12 @@ bool noSeBorro(t_entrenador* entrenador) {
 			(void*) buscarPorSimbolo);
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 
-	return noSeDesconectoNadie;
+	if (noSeDesconectoNadie == 0){
+		return noSeDesconectoNadie;
+	}
+
+	else return (entrenador->accion != ESTADISTICAS);
+
 }
 
 void saleColaBloqueados(t_entrenador* entrenador) {
@@ -2280,6 +2221,5 @@ char* dameElNombre(char id){
 		return pkmnombre->pokemon_id == id;
 	}
 	 t_pokemonNombre* nombre = list_find(listaDeNombres,(void*) _buscar);
-	 log_info(logMapa,"EL NOBMRE ES %s",nombre->nombrePokemon);
 	return nombre->nombrePokemon;
 }

@@ -14,7 +14,9 @@ int main(int argc, char **argv) {
 	pokedex = string_new();
 	pthread_mutex_init(&turnoMutex, NULL);
 	pthread_mutex_init(&pokemonCapturadoMutex, NULL);
+	pthread_mutex_init(&msjMutex,NULL);
 	sem_init(&semEstadisticas, 0, 0);
+	sem_init(&semProcesarMsjs,0, 0);
 
 	exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -193,6 +195,7 @@ void crearArchivoMetadata(char *rutaMetadata) {
 	metadataEntrenador.comenzoJuego = time(0);
 	metadataEntrenador.cantDeadLock = 0;
 	metadataEntrenador.cantDead = 0;
+	metadataEntrenador.tiempoBloqueado = 0;
 	char** hojaDeViaje; //Creo un array auxiliar para poder encolar los objetivos de cada mapa sin desapilar la hojaDeViaje
 
 	metadata = config_create(rutaMetadata);
@@ -333,6 +336,7 @@ void jugar() {
 				free(rutaMetadataPokemon);
 				free(rutaMedataPokemonMapa);
 				objetivoActual = NULL;
+				sem_post(&semProcesarMsjs);
 				break;
 			}
 
@@ -428,6 +432,7 @@ void recibirMsjs() {
 
 			free(messageRcv);
 
+			pthread_mutex_lock(&msjMutex);
 			switch (message->tipo) {
 			case LIBRE: { //msj que envia el mapa para indicar que comenzo un turno libre
 				log_info(logEntrenador, "New action begins", message->mensaje);
@@ -478,6 +483,8 @@ void recibirMsjs() {
 				pthread_mutex_lock(&turnoMutex);
 				turno = CAPTURADO;
 				pthread_mutex_unlock(&turnoMutex);
+
+				sem_wait(&semProcesarMsjs);
 				break;
 			}
 			case MATAR: { //msj que envia si fue capturado OK !!
@@ -521,7 +528,9 @@ void recibirMsjs() {
 			close(socketMapa);
 			break;
 		}
+		pthread_mutex_unlock(&msjMutex);
 	}
+
 }
 
 void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
