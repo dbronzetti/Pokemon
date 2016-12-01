@@ -18,6 +18,7 @@
 int PORT;
 char *IP_SERVER;
 int socketPokeServer = 0;
+pthread_mutex_t readMutex;
 
 //Logger
 t_log* logPokeCliente;
@@ -25,8 +26,6 @@ t_log* logPokeCliente;
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
 t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation);
-
-#endif /* POKEDEX_CLIENTE_H_ */
 
 //Librerias y estructuras pra el FUSE
 #include <fuse/fuse.h>
@@ -86,3 +85,4 @@ static inline const char *rel(const char *path)
 const char *full(const char *path); /* Anade un punto de montaje */;//Esto da un warning no importa!
 
 // Fin de cosillas para el FUSE
+#endif /* POKEDEX_CLIENTE_H_ */

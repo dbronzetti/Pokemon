@@ -573,47 +573,53 @@ static int fuse_open(const char *path, struct fuse_file_info *fi) {
 static int fuse_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi)
 {
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
+
+
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp") && !string_is_empty(path)){
 
-		int cantidadBloques = -1;
+		int fileFound = -1;
 		int receivedBytes;
 		log_info(logPokeCliente, "****************fuse_read****************\n");
 		log_info(logPokeCliente,"********************************* fuse_read - size: %i\n", size);
 		log_info(logPokeCliente,"********************************* fuse_read - offset: %i\n", offset);
 
-		if (offset == 0){//checking if this is a callback
 
-			//0) Send Fuse Operations
-			enum_FUSEOperations operacion = FUSE_READ;
-			exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
+		//0) Send Fuse Operations
+		enum_FUSEOperations operacion = FUSE_READ;
+		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
 
-			string_append(&path, "\0");
-			//1) send path length (+1 due to \0)
-			int pathLength = strlen(path) + 1;
-			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-			log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
+		string_append(&path, "\0");
+		//1) send path length (+1 due to \0)
+		int pathLength = strlen(path) + 1;
+		exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+		log_info(logPokeCliente, "fuse_read - pathLength: %i\n", pathLength);
 
-			//2) send path
-			exitCode = sendMessage(&socketPokeServer, path , pathLength );
-			log_info(logPokeCliente, "fuse_read - path: %s\n", path);
+		//2) send path
+		exitCode = sendMessage(&socketPokeServer, path , pathLength );
+		log_info(logPokeCliente, "fuse_read - path: %s\n", path);
 
-			//3) send parent_directory
-			exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
-			log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
+		//3) send parent_directory
+		exitCode = sendMessage(&socketPokeServer, &parent_directory , sizeof(int));
+		log_info(logPokeCliente, "fuse_read - parent_directory: %i\n", parent_directory);
 
-			//Receive message size
-			receivedBytes = receiveMessage(&socketPokeServer, &cantidadBloques ,sizeof(cantidadBloques));
-			log_info(logPokeCliente, "fuse_read - cantidad Bloques: %d\n", cantidadBloques);
+		//4) send offset
+		int offsetTosend = offset; // sending an int because off_t has issues with the sockets
+		exitCode = sendMessage(&socketPokeServer, &offsetTosend , sizeof(offsetTosend));
+		log_info(logPokeCliente, "fuse_read - offset: %i\n", offsetTosend);
 
-		}else{
+		//5) send size to read
+		int sizeTosend = size; //sending an int because size_t has issues with the sockets
+		exitCode = sendMessage(&socketPokeServer, &sizeTosend , sizeof(sizeTosend));
+		log_info(logPokeCliente, "fuse_read - size to read: %i\n", sizeTosend);
 
-			receivedBytes = 1; //setting this as >0 in order to pass the next if, because this is a callback from a file previously found
-		}
+		//Receive if the file was found
+		receivedBytes = receiveMessage(&socketPokeServer, &fileFound ,sizeof(fileFound));
+		log_info(logPokeCliente, "fuse_read - fileFound: %d\n", fileFound);
 
 		if (receivedBytes > 0){
-			if (cantidadBloques != -999){//el archivo no fue encontrado por el server
+			if (fileFound != -999){//el archivo no fue encontrado por el server
 
-				int cant_bloques = (offset / OSADA_BLOCK_SIZE);
+				pthread_mutex_lock(&readMutex);
 				int off_bloque = (offset % OSADA_BLOCK_SIZE);
 
 				int messageSize = 0;
@@ -666,14 +672,11 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 					}else{
 
-//						for (i = 0 ; i < cantidadBloques; i++){
 						int k;
-						for (k = 1; k < cantidadBloques; k++){
+						for (k = 1; k <= cant_bloques_por_leer; k++){
 							//Receive message size
 							receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-
 							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
-							//bytes_leidos += messageSize;
 
 							char *messageRcv = malloc(messageSize);
 							receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
@@ -704,9 +707,12 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 					}
 				}
 
+				pthread_mutex_unlock(&readMutex);
+
 				//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
 				//memcpy(buf, "hola\0", strlen("hola\0")+1);
 				log_info(logPokeCliente, "fuse_read - buf: %s\n", buf);
+				log_info(logPokeCliente, "fuse_read - bytes_leidos: %d\n", bytes_leidos);
 
 				return bytes_leidos;
 
@@ -720,6 +726,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 	}else{
 		exitCode=EXIT_SUCCESS;
 	}
+
 
 	return exitCode;
 }
@@ -988,6 +995,7 @@ int main(int argc, char **argv) {
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
 	char *el_fuse;
+	pthread_mutex_init(&readMutex, NULL);
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -1031,6 +1039,8 @@ int main(int argc, char **argv) {
 		log_error(logPokeCliente,"No server available - shutting down proces!!\n");
 		return EXIT_FAILURE;
 	}
+
+	pthread_mutex_destroy(&readMutex);
 
 	return EXIT_SUCCESS;
 }
@@ -1126,27 +1136,19 @@ t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation){
 	log_info(logPokeCliente, "fuseOperation2: %d", fuseOperation2);
 	printf("fuseOperation2: %d\n", fuseOperation2);
 
-
 	string_append(&path, "\0");
 	//1) send path length (+1 due to \0)
 	int pathLength = strlen(path) + 1;
 	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
 	log_info(logPokeCliente, "pathLength: %i\n", pathLength);
+
 	//2) send path
-
-
 	exitCode = sendMessage(&socketPokeServer, path , strlen(path) + 1 );
 	log_info(logPokeCliente, "path: %s\n", path);
 
 	//Receive element Count
 	int elementCount = -1;
-	usleep(500000);
-
-	char *test  = malloc(strlen("hola\0")+1);
-	int receivedBytes = receiveMessage(&socketPokeServer, test , strlen("hola\0")+1);
-	printf("**************** test: %s\n", test);
-
-	receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
+	int receivedBytes = receiveMessage(&socketPokeServer, &elementCount ,sizeof(elementCount));
 
 	log_info(logPokeCliente, "elementCount: %i\n", elementCount);
 	if (receivedBytes > 0 && elementCount > 0){
