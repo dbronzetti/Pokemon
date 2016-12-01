@@ -618,6 +618,9 @@ void yoYaGane() {
 	sendClientMessage(&socketMapa, "ESTADISTICAS", ESTADISTICAS);
 
 	sem_wait(&semEstadisticas);
+	pthread_mutex_lock(&turnoMutex);
+	turno = SIN_MENSAJE;
+	pthread_mutex_unlock(&turnoMutex);
 	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
 	borrarArchivos(rutaDirDeBill);
 	desconectarse();

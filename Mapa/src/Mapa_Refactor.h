@@ -163,4 +163,6 @@ void iformarEstadosColas();
 void loguearColaListos();
 void loguearColaBloqueados();
 char* dameElNombre(char id);
+void eliminarDeColaListos(char simbolo);
+void eliminarDeColaBloequeados(char simbolo);
 #endif /* MAPA_H_ */
