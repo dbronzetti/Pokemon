@@ -392,7 +392,7 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - Content size: %d", contentSize);
 						char *content = malloc(contentSize);
 
-						//4) Content path
+						//4) Content
 						receiveMessage(&serverData->socketClient, content, contentSize);
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - Message content received : %s\n",content);
 
@@ -562,10 +562,20 @@ void processMessageReceived(void *parameter){
 								bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
 								int messageSize = strlen(bloqueDeDatos);
 								log_info(logPokeDexServer, "messageSize: %i\n", messageSize);
+								printf("read - servidor - conjuntoDeBloquesDelArchivo->elements_count: %i\n", i);
 
-								sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
+								if (strcmp(bloqueDeDatos ,string_repeat('\0', OSADA_BLOCK_SIZE)) == 0){
+									printf("es un bloque barra cero de 64\n");
+									int osadaBlockSize = OSADA_BLOCK_SIZE;
+									sendMessage(&serverData->socketClient, &osadaBlockSize , sizeof(int));
+									sendMessage(&serverData->socketClient, string_repeat('\0', OSADA_BLOCK_SIZE) , osadaBlockSize);
+								}
+									else
+								{
+									sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
+									sendMessage(&serverData->socketClient, bloqueDeDatos , messageSize);
+								}
 
-								sendMessage(&serverData->socketClient, bloqueDeDatos , messageSize);
 								//string_append(&string, bloqueDeDatos);
 
 							}

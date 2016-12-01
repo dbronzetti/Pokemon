@@ -384,7 +384,7 @@ osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_dire
 		}
 	}
 
-	printf("******************************* NO LO ENCONTRO! ******************************* \n");
+	printf("******************************* devolverOsadaBlockPointer- NO LO ENCONTRO! ******************************* \n");
 	return posicion;
 }
 
@@ -408,11 +408,11 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			printf("******************************* LO ENCONTRO! ******************************* \n");
+			printf("******************************* buscarElArchivoYDevolverPosicion - LO ENCONTRO! ******************************* \n");
 			found = true;
 		}else if(TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) != 0 && pos == 2047){
 			pos =-666;
-			printf("******************************* NO LO ENCONTRO! ******************************* \n");
+			printf("******************************* buscarElArchivoYDevolverPosicion - NO LO ENCONTRO! ******************************* \n");
 
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -428,7 +428,7 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 }
 
 osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_directory){
-	printf("******************************** ENTRO EN buscarElArchivo  ******************************** \n");
+	printf("******************************** ENTRO EN buscarElArchivoYDevolverOsadaFile  ******************************** \n");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
@@ -446,10 +446,10 @@ osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_direc
 		//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			printf("******************************* LO ENCONTRO! ******************************* \n");
+			printf("*******************************buscarElArchivoYDevolverOsadaFile - LO ENCONTRO! ******************************* \n");
 			found = true;
 		}else if(TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) != 0 && pos == 2047){
-			printf("******************************* NO LO ENCONTRO! ******************************* \n");
+			printf("******************************* buscarElArchivoYDevolverOsadaFile -NO LO ENCONTRO! ******************************* \n");
 
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -1224,10 +1224,13 @@ int hacerElTruncate(char *contenido, int tamanio, char* fname, int posDelaTablaD
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 	/*****************************************/
+	printf("************************ FUNCION: hacerElTruncate ************************\n");
+
+
 	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
 	posDelaTablaDeArchivos = buscarElArchivoYDevolverPosicion(fname, parent_directory);
 	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
-	printf("crearUnArchivo - El archivo size: %i\n", elArchivo.file_size);
+	printf("hacerElTruncate - El archivo size: %i\n", elArchivo.file_size);
 
 
 	if (posicion != -999 && elArchivo.file_size != 0){
