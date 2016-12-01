@@ -10,11 +10,13 @@ int main(int argc, char **argv) {
 	char *logFile = NULL;
 	mapa = string_new();
 	char *pokedex = string_new();
+	nombrePokenest = string_new();
 	pthread_t serverThread;
 	pthread_t detectorDeadlocks;
 	pthread_t hiloSignal;
 	pthread_t planificador;
 	listaDeEntrenadores = list_create();
+	listaDeNombres = list_create();
 	listaDePokenest = list_create();
 	colaDeBloqueados = queue_create();
 	colaDeListos = queue_create();
@@ -55,9 +57,8 @@ int main(int argc, char **argv) {
 
 	logMapa = log_create(logFile, "MAPA", 0, LOG_LEVEL_TRACE);
 
-	rutaMetadata = string_from_format("%s/Mapas/%s/metadata.dat", pokedex,
-			mapa);
-	char* rutaPokenest = string_from_format("%s/Mapas/%s/Pokenest/", pokedex,
+	rutaMetadata = string_from_format("%s/Mapas/%s/metadata", pokedex, mapa);
+	char* rutaPokenest = string_from_format("%s/Mapas/%s/PokeNests/", pokedex,
 			mapa);
 
 	log_info(logMapa, "Directorio de la metadata del mapa '%s': '%s'\n", mapa,
@@ -65,6 +66,16 @@ int main(int argc, char **argv) {
 
 	crearArchivoMetadataDelMapa(rutaMetadata, &metadataMapa, logMapa);
 	recorrerdirDePokenest(rutaPokenest);
+	int a;
+	for(a = 0;  a <list_size(listaDePokenest);a++){
+
+		t_pokenest* pokenest = list_get(listaDePokenest,a);
+		t_pokemonNombre* pokemonNombre = malloc(sizeof(t_pokemonNombre));
+		pokemonNombre->nombrePokemon = string_new();
+		string_append(&pokemonNombre->nombrePokemon,pokenest->metadata.nombrePokenest);
+		pokemonNombre->pokemon_id = pokenest->metadata.id;
+		list_add(listaDeNombres,pokemonNombre);
+	}
 
 	log_info(logMapa, "Bienvenido al mapa");
 
@@ -101,38 +112,48 @@ int main(int argc, char **argv) {
 //*************************************************************************//
 
 int recorrerdirDePokenest(char* rutaDirPokenest) {
+
 	int i;
 
 	if ((dipPokenest = opendir(rutaDirPokenest)) == NULL) {
-		log_error(logMapa, "Error trying to open dir of pokenests.");
+		log_error(logMapa,
+				"Error al abrir el directorio donde se encuentran las pokenests.");
 		return -1;
 	}
 
 	while ((ditPokenest = readdir(dipPokenest)) != NULL) {
 		i++;
+
 		if ((strcmp(ditPokenest->d_name, ".") != 0)
 				&& (strcmp(ditPokenest->d_name, "..") != 0)) {
+
 			char* rutaPokemon = string_from_format("%s%s", rutaDirPokenest,
 					ditPokenest->d_name);
-			char* nombrePokenest = ditPokenest->d_name;
 
-			recorrerCadaPokenest(rutaPokemon, nombrePokenest);
+//			strcpy(nombrePokenest,ditPokenest->d_name);
+			nombrePokenest = ditPokenest->d_name;
+
+			recorrerCadaPokenest(rutaPokemon);
+
+			free(rutaPokemon);
 		}
+
 	}
 
 	if (closedir(dipPokenest) == -1) {
-		log_error(logMapa, "Error trying to close the dir of pokenest.");
+		log_error(logMapa,
+				"Error al cerrar el directorio donde se encuentran las pokenest.");
 		return -1;
 	}
 
 	return 0;
+
 }
 
-int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
+int recorrerCadaPokenest(char* rutaDeUnaPokenest) {
 	int i;
 
 	t_pokenest* pokenest = malloc(sizeof(t_pokenest));
-	pokenest->pokemon = malloc((sizeof(int)));
 	pokenest->listaDePokemones = list_create();
 
 	if ((dipPokemones = opendir(rutaDeUnaPokenest)) == NULL) {
@@ -146,12 +167,13 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 
 		if ((strcmp(ditPokemones->d_name, ".") != 0)
 				&& (strcmp(ditPokemones->d_name, "..") != 0)) {
-			if ((strcmp(ditPokemones->d_name, "metadata.dat") == 0)) { //estamos leyendo el archivo metadata
+			if ((strcmp(ditPokemones->d_name, "metadata") == 0)) { //estamos leyendo el archivo metadata
 
-				char* rutaMetadataPokenest = string_from_format(
-						"%s/metadata.dat", rutaDeUnaPokenest);
+				char* rutaMetadataPokenest = string_from_format("%s/metadata",
+						rutaDeUnaPokenest);
 				pokenest->metadata = crearArchivoMetadataPokenest(
-						rutaMetadataPokenest, nombreDelaPokenest);
+						rutaMetadataPokenest);
+				free(rutaMetadataPokenest);
 
 			} else { //estamos leyendo un archvo pokemon.
 				char* rutaDelPokemon = string_from_format("%s/%s",
@@ -160,6 +182,7 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 				t_pokemones* pokemon = malloc(sizeof(pokemon));
 				pokemon->nivel = levantarNivelDelPokemon(rutaDelPokemon);
 				list_add(pokenest->listaDePokemones, pokemon);
+				free(rutaDelPokemon);
 			}
 		}
 
@@ -173,8 +196,9 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 
 	void mapearIdYTipo(t_pokemones* pokemon) {
 		pokemon->id = pokenest->metadata.id;
+//		pokemon->nombre = pokenest->metadata.tipo;
 		pokemon->tipo = pokenest->metadata.tipo;
-		pokemon->nombre = pokenest->metadata.nombrePokenest;
+//		log_info(logMapa,"NOMBRE DE LA POKENEST:%s",pokemon->nombre);
 	}
 
 	pokenest->listaDePokemones = list_map(pokenest->listaDePokemones,
@@ -182,26 +206,22 @@ int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest) {
 
 	//not needed to lock this list because there is only one execution thread at this point
 	list_add(listaDePokenest, pokenest);
-	log_info(logMapa, "Pokenest de %s y hay %d",
-			pokenest->metadata.nombrePokenest,
-			list_size(pokenest->listaDePokemones)); //todo: QUIERO BORRAR ESTO PERO ME TIRA UN SEG FAULT, AYUDA DAMI :(
+//	log_info(logMapa, "Pokenest de %s y hay %d",
+//			pokenest->metadata.nombrePokenest,
+//			list_size(pokenest->listaDePokemones)); //todo: QUIERO BORRAR ESTO PERO ME TIRA UN SEG FAULT, AYUDA DAMI :(
 
-	char simbolo = pokenest->metadata.id;
+//	char simbolo = pokenest->metadata.id;
 
 	return 0;
 
 }
 
-t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest,
-		const char* nombreDeLaPokenest) {
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest) {
 	t_config* metadata;
 	metadata = config_create(rutaMetadataPokenest);
-	char *nombresito = string_new();
 	t_metadataPokenest metadataPokenest;
 
-	string_append(&nombresito, nombreDeLaPokenest);
-
-	metadataPokenest.nombrePokenest = nombresito;
+	metadataPokenest.nombrePokenest = nombrePokenest;
 	metadataPokenest.tipo = config_get_string_value(metadata, "Tipo");
 	metadataPokenest.id = config_get_string_value(metadata, "Identificador")[0];
 
@@ -212,7 +232,11 @@ t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest,
 	metadataPokenest.pos_x = atoi(posicionYaParseadas[0]);
 	metadataPokenest.pos_y = atoi(posicionYaParseadas[1]);
 
+	free(metadata->path);
+	free(metadata->properties);
 	free(metadata);
+	free(posicionSinParsear);
+	free(posicionYaParseadas);
 
 	return metadataPokenest;
 }
@@ -221,9 +245,11 @@ int levantarNivelDelPokemon(char* rutaDelPokemon) {
 
 	t_config* metadata;
 	metadata = config_create(rutaDelPokemon);
-	return config_get_int_value(metadata, "Nivel");
-
+	int nivel = config_get_int_value(metadata, "Nivel");
+	free(metadata->path);
+	free(metadata->properties);
 	free(metadata);
+	return nivel;
 }
 
 void dibujarMapa() {
@@ -598,11 +624,12 @@ void processMessageReceived(void *parameter) {
 				break;
 			}
 
-			case ESTADISTICAS:{
+			case ESTADISTICAS: {
 				pthread_mutex_lock(&setEntrenadoresMutex);
 				t_entrenador* entrenador = list_find(listaDeEntrenadores,
 						(void*) buscarPorSocket);
-				char* stats = convertirAString(entrenador->cantDeadLock,entrenador->tiempoBloqueado);
+				char* stats = convertirAString(entrenador->cantDeadLock,
+						entrenador->tiempoBloqueado);
 
 				sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -944,8 +971,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 					entrenador->posD_y = posY;
 					entrenador->accion = SIN_MENSAJE;
 					entrenador->seEstaMoviendo = 1;
-					char* mensajeAEnviar = convertirAString(posX,
-							posY);
+					char* mensajeAEnviar = convertirAString(posX, posY);
 					sendClientMessage(&entrenador->socket, mensajeAEnviar,
 							CONOCER);
 					pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -1044,11 +1070,13 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 					pthread_mutex_lock(&listaDePokenestMutex);
 					t_pokemones* pokemon = list_remove(
 							pokenestEncontrada->listaDePokemones, 0); //saca al primero que encuentra
+
+					char* msjAEnviar = dameElNombre(pokemon->id);
 					pthread_mutex_unlock(&listaDePokenestMutex);
 
 					log_info(logMapa,
 							"Trainer: '%c' capture the pokemon: '%s' SUCCESSFUL",
-							entrenador->simbolo, pokemon->nombre);
+							entrenador->simbolo, msjAEnviar);
 
 					pthread_mutex_lock(&setEntrenadoresMutex);
 					list_add(entrenador->listaDePokemonesCapturados, pokemon);
@@ -1061,8 +1089,7 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 					entrenador->posD_x = -1;
 					entrenador->posD_y = -1;
 					entrenador->accion = SIN_MENSAJE;
-					; // se lo configura como libre para que el proximo turno solicite nuevo pokemon al entrenador
-					char* msjAEnviar = pokemon->nombre;
+					 // se lo configura como libre para que el proximo turno solicite nuevo pokemon al entrenador
 					sendClientMessage(&entrenador->socket, msjAEnviar,
 							CAPTURADO);
 					pthread_mutex_unlock(&setEntrenadoresMutex);
@@ -1107,7 +1134,6 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 				log_info(logMapa, "Deleting trainer: '%c'", simbolo);
 
 				eliminarEntrenador(simbolo);
-
 
 				log_info(logMapa, "Trainer: '%c' deleted SUCCESSFUL", simbolo);
 
@@ -1327,30 +1353,30 @@ void calcularCantidadMovimientos(t_entrenador* entrenador) {
 		ejecutarAccionEntrenador(entrenador, &quatum);
 	}
 
-	if(noSeBorro(entrenador)){
+	if (noSeBorro(entrenador)) {
 
-	pthread_mutex_lock(&setEntrenadoresMutex);
-	int pos_x = entrenador->pos_x;
-	int pos_y = entrenador->pos_y;
-	int posD_x = entrenador->posD_x;
-	int posD_y = entrenador->posD_y;
-	int seMovioEnX = entrenador->seMovioEnX;
-	pthread_mutex_unlock(&setEntrenadoresMutex);
+		pthread_mutex_lock(&setEntrenadoresMutex);
+		int pos_x = entrenador->pos_x;
+		int pos_y = entrenador->pos_y;
+		int posD_x = entrenador->posD_x;
+		int posD_y = entrenador->posD_y;
+		int seMovioEnX = entrenador->seMovioEnX;
+		pthread_mutex_unlock(&setEntrenadoresMutex);
 
-	int distancia = 0;
+		int distancia = 0;
 
-	while (((pos_x == posD_x) && (pos_y == posD_y)) != 1) { //mientras no haya llegado que siga contando
-		moverEntrenador(&pos_x, &pos_y, posD_x, posD_y, &seMovioEnX);
-		//log_info(logMapa,"[DEBUG] pos en x:%d , pos deseada x: %d , pos en y:%d , pos deseada en y: %d", pos_x,posD_x,pos_y,posD_y);
-		distancia++;
-	}
+		while (((pos_x == posD_x) && (pos_y == posD_y)) != 1) { //mientras no haya llegado que siga contando
+			moverEntrenador(&pos_x, &pos_y, posD_x, posD_y, &seMovioEnX);
+			//log_info(logMapa,"[DEBUG] pos en x:%d , pos deseada x: %d , pos en y:%d , pos deseada en y: %d", pos_x,posD_x,pos_y,posD_y);
+			distancia++;
+		}
 
-	pthread_mutex_lock(&setEntrenadoresMutex);
-	entrenador->distancia = distancia;
-	pthread_mutex_unlock(&setEntrenadoresMutex);
+		pthread_mutex_lock(&setEntrenadoresMutex);
+		entrenador->distancia = distancia;
+		pthread_mutex_unlock(&setEntrenadoresMutex);
 
-	log_info(logMapa, "Trainer: '%c' it's about %d actions of his pokenest",
-			entrenador->simbolo, entrenador->distancia);
+		log_info(logMapa, "Trainer: '%c' it's about %d actions of his pokenest",
+				entrenador->simbolo, entrenador->distancia);
 	}
 }
 
@@ -1603,7 +1629,7 @@ t_list* detectarInterbloqueo() {
 	cargarCantidadPokemonesExistentes(pokemonesDisponibles);
 
 	//4.1) Informamos el estado de todas las Listas
-	iformarEstadosRecursos(asignacion,solicitud,pokemonesDisponibles);
+	iformarEstadosRecursos(asignacion, solicitud, pokemonesDisponibles);
 
 	//5)Recorrer matriz asignacion buscando que tenga recursos <= a la lista creada previamente (pokemonesExistentes)
 	bool notFound = true;
@@ -1980,7 +2006,8 @@ void matar(t_entrenador* entrenador) {
 	saleColaBloqueados(entrenador);
 
 	// antes de matarlo se le manda las estadisticas por si se reeconecta.
-	char* stats = convertirAString(entrenador->cantDeadLock,entrenador->tiempoBloqueado);
+	char* stats = convertirAString(entrenador->cantDeadLock,
+			entrenador->tiempoBloqueado);
 	sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
 
 	eliminarEntrenador(entrenador->simbolo);
@@ -2034,13 +2061,10 @@ void evaluarEstadoEntrenador(t_entrenador* entrenador) {
 	pthread_mutex_unlock(&setEntrenadoresMutex);
 }
 
-
-
-bool noSeBorro(t_entrenador* entrenador){
+bool noSeBorro(t_entrenador* entrenador) {
 	char simbolo;
 	bool buscarPorSimbolo(t_entrenador* entrenadorDeLaLista) {
-		if ((entrenadorDeLaLista != NULL
-				&& entrenadorDeLaLista->simbolo != NULL)
+		if ((entrenadorDeLaLista != NULL && entrenadorDeLaLista->simbolo != NULL)
 				&& (simbolo != NULL)) {
 			return (entrenadorDeLaLista->simbolo == simbolo);
 		} else {
@@ -2063,13 +2087,15 @@ bool noSeBorro(t_entrenador* entrenador){
 	return noSeDesconectoNadie;
 }
 
-void saleColaBloqueados(t_entrenador* entrenador){
+void saleColaBloqueados(t_entrenador* entrenador) {
 	// Al Sacarlo de la lista debemos calcular tiempos en cola.
 	time_t tiempo2 = time(0);
-	entrenador->tiempoBloqueado = entrenador->tiempoBloqueado+(difftime(tiempo2, entrenador->timeIngresoBloq));
+	entrenador->tiempoBloqueado = entrenador->tiempoBloqueado
+			+ (difftime(tiempo2, entrenador->timeIngresoBloq));
 }
 
-void iformarEstadosRecursos(t_list* asignacion,t_list* solicitud,t_list* pokemonesDisponibles){
+void iformarEstadosRecursos(t_list* asignacion, t_list* solicitud,
+		t_list* pokemonesDisponibles) {
 	log_info(logMapa, "========================================");
 	log_info(logMapa, "==   Estado de Recursos en DEADLOCK   ==");
 	log_info(logMapa, "========================================");
@@ -2093,7 +2119,7 @@ void iformarEstadosRecursos(t_list* asignacion,t_list* solicitud,t_list* pokemon
 
 }
 
-void loguearEntrenadorAsignacion(t_list* asignacion){
+void loguearEntrenadorAsignacion(t_list* asignacion) {
 	int i;
 
 	for (i = 0; i < list_size(asignacion); i++) {
@@ -2103,58 +2129,61 @@ void loguearEntrenadorAsignacion(t_list* asignacion){
 
 		t_entrenador_Asignacion* entrenadorAux = list_get(asignacion, i);
 
-		string_append(&cabecera,"Entrenador             |");
+		string_append(&cabecera, "Entrenador             |");
 
-		string_append(&lineaDato, string_from_format("%c", entrenadorAux->entrenador)  );
+		string_append(&lineaDato,
+				string_from_format("%c", entrenadorAux->entrenador));
 		//Para que todos comiencen la matriz en el mismo lugar
 
 		int cantBlancos = 22 - 1;
-		while(cantBlancos>0){
-			string_append(&lineaDato," ");
+		while (cantBlancos > 0) {
+			string_append(&lineaDato, " ");
 			cantBlancos--;
 		}
-		string_append(&lineaDato,"|");
+		string_append(&lineaDato, "|");
 
 		int j;
 		for (j = 0; j < list_size(entrenadorAux->pokemonesAsignados); j++) {
-			t_pokemones_Asignacion* auxPok = list_get(entrenadorAux->pokemonesAsignados, j);
-			if(i == 0){
+			t_pokemones_Asignacion* auxPok = list_get(
+					entrenadorAux->pokemonesAsignados, j);
+			if (i == 0) {
 				//Obtengo La cabecera para mostrar Solo una vez
-				string_append(&cabecera, string_from_format("%c", auxPok->pokemon_id)  );
-				string_append(&cabecera,"|");
+				string_append(&cabecera,
+						string_from_format("%c", auxPok->pokemon_id));
+				string_append(&cabecera, "|");
 			}
-			string_append(&lineaDato,string_itoa(auxPok->cantidad));
-			string_append(&lineaDato," |");
+			string_append(&lineaDato, string_itoa(auxPok->cantidad));
+			string_append(&lineaDato, " |");
 		}
 
-		if(i == 0){
+		if (i == 0) {
 			//Solo si estoy en el primer debo armar la cabecera
-			log_info(logMapa,cabecera);
+			log_info(logMapa, cabecera);
 		}
-		log_info(logMapa,lineaDato);
+		log_info(logMapa, lineaDato);
 	}
 }
 
-void loguearPokemonesAsignacion(t_list* asignacion){
+void loguearPokemonesAsignacion(t_list* asignacion) {
 	int i;
 	char* cabecera = string_new();
 	char* lineaDato = string_new();
 
 	for (i = 0; i < list_size(asignacion); i++) {
 		t_pokemones_Asignacion* auxPok = list_get(asignacion, i);
-		string_append(&cabecera, string_from_format("%c", auxPok->pokemon_id)  );
-		string_append(&cabecera," |");
-		string_append(&lineaDato,string_itoa(auxPok->cantidad));
-		string_append(&lineaDato," |");
+		string_append(&cabecera, string_from_format("%c", auxPok->pokemon_id));
+		string_append(&cabecera, " |");
+		string_append(&lineaDato, string_itoa(auxPok->cantidad));
+		string_append(&lineaDato, " |");
 	}
 
-	log_info(logMapa,cabecera);
-	log_info(logMapa,lineaDato);
+	log_info(logMapa, cabecera);
+	log_info(logMapa, lineaDato);
 }
 
-void iformarEstadosColas(){
+void iformarEstadosColas() {
 	/*	colaDeListos
-		colaDeBloqueados	*/
+	 colaDeBloqueados	*/
 	log_info(logMapa, "========================================");
 	log_info(logMapa, "==           Estado de Colas          ==");
 	log_info(logMapa, "========================================");
@@ -2166,7 +2195,7 @@ void iformarEstadosColas(){
 	log_info(logMapa, "  -------------------");
 	loguearColaBloqueados();
 }
-void loguearColaListos(){
+void loguearColaListos() {
 	t_list* listAuxOrdenar = list_create();
 	int i;
 	char simbolo;
@@ -2206,7 +2235,7 @@ void loguearColaListos(){
 
 }
 
-void loguearColaBloqueados(){
+void loguearColaBloqueados() {
 	t_list* listAuxOrdenar = list_create();
 	int i;
 	char simbolo;
@@ -2244,4 +2273,13 @@ void loguearColaBloqueados(){
 
 	list_destroy(listAuxOrdenar);
 
+}
+
+char* dameElNombre(char id){
+	bool _buscar(t_pokemonNombre* pkmnombre){
+		return pkmnombre->pokemon_id == id;
+	}
+	 t_pokemonNombre* nombre = list_find(listaDeNombres,(void*) _buscar);
+	 log_info(logMapa,"EL NOBMRE ES %s",nombre->nombrePokemon);
+	return nombre->nombrePokemon;
 }

@@ -28,6 +28,7 @@
 //Variables
 t_log* logMapa;
 char *mapa;
+char *nombrePokenest;
 t_metadataMapa metadataMapa;
 DIR *dipPokenest;
 struct dirent *ditPokenest;
@@ -37,6 +38,7 @@ t_list* listaDePokenest;
 t_list* items;
 t_list* listaDeEntrenadores;
 t_list* entrenadoresDeadLock;
+t_list* listaDeNombres;
 t_queue* colaDeListos;
 t_queue* colaDeBloqueados;
 pthread_mutex_t setFDmutex;
@@ -62,7 +64,7 @@ typedef struct {
 } t_serverData;
 
 typedef struct {
-	int* pokemon;
+//	int* pokemon;
 	t_list* listaDePokemones;
 	t_metadataPokenest metadata;
 } t_pokenest;
@@ -105,6 +107,12 @@ typedef struct {
 	int cantidad;
 } t_pokemones_Asignacion;
 
+typedef struct {
+	char pokemon_id;
+	char* nombrePokemon;
+} t_pokemonNombre;
+
+
 // Funciones de conexion
 void startServerProg();
 void newClients(int *socketServer, fd_set *master, int *fdmax);
@@ -115,8 +123,8 @@ void processMessageReceived(void *parameter);
 
 // Funciones
 int recorrerdirDePokenest(char* rutaDirPokenest);
-int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest);
-t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest, const char* nombreDeLaPokenest);
+int recorrerCadaPokenest(char* rutaDeUnaPokenes);
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
 int levantarNivelDelPokemon(char* rutaDelPokemon);
 void dibujarMapa();
 void crearEntrenadorYDibujar(char simbolo, int socket);
@@ -154,4 +162,5 @@ void loguearPokemonesAsignacion(t_list* asignacion);
 void iformarEstadosColas();
 void loguearColaListos();
 void loguearColaBloqueados();
+char* dameElNombre(char id);
 #endif /* MAPA_H_ */

@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata.dat",
+	rutaMetadata = string_from_format("%s/Entrenadores/%s/metadata",
 			pokedex, entrenador);
 
 	rutaDirDeBill = string_from_format("%s/Entrenadores/%s/Dir de Bill",
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 
 		colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola de objetivos actuales donde cada elemento es un char
 
-		char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata.dat",
+		char* rutaMetadataMapa = string_from_format("%s/Mapas/%s/metadata",
 				pokedex, mapaActual);
 
 		crearArchivoMetadataDelMapa(rutaMetadataMapa, &metadataMapa,
@@ -320,10 +320,10 @@ void jugar() {
 
 			case CAPTURADO: { // si se capturo ok hay que copiar el archivito metadata en el dir de bill
 				char* rutaMetadataPokemon = string_from_format(
-						"%s/metadata%s.dat", rutaDirDeBill, pokemonCapturado); //armamos la ruta de donde se va a copiar el archivo metadata del pokemon capturado :)
+						"%s/metadata", rutaDirDeBill, pokemonCapturado); //armamos la ruta de donde se va a copiar el archivo metadata del pokemon capturado :)
 
 				char* rutaMedataPokemonMapa = string_from_format(
-						"%s/Mapas/%s/Pokenest/%s/metadata.dat", pokedex,
+						"%s/Mapas/%s/PokeNests/%s/metadata", pokedex,
 						mapaActual, pokemonCapturado); //armamos la ruta del archivo metadata que vamos a copiar
 
 				log_info(logEntrenador, "Trainer has captured: %s",
