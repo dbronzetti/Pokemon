@@ -1,0 +1,7 @@
+nombre=Brook
+simbolo=%
+hojaDeViaje=[Home,Gris]
+obj[Home]=[R]
+obj[Gris]=[G]
+vidas=1
+reintentos=0
