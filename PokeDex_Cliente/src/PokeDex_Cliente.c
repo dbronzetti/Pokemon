@@ -668,9 +668,10 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 //						for (i = 0 ; i < cantidadBloques; i++){
 						int k;
-						for (k = 1; k <= cant_bloques_por_leer; k++){
+						for (k = 1; k < cantidadBloques; k++){
 							//Receive message size
 							receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+
 							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
 							//bytes_leidos += messageSize;
 
@@ -680,12 +681,14 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 							bytes_leidos += OSADA_BLOCK_SIZE;
 							size -= OSADA_BLOCK_SIZE;
 							//string_append(&buf, messageRcv);
+							printf("read - cantidadBloques: %i\n", k);
 
 							free(messageRcv);
 						}
 
 						if(bytes_por_leer > 0){
 							//Receive message size
+							printf("entro en el bytes por leet\n");
 							receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
 							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
 							//bytes_leidos += messageSize;
@@ -703,7 +706,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 				//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
 				//memcpy(buf, "hola\0", strlen("hola\0")+1);
-//				log_info(logPokeCliente, "fuse_read - buf: %s\n", buf);
+				log_info(logPokeCliente, "fuse_read - buf: %s\n", buf);
 
 				return bytes_leidos;
 
