@@ -619,7 +619,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		if (receivedBytes > 0){
 			if (fileFound != -999){//el archivo no fue encontrado por el server
 
-				pthread_mutex_lock(&readMutex);
+				//pthread_mutex_lock(&readMutex);
 				int off_bloque = (offset % OSADA_BLOCK_SIZE);
 
 				int messageSize = 0;
@@ -707,7 +707,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 					}
 				}
 
-				pthread_mutex_unlock(&readMutex);
+				//pthread_mutex_unlock(&readMutex);
 
 				//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
 				//memcpy(buf, "hola\0", strlen("hola\0")+1);
@@ -798,7 +798,11 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 */
 
 	char *file_name = strrchr (path, '/') + 1;
-	printf("fuse_write - path: %s\n", path);
+
+	//bytes_escritos = enviarArchivo(path,offset);
+	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
+	//log_info(logPokeCliente, "fuse_write - buf: %s\n", buf);
+	log_info(logPokeCliente, "fuse_write - size: %i\n", size);
 
 	if (string_length(file_name)>17){
 		printf("fuse_write - EL fuse_write ES MAYOR A 17: %i\n", string_length(file_name));
@@ -816,22 +820,6 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 	printf("fuse_write - size: %i\n", size);
 	printf("fuse_write - offset: %llu\n", offset);
 	printf("fuse_write - buf: %s\n", buf);
-
-	if (size > offset){
-		printf("PRIMERA LLAMADA \n");
-	}
-
-	if (size == offset){
-		printf("SEGUNDA LLAMADA \n");
-	}
-
-	if (size < offset){
-		printf("SEGUNDA LLAMADA o mas \n");
-	}
-	//bytes_escritos = enviarArchivo(path,offset);
-	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
-	//log_info(logPokeCliente, "fuse_write - buf: %s\n", buf);
-	log_info(logPokeCliente, "fuse_write - size: %i\n", size);
 
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	//0) Send Fuse Operations
@@ -995,7 +983,7 @@ int main(int argc, char **argv) {
 	int exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
 	char *el_fuse;
-	pthread_mutex_init(&readMutex, NULL);
+	//pthread_mutex_init(&readMutex, NULL);
 
 	assert(("ERROR - NOT arguments passed", argc > 1)); // Verifies if was passed at least 1 parameter, if DONT FAILS
 
@@ -1013,9 +1001,10 @@ int main(int argc, char **argv) {
 
 	//delete parameter
 	if (logPosition != -1){
-		//has to be deleted the parameter and its value
-		argv[logPosition] = argv[logPosition + 2];
-		argv[logPosition + 1] = argv[logPosition + 3];
+		for (i = logPosition; i <= argc - 2 ; i++) {
+			//has to be deleted the parameter and its value
+			argv[i] = argv[i + 2];
+		}
 		argc = argc - 2 ;
 	}
 
@@ -1024,14 +1013,17 @@ int main(int argc, char **argv) {
 	//getting environment variable for connecting to server
 	IP_SERVER = getenv("POKEIP");
 	PORT = atoi(getenv("POKEPORT"));
-	printf("%s\n",IP_SERVER);
-	printf("%i\n",PORT);
+	log_info(logPokeCliente,"IP_SERVER: %s\n",IP_SERVER);
+	log_info(logPokeCliente,"PORT: %d\n",PORT);
 	exitCode = connectTo(POKEDEX_SERVIDOR, &socketPokeServer);
-	printf("%i\n",exitCode);
+
 	if (exitCode == EXIT_SUCCESS) {
 		log_info(logPokeCliente, "POKEDEX_CLIENTE connected to POKEDEX_SERVIDOR successfully\n");
-		printf("argv: %s\n", argv);
-		printf("argc: %i\n", argc);
+
+		log_info(logPokeCliente,"argc: %i\n", argc);
+		for (i = 0; i < argc; i++) {
+			log_info(logPokeCliente,"argv[%d]: %s\n",i, argv[i]);
+		}
 
 		return fuse_main(argc, argv, &xmp_oper, NULL);
 
@@ -1040,7 +1032,7 @@ int main(int argc, char **argv) {
 		return EXIT_FAILURE;
 	}
 
-	pthread_mutex_destroy(&readMutex);
+	//pthread_mutex_destroy(&readMutex);
 
 	return EXIT_SUCCESS;
 }
