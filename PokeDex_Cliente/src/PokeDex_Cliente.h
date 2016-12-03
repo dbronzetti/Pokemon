@@ -18,7 +18,8 @@
 int PORT;
 char *IP_SERVER;
 int socketPokeServer = 0;
-//pthread_mutex_t readMutex;
+pthread_mutex_t readMutex;
+pthread_mutex_t parentDirectoryMutex;
 
 //Logger
 t_log* logPokeCliente;
@@ -26,6 +27,7 @@ t_log* logPokeCliente;
 // Funciones de Conexion
 int connectTo(enum_processes processToConnect, int *socketClient);
 t_list * obtenerDirectorio(const char* path, enum_FUSEOperations fuseOperation);
+void enviarArchivo(char* path, const char* buf, size_t size, off_t offset);
 
 //Librerias y estructuras pra el FUSE
 #include <fuse/fuse.h>
