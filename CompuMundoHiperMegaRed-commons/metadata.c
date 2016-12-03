@@ -28,5 +28,9 @@ void crearArchivoMetadataDelMapa(char* rutaMetadataMapa, t_metadataMapa *metadat
 	log_info(log, "IP: %s\n", metadataMapa->ip);
 	log_info(log, "Puerto: %d\n", metadataMapa->puerto);
 	log_info(log, "@@@@@@@@@@@@@@@@@@@METADATA@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+
+	free(metadata->properties);
+	free(metadata->path);
+	free(metadata);
 }
 
