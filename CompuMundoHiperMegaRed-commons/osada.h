@@ -72,10 +72,9 @@ int setearTamanioDelArchivo(int archivoID);
 int obtenerIDDelArchivo(char *ruta);
 void setearConstantesDePosicionDeOsada();
 
-void guardarEnOsada(unsigned char *osada, int desde, void *elemento, int tamaniaDelElemento);
-void guardarEnOsada2(int desde, void *elemento, int tamaniaDelElemento);
+void guardarEnOsada(int desde, void *elemento, int tamaniaDelElemento);
 char**  armar_vector_path(const char* text);
-int crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory);
+int crearUnArchivo(unsigned char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory);
 int obtener_bloque_archivo(const char* path);
 t_list* crearArbolAPartirDelPadre(int padre);
 t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques);

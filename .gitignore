@@ -34,5 +34,7 @@
 
 #Metadata eclipse
 *.metadata/
+MapaGUI/
+nivel/
 
 RemoteSystemsTempFiles/
