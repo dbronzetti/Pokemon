@@ -547,7 +547,7 @@ void processMessageReceived(void *parameter){
 
 					if (path != NULL){
 
-						parent_directory = obtener_bloque_padre(path);
+						parent_directory = obtener_bloque_padre_ParaLecturas(path);
 						log_info(logPokeDexServer, "FUSE_READ - parent_directory : %d\n",parent_directory);
 						osada_block_pointer posicion = devolverOsadaBlockPointer(path, parent_directory);
 

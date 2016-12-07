@@ -620,7 +620,7 @@ int obtener_bloque_archivo(const char* path)
    while (vector_path[i] != NULL)
    {
 	   found = false;
-	   for (j=0; j<= 2047; j++)
+	   for (j=0;j<2047;j++)
 	   {
 		   pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir) && (TABLA_DE_ARCHIVOS[j].state != DELETED))
@@ -645,6 +645,61 @@ int obtener_bloque_archivo(const char* path)
 
 
 }
+int obtener_bloque_padre_ParaLecturas (const char* path)
+{
+	char** vector_path = armar_vector_path(path);
+	printf("****path %s: \n",path);
+	char *file_name = strrchr (path, '/') + 1;
+
+	int parent_dir = 65535;
+
+	if ( strcmp (file_name, strrchr(path, '/')) !=0 )
+	{
+		int i = 0;
+		while (vector_path[i] != NULL)
+		{
+			int j;
+			printf("****vector_path[i] %i - %s\n", i, vector_path[i]);
+			for (j = 0; j < 2047; j++)
+			{
+				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
+				{
+
+					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s \n",TABLA_DE_ARCHIVOS[j].fname);
+					printf("****************obtener_bloque_padre - vector_path[i]: %s \n",vector_path[i]);
+					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i \n",TABLA_DE_ARCHIVOS[j].parent_directory);
+					printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
+					printf("****************obtener_bloque_padre - j: %i \n", j);
+
+
+					if ((i == 0) && (parent_dir == 65535))
+					{
+						printf("PRIMER IF, %i\n", j);
+						parent_dir = TABLA_DE_ARCHIVOS[j].parent_directory;
+					}
+
+					if ((i > 0) && (parent_dir != 0))
+					{
+						printf("****************SEGUNDO IF\n", j);
+						parent_dir = j;
+					}
+
+					//PARCHE: PARA EL TERCER NIVEL
+					/*if ((i > 0) && (parent_dir == 0) && (j == 1))
+					{
+						parent_dir = j;
+					}*/
+
+				}
+				pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+			}
+			i++;
+		}
+	}
+	printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
+	return parent_dir;
+}
 
 int obtener_bloque_padre (const char* path)
 {
@@ -659,19 +714,34 @@ int obtener_bloque_padre (const char* path)
 		while (vector_path[i] != NULL)
 		{
 			int j;
-			for (j = 0; j <= 2047; j++)
+			for (j = 0; j < 2047; j++)
 			{
 				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
 				{
-					/*
+
 					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s \n",TABLA_DE_ARCHIVOS[j].fname);
 					printf("****************obtener_bloque_padre - vector_path[i]: %s \n",vector_path[i]);
 					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i \n",TABLA_DE_ARCHIVOS[j].parent_directory);
 					printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
 					printf("****************obtener_bloque_padre - j: %i \n", j);
-					 */
-					parent_dir = j;
+
+					if ((i == 0) && (parent_dir == 65535))
+					{
+						printf("PRIMER IF\n", j);
+						parent_dir = j;
+					}
+					if ((i > 0) && (parent_dir != 0))
+					{
+						printf("****************SEGUNDO IF\n", j);
+						parent_dir = j;
+					}
+
+					//PARCHE: PARA EL TERCER NIVEL
+					/*if ((i > 0) && (parent_dir == 0) && (j == 1))
+					{
+						parent_dir = j;
+					}*/
 
 				}
 				pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
