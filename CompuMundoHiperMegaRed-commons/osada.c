@@ -620,7 +620,7 @@ int obtener_bloque_archivo(const char* path)
    while (vector_path[i] != NULL)
    {
 	   found = false;
-	   for (j=0; j<= 2047; j++)
+	   for (j=0;j<2047;j++)
 	   {
 		   pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir) && (TABLA_DE_ARCHIVOS[j].state != DELETED))
@@ -667,7 +667,7 @@ int obtener_bloque_padre (const char* path)
 					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i \n",TABLA_DE_ARCHIVOS[j].parent_directory);
 					printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
 					printf("****************obtener_bloque_padre - j: %i \n", j);
-					 */
+					*/
 					parent_dir = j;
 
 				}
