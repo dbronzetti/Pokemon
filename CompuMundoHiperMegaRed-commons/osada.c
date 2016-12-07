@@ -292,7 +292,7 @@ void verContenidoDeArchivo(t_list *conjuntoDeBloques){
 }
 
 void _iterarBloques(int bloque){
-	printf("_iterarBloques el proximo: %i\n", bloque);
+	//printf("_iterarBloques el proximo: %i\n", bloque);
 }
 
 
@@ -357,10 +357,13 @@ osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint1
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory){
 	printf("******************************** ENTRO EN EL devolverOsadaBlockPointer ******************************** \n");
 	int pos=0;
-	osada_block_pointer posicion = 0;
+	osada_block_pointer posicion = -999;
 	char *file_name = strrchr (nombre, '/') + 1;
 	printf("file_name: %s\n", file_name);
 	bool found = false;
+
+	printf("devolverOsadaBlockPointer - parent_directory: %i\n", parent_directory);
+
 	for (pos=0; pos <= 2047; pos++){
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
@@ -875,13 +878,13 @@ void guardarBloqueDeDatos(t_list* listado, unsigned char *contenido){
 
 
 		memcpy(&OSADA[DATA_BLOCKS + tamanioDelBloque], &contenido[j * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE );
-		printf("contenido bloque - %i: %s\n", j, &OSADA[DATA_BLOCKS+tamanioDelBloque]);
+		//printf("contenido bloque - %i: %s\n", j, &OSADA[DATA_BLOCKS+tamanioDelBloque]);
 		j++;
 
-		printf("GUARDO UN BLOQUE EN EL DICTIONARY\n");
+		//printf("GUARDO UN BLOQUE EN EL DICTIONARY\n");
 	}
 
-	printf("EMPIEZA A INTERAR PARA GUARDAR \n");
+	//printf("EMPIEZA A INTERAR PARA GUARDAR \n");
 	//free(bloqueConDatos);
 }
 
@@ -924,7 +927,7 @@ t_dictionary *armarDicDeTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesD
 		bloquePosStr = string_repeat("\0", 10);
 		bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 		bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
-		printf("bloquePos: %i\n", bloquePos);
+		//printf("bloquePos: %i\n", bloquePos);
 
 		if(bloqueSig==0){
 			bloqueSig =-1;
@@ -961,7 +964,7 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* list
 			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i)-1;
 			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 		}
-		printf("bloquePos: %i\n", bloquePos);
+		//printf("bloquePos: %i\n", bloquePos);
 
 		if(bloqueSig==0){
 			bloqueSig =-1;
@@ -974,7 +977,7 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* list
 
 		dictionary_put(dictionary, bloquePosStr, bloqueSig);
 
-		printf("bloqueSig: %i\n",bloqueSig);
+		//printf("bloqueSig: %i\n",bloqueSig);
 
 	}
 	free(bloquePosStr);
@@ -1005,7 +1008,7 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
 		}
-		printf("bloquePos: %i\n", bloquePos);
+		//printf("bloquePos: %i\n", bloquePos);
 
 		if(bloqueSig==0){
 			bloqueSig =-1;
@@ -1018,7 +1021,7 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 
 		dictionary_put(dictionary, bloquePosStr, bloqueSig);
 
-		printf("bloqueSig: %i\n",bloqueSig);
+		//printf("bloqueSig: %i\n",bloqueSig);
 
 	}
 	free(bloquePosStr);
