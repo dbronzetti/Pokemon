@@ -1192,17 +1192,17 @@ int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 	unsigned char *contenido = creoContenidoBinario(tamanio);
 
-	/*****************************************/
 	printf("************************ FUNCION: hacerElTruncate ************************\n");
 
 
 	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory);
 	posDelaTablaDeArchivos = buscarElArchivoYDevolverPosicion(fname, parent_directory);
 	osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
-	printf("hacerElTruncate - El archivo size: %i\n", elArchivo.file_size);
+
 
 
 	if (posicion != -999 && elArchivo.file_size != 0){
+		printf("hacerElTruncate - El archivo size: %i\n", elArchivo.file_size);
 		if (elArchivo.file_size  > tamanio){
 			//JOEL: CUANDO HAGO EL TRUNCATE CON MENOR SIZE PUEDO REUTILZIAR LA FUNCION DE modificarUnARchivo para bajar contenido;
 			printf("hacerElTruncate - entra para truncate - elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
@@ -1223,10 +1223,10 @@ int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16
 	/********************************************************/
 
 	if(elTamanioDelArchivoEntraEnElOsada(tamanio) && noEsVacio(tamanio)){
-		printf("crearUnArchivo - tamanio: %i\n", tamanio);
+		printf("hacerElTruncate - tamanio: %i\n", tamanio);
 
 		cantidadDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanio);
-		printf("crearUnArchivo - cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
+		printf("hacerElTruncate - cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
 
 
 		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
@@ -1237,7 +1237,7 @@ int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16
 
 	}
 	return list_get(listadoLosIndicesDeLosBloquesDisponibles, listadoLosIndicesDeLosBloquesDisponibles->elements_count-1);
-	printf("************************ FIN CREAR UN ARCHIVO ************************\n");
+	printf("************************ FIN hacerElTruncate ************************\n");
 }
 
 int crearUnArchivo(unsigned char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
