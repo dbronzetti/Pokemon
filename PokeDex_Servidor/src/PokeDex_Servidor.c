@@ -226,13 +226,14 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "FUSE_UTIMENS - Message path received : %s\n",path);
 
-					//3) time
-					long int tiempo=0;
-					receiveMessage(&serverData->socketClient, &tiempo, sizeof(tiempo));
-					log_info(logPokeDexServer, "FUSE_UTIMENS - Message tiempo received : %i\n",tiempo);
+					//3) Receive parent_directory
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "FUSE_UTIMENS - Message parent_directory received : %i\n",parent_directory);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//4) time
+					long int tiempo=0;
+					receiveMessage(&serverData->socketClient, &tiempo, sizeof(int));
+					log_info(logPokeDexServer, "FUSE_UTIMENS - Message tiempo received : %i\n",tiempo);
 
 					ingresarElUTIMENS(path, parent_directory, tiempo);
 
@@ -255,8 +256,9 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//3) Receive parent_directory
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					posTablaDeArchivos = borrarUnDirectorio(path, parent_directory);
 					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
@@ -296,8 +298,9 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
 					log_info(logPokeDexServer, "FUSE_WRITE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//6) Receive parent_directory
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					int ultimoPuntero = crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
 					log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
@@ -352,17 +355,17 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message path received : %s\n",path);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//3) Receive parent_directory
+
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					osada_block_pointer posicion = devolverOsadaBlockPointer(path, parent_directory);
 					printf("FUSE_UNLINK - posicion: %i\n",posicion);
-
 					if (posicion != -999){
 						t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 						borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
 					}
-
 					borrarUnArchivo(path, parent_directory);
 
 					sendMessage(&serverData->socketClient, &posicion , sizeof(posicion));
@@ -400,8 +403,9 @@ void processMessageReceived(void *parameter){
 						receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
 
-						//get padre from path received
-						parent_directory = obtener_bloque_padre(path);
+						//6) Receive parent_directory
+					     receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+						log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 						int ultimoPuntero = hacerElTruncate(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", ultimoPuntero);
@@ -429,8 +433,9 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//3) Receive parent_directory
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					posTablaDeArchivos = crearUnDirectorio(path, parent_directory);
 					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
@@ -440,6 +445,7 @@ void processMessageReceived(void *parameter){
 				}
 				case FUSE_MODIFICAR:{
 					log_info(logPokeDexServer, "Processing FUSE_MODIFICAR message");
+					int posDelaTablaDeArchivos = -999;
 					int pathLength = 0;
 					int parent_directory;
 
@@ -459,8 +465,10 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, content, contentSize);
 					log_info(logPokeDexServer, "FUSE_MODIFICAR - Message content received : %s\n",content);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//6) Receive parent_directory
+					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					modificarUnArchivo(content, contentSize, path, parent_directory);
 					log_info(logPokeDexServer, "FUSE_MODIFICAR - TERMINO DE CREAR\n");
@@ -488,8 +496,10 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message path received : %s\n",path);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//3) Receive parent_directory
+					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory);
 					sendMessage(&serverData->socketClient, &osadaFile.file_size , sizeof(int));
@@ -517,14 +527,19 @@ void processMessageReceived(void *parameter){
 					printf("******************* FUSE_READ - Receive path ****************\n");
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "FUSE_READ - Message path received : %s\n",path);
-
-					//3) Receive offset
+/*
+					//3) Receive parent_directory
+					printf("******************* FUSE_READ - Receive parent_directory ****************\n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "FUSE_READ - Message parent_directory received : %i\n",parent_directory);
+*/
+					//4) Receive offset
 					printf("******************* FUSE_READ - Receive offset ****************\n");
 					int offset = 0;
 					receiveMessage(&serverData->socketClient, &offset, sizeof(offset));
 					log_info(logPokeDexServer, "FUSE_READ - Message offset received : %i\n",offset);
 
-					//4) Receive size to read
+					//5) Receive size to read
 					printf("******************* FUSE_READ - Receive size ****************\n");
 					int size = 0;
 					receiveMessage(&serverData->socketClient, &size, sizeof(size));
@@ -619,7 +634,7 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "FUSE_READDIR - Message size received : %s\n",path);
 
-					//get padre from path received
+					//get padre from path received for passing it to crearArbolAPartirDelPadre
 					int posBloquePadre = obtener_bloque_padre(path);
 					log_info(logPokeDexServer,"FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
 					printf("FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
@@ -700,8 +715,10 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, newPath, newPathLength);
 					log_info(logPokeDexServer, "Message newPath received : %s\n",newPath);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//5) Receive parent_directory
+					log_info(logPokeDexServer, "Message parent_directory received --> \n");
+					receiveMessage(&serverData->socketClient, &parent_directory, sizeof(parent_directory));
+					log_info(logPokeDexServer, "Message parent_directory received : %i\n",parent_directory);
 
 					int posicion = sobreescribirNombre(path, newPath, parent_directory);
 					log_info(logPokeDexServer, "Message posicion received : %i\n",posicion);

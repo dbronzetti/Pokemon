@@ -656,11 +656,14 @@ int obtener_bloque_padre (const char* path)
 	if ( strcmp (file_name, strrchr(path, '/')) !=0 )
 	{
 		int i = 0;
-		while (vector_path[i] != NULL){
+		while (vector_path[i] != NULL)
+		{
 			int j;
-			for (j = 0; j <= 2047; j++){
+			for (j = 0; j <= 2047; j++)
+			{
 				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir)){
+				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir))
+				{
 					/*
 					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s \n",TABLA_DE_ARCHIVOS[j].fname);
 					printf("****************obtener_bloque_padre - vector_path[i]: %s \n",vector_path[i]);
