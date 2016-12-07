@@ -374,7 +374,7 @@ void processMessageReceived(void *parameter){
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
 						int posDelaTablaDeArchivos = -999;
 						int pathLength = 0;
-						int parent_directory;
+						uint16_t parent_directory;
 						int ultimoPunteroDeLosBloques = 1;
 
 						//1) Receive path length
@@ -392,18 +392,14 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - Content size: %d", contentSize);
 						char *content = malloc(contentSize);
 
-						//4) Content
-						receiveMessage(&serverData->socketClient, content, contentSize);
-						log_info(logPokeDexServer, "FUSE_TRUNCATE - Message content received : %s\n",content);
-
-						//5) posDelaTablaDeArchivos
+						//4) posDelaTablaDeArchivos
 						receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
 
 						//get padre from path received
 						parent_directory = obtener_bloque_padre(path);
 
-						int ultimoPuntero = hacerElTruncate(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
+						int ultimoPuntero = hacerElTruncate(contentSize, path, posDelaTablaDeArchivos, parent_directory);
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", ultimoPuntero);
 						printf("FUSE_TRUNCATE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
 

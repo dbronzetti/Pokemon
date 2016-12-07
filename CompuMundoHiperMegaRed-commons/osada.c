@@ -1177,9 +1177,18 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 	printf("************************ FIN MODIFICAR UN ARCHIVO ************************\n");
 }
 
-int hacerElTruncate(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
+unsigned char *creoContenidoBinario(int tamanio){
+	unsigned char *contenido = malloc(tamanio);
+	memset(contenido, 0, tamanio);
+	return contenido;
+
+}
+
+int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
+	unsigned char *contenido = creoContenidoBinario(tamanio);
+
 	/*****************************************/
 	printf("************************ FUNCION: hacerElTruncate ************************\n");
 
@@ -1193,13 +1202,13 @@ int hacerElTruncate(char *contenido, int tamanio, char* fname, int posDelaTablaD
 	if (posicion != -999 && elArchivo.file_size != 0){
 		if (elArchivo.file_size  > tamanio){
 			//JOEL: CUANDO HAGO EL TRUNCATE CON MENOR SIZE PUEDO REUTILZIAR LA FUNCION DE modificarUnARchivo para bajar contenido;
-			printf("crearUnArchivo - entra para truncate - elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+			printf("hacerElTruncate - entra para truncate - elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
 			modificarUnArchivo(contenido, tamanio,fname, parent_directory);
 			return 1;
 		}
 			else
 		{
-			printf("crearUnArchivo -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+			printf("hacerElTruncate -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
 			t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
 			return agregarMasDatosAlArchivos_archivosGrandes(contenido, tamanio, fname,  parent_directory, list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));
 
@@ -1499,7 +1508,7 @@ void encontrarArbolPadre(int padre){
 }
 
 /*****************************************************/
-int crearUnDirectorio(char *fname, int parent_directory){
+int crearUnDirectorio(char *fname, uint16_t parent_directory){
 	int k=0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
@@ -1554,7 +1563,7 @@ int crearUnDirectorio(char *fname, int parent_directory){
 	return k;
 }
 
-int borrarUnDirectorio(char *fname, int parent_directory){
+int borrarUnDirectorio(char *fname, uint16_t parent_directory){
 	int pos=0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;

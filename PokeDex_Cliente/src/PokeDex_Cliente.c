@@ -400,11 +400,8 @@ static int fuse_truncate(const char* path, off_t offset)
 		exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(int));
 		log_info(logPokeCliente, "fuse_truncate - bufferSize: %i\n", bufferSize);
 
-		//4) send buffer
-		char *buf =  string_repeat('\0', offset);
-		exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
 
-		//5) send posDelaTablaDeArchivos
+		//4) send posDelaTablaDeArchivos
 		exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(int) );
 		log_info(logPokeCliente, "fuse_truncate - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
 		//printf("********************************* sendMessage 5 *********************\n");
@@ -414,8 +411,7 @@ static int fuse_truncate(const char* path, off_t offset)
 		int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write2 ,sizeof(ultimoPunteroDeLosBloques_write2));
 		log_info(logPokeCliente, "fuse_truncate -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
 		printf("fuse_truncate - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
-		//usleep(500000);
-		buf="";
+
 		return 0;
 	}else{
 

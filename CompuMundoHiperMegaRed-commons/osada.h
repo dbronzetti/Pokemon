@@ -82,8 +82,9 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre);
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory);
 int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory);
-int crearUnDirectorio(char *fname, int parent_directory);
-int borrarUnDirectorio(char *fname, int parent_directory);
+int crearUnDirectorio(char *fname, uint16_t parent_directory);
+int borrarUnDirectorio(char *fname, uint16_t parent_directory);
+int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER;
 static int TAMANIO_DEL_BITMAP;
