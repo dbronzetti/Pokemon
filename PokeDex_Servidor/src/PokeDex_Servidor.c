@@ -299,7 +299,7 @@ void processMessageReceived(void *parameter){
 					//get padre from path received
 					parent_directory = obtener_bloque_padre(path);
 
-					int ultimoPuntero = escribirUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
+					int ultimoPuntero = escribirUnArchivo(content, contentSize, path, parent_directory);
 					log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
 					printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
 
@@ -474,6 +474,7 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "-------Processing FUSE_OPEN message");
 					printf("******************* Processing FUSE_OPEN message ****************\n");
 					int parent_directory=0;
+					int posDelaTablaDeArchivos = 0;
 					int pathLength = 0;
 					osada_file osadaFile;
 
@@ -488,7 +489,7 @@ void processMessageReceived(void *parameter){
 					//get padre from path received
 					parent_directory = obtener_bloque_padre(path);
 
-					osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory);
+					osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory,&posDelaTablaDeArchivos); //posDelaTablaDeArchivos= No es usado para Abrrir el archivo
 					sendMessage(&serverData->socketClient, &osadaFile.file_size , sizeof(int));
 
 					log_info(logPokeDexServer, "-------FIN FUSE_OPEN message");
