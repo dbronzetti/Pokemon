@@ -299,7 +299,7 @@ void processMessageReceived(void *parameter){
 					//get padre from path received
 					parent_directory = obtener_bloque_padre(path);
 
-					int ultimoPuntero = crearUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
+					int ultimoPuntero = escribirUnArchivo(content, contentSize, path, posDelaTablaDeArchivos, parent_directory);
 					log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
 					printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
 
@@ -359,7 +359,7 @@ void processMessageReceived(void *parameter){
 					printf("FUSE_UNLINK - posicion: %i\n",posicion);
 
 					if (posicion != -999){
-						t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+						t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
 						borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
 					}
 
@@ -397,7 +397,8 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
 
 						//get padre from path received
-						parent_directory = obtener_bloque_padre(path);
+						//parent_directory = obtener_bloque_padre(path);
+						parent_directory = 65535;
 
 						int ultimoPuntero = hacerElTruncate(contentSize, path, posDelaTablaDeArchivos, parent_directory);
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", ultimoPuntero);
@@ -536,7 +537,7 @@ void processMessageReceived(void *parameter){
 						//char *string = string_new();
 						if (posicion != -999){// -999 = NO LO ENCONTRO
 
-							t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+							t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
 
 //							printf("FUSE_READ - conjuntoDeBloquesDelArchivo first: %i\n",list_get(conjuntoDeBloquesDelArchivo, 0));
 //							printf("FUSE_READ - conjuntoDeBloquesDelArchivo last: %i\n",list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1));

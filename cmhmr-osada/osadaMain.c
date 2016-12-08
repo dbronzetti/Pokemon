@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
 
 	//contarBloques(osada, osadaHeaderFile, bitMap);
 	int posDelaTablaDeArchivos = escribirEnLaTablaDeArchivos(65535, 0, "/test1", -999, -999);
-	crearUnArchivo("hola como andas todo bien que se cuenta nose como estabas tratandonte la vida pero es dififcil.", strlen("hola como andas todo bien que se cuenta nose como estabas tratandonte la vida pero es dififcil."), "/test1", posDelaTablaDeArchivos, 65535);
+	escribirUnArchivo("hola como andas todo bien que se cuenta nose como estabas tratandonte la vida pero es dififcil.", strlen("hola como andas todo bien que se cuenta nose como estabas tratandonte la vida pero es dififcil."), "/test1", posDelaTablaDeArchivos, 65535);
 
 	//dameTodosLosDirectorios();
 	//dameTodosLosArchivosRegulares();
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]){
 	osada_block_pointer posicion = devolverOsadaBlockPointer("/test1", 65535);
 	//printf("posicion del primer bloque: %i\n", posicion);
 
-	t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(posicion);
+	t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
 	//t_list *conjuntoDeBloquesDelArchivo = crearPosicionesDeBloquesParaUnArchivo(31216);
 
 	verContenidoDeArchivo(conjuntoDeBloquesDelArchivo);

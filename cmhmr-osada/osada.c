@@ -240,7 +240,7 @@ void _iterarBloques(int bloque){
 
 
 
-t_list *crearPosicionesDeBloquesParaUnArchivo(int numeroBloques){
+t_list *obtenerElListadoDeBloquesCorrespondientesAlArchivo(int numeroBloques){
 	int elProximo = 0;
 	t_list *proximo = list_create();
 
@@ -701,7 +701,7 @@ void guardarEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibl
 	dictionary_iterator(armarDicDeTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles), (void*) _prepararLaVariableGlobalParaGuadar);
 	guardarEnOsada2(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 }
-void crearUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
+void escribirUnArchivo(char *contenido, int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory){
 	int cantidadDeBloquesParaGrabar = 0;
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 
