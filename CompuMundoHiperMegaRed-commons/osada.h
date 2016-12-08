@@ -85,7 +85,7 @@ osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_dire
 int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory);
 int crearUnDirectorio(char *fname);
 int borrarUnDirectorio(char *fname, uint16_t parent_directory);
-int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory);
+int hacerElTruncate(int offset, char* path);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER;
 static int TAMANIO_DEL_BITMAP;
