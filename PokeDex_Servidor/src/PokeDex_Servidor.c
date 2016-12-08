@@ -270,7 +270,6 @@ void processMessageReceived(void *parameter){
 					printf("************************ Processing FUSE_WRITE message ********************************\n");
 					int posDelaTablaDeArchivos = -999;
 					int pathLength = 0;
-					int parent_directory;
 					int ultimoPunteroDeLosBloques = 1;
 
 					//1) Receive path length
@@ -293,10 +292,7 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, content, contentSize);
 					log_info(logPokeDexServer, "FUSE_WRITE - Message content received : %s\n",content);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
-
-					int ultimoPuntero = escribirUnArchivo(content, contentSize, path, parent_directory);
+					int ultimoPuntero = escribirUnArchivo(content, contentSize, path);
 					log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
 					printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
 

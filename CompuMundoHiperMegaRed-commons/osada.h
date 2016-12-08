@@ -75,7 +75,7 @@ void setearConstantesDePosicionDeOsada();
 
 void guardarEnOsada(int desde, void *elemento, int tamaniaDelElemento);
 char**  armar_vector_path(const char* text);
-int escribirUnArchivo(unsigned char *contenido, int tamanio, char* fname, uint16_t parent_directory);
+int escribirUnArchivo(unsigned char *contenido, int tamanio, char* fname);
 int obtener_bloque_archivo(const char* path);
 t_list* crearArbolAPartirDelPadre(int padre);
 t_list *obtenerElListadoDeBloquesCorrespondientesAlArchivo(int bloqueActual);
