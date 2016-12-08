@@ -612,7 +612,7 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "FUSE_READDIR - Message size received : %s\n",path);
 
 					//get padre from path received
-					int posBloquePadre = obtener_bloque_padre(path);
+					int posBloquePadre = obtener_Nuevo_padre(path);
 					log_info(logPokeDexServer,"FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
 					printf("FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
 

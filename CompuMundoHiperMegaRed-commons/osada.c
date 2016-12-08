@@ -422,10 +422,14 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 }
 
 osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_directory, int* posicionTablaDeArchivo){
+
+
 	log_info(logPokeDexServer, "******************************** ENTRO EN buscarElArchivoYDevolverOsadaFile  ******************************** ");
+	log_info(logPokeDexServer, "DATOS INICIALES: nombre: %s - parent_directory: %d - posicionTablaDeArchivo %d",nombre,parent_directory,posicionTablaDeArchivo);
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
+
 	//log_info(logPokeDexServer, "file_name: %s", file_name);
 	bool found = false;
 	for (pos=0; pos <= 2047; pos++){
@@ -659,7 +663,8 @@ int obtener_Nuevo_padre (const char* path)
 	while (vector_path[sizeVectorPath] != NULL){
 		sizeVectorPath++;
 	}
-
+	log_info(logPokeDexServer,"BUSCAMOS ESTO %s", path);
+	log_info(logPokeDexServer,"sizeVectorPath= %d", sizeVectorPath);
 	int parent_dir = 65535;
 
 	if ( strcmp (file_name, strrchr(path, '/')) !=0 )
@@ -669,14 +674,16 @@ int obtener_Nuevo_padre (const char* path)
 			int j;
 			for (j = 0; j <= 2047; j++){
 				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+
 				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir)){
 
 					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - TABLA_DE_ARCHIVOS[j].fname: %s ",TABLA_DE_ARCHIVOS[j].fname);
-					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - vector_path[i]: %s ",vector_path[i]);
 					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i ",TABLA_DE_ARCHIVOS[j].parent_directory);
-					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - parent_dir: %i ", parent_dir);
-					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - j: %i ", j);
 
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - vector_path[i]: %s ",vector_path[i]);
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - parent_dir: %i ", parent_dir);
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - Bloque Tabla j: %i ", j);
+					log_info(logPokeDexServer, "-------------------------------------------------------------------------------------");
 					if(sizeVectorPath != i){
 						parent_dir = j;
 					}
@@ -687,7 +694,7 @@ int obtener_Nuevo_padre (const char* path)
 			i++;
 		}
 	}
-	log_info(logPokeDexServer, "****************obtener_Nuevo_padre - parent_dir: %i ", parent_dir);
+	log_info(logPokeDexServer, "****************obtener_Nuevo_padre - RETORNADO: parent_dir: %i ", parent_dir);
 	return parent_dir;
 }
 
@@ -714,12 +721,17 @@ int obtener_bloque_padre (const char* path)
 				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir)){
 
 					log_info(logPokeDexServer, "****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s ",TABLA_DE_ARCHIVOS[j].fname);
-					log_info(logPokeDexServer, "****************obtener_bloque_padre - vector_path[i]: %s ",vector_path[i]);
 					log_info(logPokeDexServer, "****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i ",TABLA_DE_ARCHIVOS[j].parent_directory);
-					log_info(logPokeDexServer, "****************obtener_bloque_padre - parent_dir: %i ", parent_dir);
-					log_info(logPokeDexServer, "****************obtener_bloque_padre - j: %i ", j);
 
-					parent_dir = TABLA_DE_ARCHIVOS[j].parent_directory;
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - vector_path[i]: %s ",vector_path[i]);
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - parent_dir: %i ", parent_dir);
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - Bloque Tabla j: %i ", j);
+					log_info(logPokeDexServer, "-------------------------------------------------------------------------------------");
+
+					if(sizeVectorPath>i+1){
+						parent_dir = j;
+					}
+
 
 				}
 				pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -727,7 +739,7 @@ int obtener_bloque_padre (const char* path)
 			i++;
 		}
 	}
-	log_info(logPokeDexServer, "****************obtener_bloque_padre - parent_dir: %i ", parent_dir);
+	log_info(logPokeDexServer, "****************obtener_bloque_padre - RETORNADO parent_dir: %i ", parent_dir);
 	return parent_dir;
 }
 
