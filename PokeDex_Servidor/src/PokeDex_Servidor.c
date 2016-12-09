@@ -290,7 +290,13 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, content, contentSize);
 					//log_info(logPokeDexServer, "FUSE_WRITE - Message content received : %s\n",content);
 
-					int ultimoPuntero = escribirUnArchivo(content, contentSize, path);
+					//5) Receive offset
+					int bufferOffset = 0;
+					receiveMessage(&serverData->socketClient, &bufferOffset, sizeof(bufferOffset));
+
+					hacerElTruncate(contentSize + bufferOffset, path);
+
+					int ultimoPuntero = escribirUnArchivo(content, contentSize, path,bufferOffset);
 					//log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
 					//printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
 

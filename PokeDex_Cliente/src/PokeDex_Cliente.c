@@ -735,6 +735,11 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 	exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
 	//log_info(logPokeCliente, "fuse_write - buffer: %s\n", buf);
 
+	//5) send offset
+	int bufferOffset = offset;
+	exitCode = sendMessage(&socketPokeServer, &bufferOffset , sizeof(bufferOffset));
+	//log_info(logPokeCliente, "fuse_write - bufferSize: %i\n", bufferSize);
+
 	//Receive message size
 	int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write ,sizeof(ultimoPunteroDeLosBloques_write));
 	log_info(logPokeCliente, "fuse_write -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write);
