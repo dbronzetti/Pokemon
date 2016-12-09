@@ -31,6 +31,8 @@ int main(int argc, char **argv) {
 		}
 	}
 
+	logPokeDexServer = log_create(logFile, "POKEDEX_SERVER", 0, LOG_LEVEL_TRACE);
+
 	int archivoID = obtenerIDDelArchivo(diskFile);
 	int tamanioDelArchivo = setearTamanioDelArchivo(archivoID);
 
@@ -43,7 +45,6 @@ int main(int argc, char **argv) {
     obtenerTablaDeArchivos();
     obtenerTablaDeAsignacion();
 
-	logPokeDexServer = log_create(logFile, "POKEDEX_SERVER", 0, LOG_LEVEL_TRACE);
 
 	puts("Soy el PokeDex Servidor"); /* prints Soy el PokeDex Servidor */
 
@@ -292,10 +293,6 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, content, contentSize);
 					log_info(logPokeDexServer, "FUSE_WRITE - Message content received : %s\n",content);
 
-					//5) posDelaTablaDeArchivos
-					receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
-					log_info(logPokeDexServer, "FUSE_WRITE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
-
 					//get padre from path received
 					parent_directory = obtener_bloque_padre(path);
 
@@ -328,7 +325,7 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "Message received : %s\n",path);
 
 					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
-					int posBloquePadre = obtener_bloque_padre(path);
+					int posBloquePadre = obtener_Nuevo_padre(path);
 
 					log_info(logPokeDexServer, "FUSE_CREATE - escribirEnLaTablaDeArchivos");
 					posDelaTablaDeArchivos = escribirEnLaTablaDeArchivos(posBloquePadre, 0, path, first_block_init, posDelaTablaDeArchivos);
@@ -426,10 +423,7 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
-
-					posTablaDeArchivos = crearUnDirectorio(path, parent_directory);
+					posTablaDeArchivos = crearUnDirectorio(path);
 					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
 
 					sendMessage(&serverData->socketClient, &posTablaDeArchivos , sizeof(int));
@@ -569,10 +563,10 @@ void processMessageReceived(void *parameter){
 									bloque2 *= 64;
 
 									pthread_mutex_lock(&OSADAmutex);
-									printf("read - servidor - bloque2: %i\n", bloque2);
+									//printf("read - servidor - bloque2: %i\n", bloque2);
 									memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
 									pthread_mutex_unlock(&OSADAmutex);
-									log_info(logPokeDexServer, "bloqueDeDatos: %s\n", &OSADA[DATA_BLOCKS+bloque2]);
+									//log_info(logPokeDexServer, "bloqueDeDatos: %s\n", &OSADA[DATA_BLOCKS+bloque2]);
 
 									//bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
 									int messageSize = OSADA_BLOCK_SIZE;//se tienen que enviar bloques enteros SIEMPRE

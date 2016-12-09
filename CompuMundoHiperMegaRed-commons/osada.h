@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <commons/log.h>
 #include <commons/bitarray.h>
 #include <commons/collections/list.h>
 #include <commons/string.h>
@@ -82,7 +83,7 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre);
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory);
 int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory);
-int crearUnDirectorio(char *fname, uint16_t parent_directory);
+int crearUnDirectorio(char *fname);
 int borrarUnDirectorio(char *fname, uint16_t parent_directory);
 int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16_t parent_directory);
 
@@ -108,6 +109,7 @@ static int DATA_BLOCKS;
 static int *ARRAY_TABLA_ASIGNACION;
 static osada_file *TABLA_DE_ARCHIVOS;
 
+t_log* logPokeDexServer;
 pthread_mutex_t OSADAmutex;
 pthread_mutex_t HEADERmutex;
 pthread_mutex_t BITMAPmutex;

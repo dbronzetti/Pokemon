@@ -588,7 +588,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 					int cant_bloques_por_leer = size / OSADA_BLOCK_SIZE;
 					int bytes_por_leer = size % OSADA_BLOCK_SIZE;
 
-					log_info(logPokeCliente, "fuse_read - cant_bloques_por_leer: %d\n", cant_bloques_por_leer);
+					log_info(logPokeCliente, "fuse_read - cant_bloques_por_leer: %d\n", cant_bloques_por_leer + 1);
 
 					if (cant_bloques_por_leer == 0){
 						//Receive message size
@@ -771,17 +771,12 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 	exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
 	log_info(logPokeCliente, "fuse_write - buffer: %s\n", buf);
 
-	//5) send posDelaTablaDeArchivos
-	exitCode = sendMessage(&socketPokeServer, &posDelaTablaDeArchivos , sizeof(posDelaTablaDeArchivos) );
-	log_info(logPokeCliente, "fuse_write - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
-
 	//Receive message size
-	int ultimoPunteroDeLosBloques_write2;
-	int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write2 ,sizeof(ultimoPunteroDeLosBloques_write2));
-	log_info(logPokeCliente, "fuse_write -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
-	printf("fuse_write - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
+	int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write ,sizeof(ultimoPunteroDeLosBloques_write));
+	log_info(logPokeCliente, "fuse_write -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write);
+	printf("fuse_write - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write);
 
-	buf="";
+	bzero(buf,size);
 
 	return size;
 }

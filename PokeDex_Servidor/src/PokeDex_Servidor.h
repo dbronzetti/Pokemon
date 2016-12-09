@@ -12,10 +12,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "sockets.h"
-#include "commons/log.h"
-#include "commons/collections/list.h"
 
-t_log* logPokeDexServer;
 pthread_mutex_t mutexG;
 
 int PORT=0;

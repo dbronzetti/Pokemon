@@ -11,7 +11,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sockets.h"
-#include "commons/log.h"
 #include "commons/config.h"
 #include "metadata.h"
 

@@ -20,8 +20,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <commons/string.h>
-#include <commons/collections/list.h>
 #include "osada.h"
 
 typedef enum{

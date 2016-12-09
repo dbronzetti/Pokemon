@@ -49,7 +49,7 @@ char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
 }
 
 void mostarAsignacion(int asignado){
-	printf("Array tabla asignada: %i\n",asignado);
+	log_info(logPokeDexServer, "Array tabla asignada: %i",asignado);
 }
 
 void mostrarTodosLosAsignados(int *arrayTabla, int numeroBloques){
@@ -82,14 +82,14 @@ void mostrarTodaLaTablaDeArchivos(osada_file *tablaDeArchivo){
 }
 
 void mostrarStructDeArchivos(osada_file tablaDeArchivo, int pos){
-	printf("Empieza: %i****************\n",pos);
-	printf("state_%i: %c\n",pos, tablaDeArchivo.state);
-	printf("parent_directory_%i: %i\n",pos, tablaDeArchivo.parent_directory);
-	printf("fname_%i: %s\n",pos, &tablaDeArchivo.fname);
-	printf("file_size_%i: %i\n",pos, tablaDeArchivo.file_size);
-	printf("lastmod_%i: %i\n",pos, tablaDeArchivo.lastmod);
-	printf("first_block_%i: %i\n",pos, tablaDeArchivo.first_block);
-	printf("Termina: %i****************\n",pos);
+	log_info(logPokeDexServer, "Empieza: %i****************",pos);
+	log_info(logPokeDexServer, "state_%i: %c",pos, tablaDeArchivo.state);
+	log_info(logPokeDexServer, "parent_directory_%i: %i",pos, tablaDeArchivo.parent_directory);
+	log_info(logPokeDexServer, "fname_%i: %s",pos, &tablaDeArchivo.fname);
+	log_info(logPokeDexServer, "file_size_%i: %i",pos, tablaDeArchivo.file_size);
+	log_info(logPokeDexServer, "lastmod_%i: %i",pos, tablaDeArchivo.lastmod);
+	log_info(logPokeDexServer, "first_block_%i: %i",pos, tablaDeArchivo.first_block);
+	log_info(logPokeDexServer, "Termina: %i****************",pos);
 }
 
 osada_file *obtenerTablaDeArchivos(){
@@ -122,24 +122,24 @@ void contarBloques(){
 		pthread_mutex_lock(&BITMAPmutex);
 		if(bitarray_test_bit(BITMAP, i) == 0){
 			bloquesLibres++;
-			//printf("Bloque - %i - LIBRE\n",i);
+			//log_info(logPokeDexServer, "Bloque - %i - LIBRE",i);
 		}
 		pthread_mutex_unlock(&BITMAPmutex);
 
 		pthread_mutex_lock(&BITMAPmutex);
 		if(bitarray_test_bit(BITMAP, i) == 1){
 			bloquesOcupados++;
-			//printf("Bloque - %i - OCUPADO\n",i);
+			//log_info(logPokeDexServer, "Bloque - %i - OCUPADO",i);
 		}
 		pthread_mutex_unlock(&BITMAPmutex);
 
 	}
-	//printf("Bloques Ocupados: %i\n",bloquesOcupados);
-	//printf("Bloques Libres: %i\n",bloquesLibres);
-	//printf("bytes libres: %i\n",bloquesLibres*64);
+	//log_info(logPokeDexServer, "Bloques Ocupados: %i",bloquesOcupados);
+	//log_info(logPokeDexServer, "Bloques Libres: %i",bloquesLibres);
+	//log_info(logPokeDexServer, "bytes libres: %i",bloquesLibres*64);
 	BYTES_LIBRES = bloquesLibres*64;
 	BYTES_OCUPADOS = bloquesOcupados*64;
-	printf("kb libres: %d\n", (bloquesLibres*64)/1024);
+	log_info(logPokeDexServer, "kb libres: %d", (bloquesLibres*64)/1024);
 
 }
 
@@ -176,13 +176,13 @@ t_bitarray *obtenerBitmap(){
 
 void mostrarHeader(osada_header *osadaHeaderFile){
 	pthread_mutex_lock(&HEADERmutex);
-	printf("magic_number 2: %s\n",  osadaHeaderFile->magic_number);
-	printf("version: %i\n", osadaHeaderFile->version);
-	printf("fs_blocks: %i\n", osadaHeaderFile->fs_blocks);
-	printf("bitmap_blocks: %i\n", osadaHeaderFile->bitmap_blocks);
-	printf("allocations_table_offset: %i\n", osadaHeaderFile->allocations_table_offset);
-	printf("data_blocks: %i\n", osadaHeaderFile->data_blocks);
-	printf("padding: %s\n",   osadaHeaderFile->padding);
+	log_info(logPokeDexServer, "magic_number 2: %s",  osadaHeaderFile->magic_number);
+	log_info(logPokeDexServer, "version: %i", osadaHeaderFile->version);
+	log_info(logPokeDexServer, "fs_blocks: %i", osadaHeaderFile->fs_blocks);
+	log_info(logPokeDexServer, "bitmap_blocks: %i", osadaHeaderFile->bitmap_blocks);
+	log_info(logPokeDexServer, "allocations_table_offset: %i", osadaHeaderFile->allocations_table_offset);
+	log_info(logPokeDexServer, "data_blocks: %i", osadaHeaderFile->data_blocks);
+	log_info(logPokeDexServer, "padding: %s",   osadaHeaderFile->padding);
 	pthread_mutex_unlock(&HEADERmutex);
 }
 
@@ -209,7 +209,7 @@ int setearTamanioDelArchivo(int archivoID){
 }
 
 int obtenerIDDelArchivo(char *ruta){
-	printf("ruta: %s\n", ruta);
+	log_info(logPokeDexServer, "ruta: %s", ruta);
 	return open(ruta, O_RDWR, (mode_t)0777);
 }
 void setearConstantesDePosicionDeOsada(){
@@ -227,16 +227,16 @@ void setearConstantesDePosicionDeOsada(){
 	pthread_mutex_unlock(&DATA_BLOCKSmutex);
 	//dataBlocks=  osadaHeaderFile->allocations_table_offset + tamanioQueOcupaLaTablaDeAsignacionEnBloques;
 
-	printf("HEADER->fs_blocks - HEADER->data_blocks: %i\n",HEADER->fs_blocks - HEADER->data_blocks);
+	log_info(logPokeDexServer, "HEADER->fs_blocks - HEADER->data_blocks: %i",HEADER->fs_blocks - HEADER->data_blocks);
 	pthread_mutex_unlock(&HEADERmutex);
-	printf("dataBlocks: %i\n",DATA_BLOCKS);
+	log_info(logPokeDexServer, "dataBlocks: %i",DATA_BLOCKS);
 
 	DESDE_PARA_BITMAP = OSADA_BLOCK_SIZE;//LO QUE OCUPA EL HEADER
 	DESDE_PARA_TABLA_DE_ARCHIVOS  = OSADA_BLOCK_SIZE + TAMANIO_DEL_BITMAP;
 	DESDE_PARA_TABLA_ASIGNACION  = TAMANIO_QUE_OCUPA_EL_HEADER + TAMANIO_DEL_BITMAP + TAMANIO_TABLA_DE_ARCHIVOS;
 	DESDE_PARA_BLOQUE_DE_DATOS = TAMANIO_QUE_OCUPA_EL_HEADER + TAMANIO_DEL_BITMAP + TAMANIO_TABLA_DE_ARCHIVOS + TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION;
-	printf("desdeParaTablaAsigancion: %i\n",DESDE_PARA_TABLA_ASIGNACION );
-	printf("desdeParaBloqueDeDatos: %i\n",DESDE_PARA_BLOQUE_DE_DATOS);
+	log_info(logPokeDexServer, "desdeParaTablaAsigancion: %i",DESDE_PARA_TABLA_ASIGNACION );
+	log_info(logPokeDexServer, "desdeParaBloqueDeDatos: %i",DESDE_PARA_BLOQUE_DE_DATOS);
 }
 
 
@@ -244,10 +244,10 @@ unsigned char *inicializarOSADA(int archivoID){
 	unsigned char *osada;
 	setlocale(LC_ALL, "es_ES.UTF-8");
 	/************************************************************/
-	printf("Locale is: %s\n", setlocale(LC_ALL, "es_ES.UTF-8"));
-	printf("Que paso?: %s\n", strerror(errno));
-	printf("archivoID: %i\n", archivoID);
-	printf("tamanio: %i\n", TAMANIO_DEL_ARCHIVO_OSADA_EN_BYTES);
+	log_info(logPokeDexServer, "Locale is: %s", setlocale(LC_ALL, "es_ES.UTF-8"));
+	log_info(logPokeDexServer, "Que paso?: %s", strerror(errno));
+	log_info(logPokeDexServer, "archivoID: %i", archivoID);
+	log_info(logPokeDexServer, "tamanio: %i", TAMANIO_DEL_ARCHIVO_OSADA_EN_BYTES);
 	/************************************************************/
 
 
@@ -267,7 +267,7 @@ void _iterarParaVerContenido(int bloque){
 	int bloque2 = bloque *64;
 	int i;
 	//tamanioQueOcupaElBloqueDeDatos ir de atras con los bloques.
-	//printf("%i\n", dataBlocks);
+	//log_info(logPokeDexServer, "%i", dataBlocks);
 	pthread_mutex_lock(&OSADAmutex);
 	pthread_mutex_lock(&DATA_BLOCKSmutex);
 	memcpy(bloqueDeDatos, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
@@ -276,9 +276,9 @@ void _iterarParaVerContenido(int bloque){
 
 //	for(i=1; i<=64; i++){
 	bloqueDeDatos[OSADA_BLOCK_SIZE + 1] = '\0';
-		printf("%s", bloqueDeDatos);
+		log_info(logPokeDexServer, "%s", bloqueDeDatos);
 	//}
-	//printf("\nTERMINO\n");
+	//log_info(logPokeDexServer, "\nTERMINO");
 	free(bloqueDeDatos);
 
 
@@ -290,7 +290,7 @@ void verContenidoDeArchivo(t_list *conjuntoDeBloques){
 }
 
 void _iterarBloques(int bloque){
-	printf("_iterarBloques el proximo: %i\n", bloque);
+	log_info(logPokeDexServer, "_iterarBloques el proximo: %i", bloque);
 }
 
 
@@ -328,21 +328,21 @@ osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint1
 	string_trim(&tablaDeArchivoNombreDeArchivoParaSerLimpiadoEnElTrim);
 	string_trim(&n);
 	/*
-	printf("tablaDeArchivo.parent_directory: %i\n", tablaDeArchivo.parent_directory);
-	printf("parent_directory_: %i\n", parent_directory);
-	printf("nac: %s\n",tablaDeArchivoNombreDeArchivoParaSerLimpiadoEnElTrim);
-	printf("n: %s\n",n);
+	log_info(logPokeDexServer, "tablaDeArchivo.parent_directory: %i", tablaDeArchivo.parent_directory);
+	log_info(logPokeDexServer, "parent_directory_: %i", parent_directory);
+	log_info(logPokeDexServer, "nac: %s",tablaDeArchivoNombreDeArchivoParaSerLimpiadoEnElTrim);
+	log_info(logPokeDexServer, "n: %s",n);
 	*/
 	if (tablaDeArchivo.parent_directory == parent_directory && tablaDeArchivo.state == REGULAR && strcmp(tablaDeArchivoNombreDeArchivoParaSerLimpiadoEnElTrim, n) == 0){
 		free(tablaDeArchivoNombreDeArchivoParaSerLimpiadoEnElTrim);
 		free(n);
 		/*
-		printf("state_: %c\n", tablaDeArchivo.state);
-		printf("parent_directory_: %i\n", tablaDeArchivo.parent_directory);
-		printf("fname_: %s\n",&tablaDeArchivo.fname);
-		printf("file_size_: %i\n",tablaDeArchivo.file_size);
-		printf("lastmod_: %i\n", tablaDeArchivo.lastmod);
-		printf("first_block_: %i\n",tablaDeArchivo.first_block);
+		log_info(logPokeDexServer, "state_: %c", tablaDeArchivo.state);
+		log_info(logPokeDexServer, "parent_directory_: %i", tablaDeArchivo.parent_directory);
+		log_info(logPokeDexServer, "fname_: %s",&tablaDeArchivo.fname);
+		log_info(logPokeDexServer, "file_size_: %i",tablaDeArchivo.file_size);
+		log_info(logPokeDexServer, "lastmod_: %i", tablaDeArchivo.lastmod);
+		log_info(logPokeDexServer, "first_block_: %i",tablaDeArchivo.first_block);
 		*/
 		return tablaDeArchivo.first_block;
 	}
@@ -355,20 +355,20 @@ osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint1
 
 
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory){
-	printf("******************************** ENTRO EN EL devolverOsadaBlockPointer ******************************** \n");
+	log_info(logPokeDexServer, "******************************** ENTRO EN EL devolverOsadaBlockPointer ******************************** ");
 	int pos=0;
 	osada_block_pointer posicion = -999;
 	char *file_name = strrchr (nombre, '/') + 1;
-	printf("file_name: %s\n", file_name);
+	log_info(logPokeDexServer, "file_name: %s", file_name);
 	bool found = false;
 
-	printf("devolverOsadaBlockPointer - parent_directory: %i\n", parent_directory);
+	log_info(logPokeDexServer, "devolverOsadaBlockPointer - parent_directory: %i", parent_directory);
 
 	for (pos=0; pos <= 2047; pos++){
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if ((posicion = comprobarElNombreDelArchivo(TABLA_DE_ARCHIVOS[pos], parent_directory,  file_name)) != -666){
-			printf("devolverOsadaBlockPointer - Encontro archivo - pos:  %i\n", pos);
+			log_info(logPokeDexServer, "devolverOsadaBlockPointer - Encontro archivo - pos:  %i", pos);
 			found = true;
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -378,16 +378,16 @@ osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_dire
 		}
 	}
 
-	printf("******************************* devolverOsadaBlockPointer- NO LO ENCONTRO! ******************************* \n");
+	log_info(logPokeDexServer, "******************************* devolverOsadaBlockPointer- NO LO ENCONTRO! ******************************* ");
 	return posicion;
 }
 
 int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
-	printf("******************************** ENTRO EN buscarElArchivo  ******************************** \n");
+	log_info(logPokeDexServer, "******************************** ENTRO EN buscarElArchivo  ******************************** ");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
-	//printf("file_name: %s\n", file_name);
+	//log_info(logPokeDexServer, "file_name: %s", file_name);
 	bool found = false;
 	for (pos=0; pos <= 2047; pos++){
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
@@ -398,15 +398,15 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 		n = string_duplicate(file_name);
 		string_trim(&nac);
 		string_trim(&n);
-		//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
+		//log_info(logPokeDexServer, "nac: %s", &TABLA_DE_ARCHIVOS[pos].fname);
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			printf("******************************* buscarElArchivoYDevolverPosicion - LO ENCONTRO! ******************************* \n");
+			log_info(logPokeDexServer, "******************************* buscarElArchivoYDevolverPosicion - LO ENCONTRO! ******************************* ");
 			found = true;
 		}else if(TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) != 0 && pos == 2047){
 			pos =-666;
-			printf("******************************* buscarElArchivoYDevolverPosicion - NO LO ENCONTRO! ******************************* \n");
+			log_info(logPokeDexServer, "******************************* buscarElArchivoYDevolverPosicion - NO LO ENCONTRO! ******************************* ");
 
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -422,11 +422,11 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 }
 
 osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_directory, int* posicionTablaDeArchivo){
-	printf("******************************** ENTRO EN buscarElArchivoYDevolverOsadaFile  ******************************** \n");
+	log_info(logPokeDexServer, "******************************** ENTRO EN buscarElArchivoYDevolverOsadaFile  ******************************** ");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
-	//printf("file_name: %s\n", file_name);
+	//log_info(logPokeDexServer, "file_name: %s", file_name);
 	bool found = false;
 	for (pos=0; pos <= 2047; pos++){
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
@@ -435,22 +435,23 @@ osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_direc
 			char *n   = string_duplicate(file_name);
 			string_trim(&nac);
 			string_trim(&n);
-			//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
+			//log_info(logPokeDexServer, "nac: %s", &TABLA_DE_ARCHIVOS[pos].fname);
 			if (strcmp(nac, n) == 0){
-				printf("*******************************buscarElArchivoYDevolverOsadaFile - LO ENCONTRO! ******************************* \n");
+				log_info(logPokeDexServer, "*******************************buscarElArchivoYDevolverOsadaFile - LO ENCONTRO! ******************************* ");
 				found = true;
 			}
 			free(nac);
 			free(n);
-			if(found){
-				break;
-			}
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+
+		if(found){
+			break;
+		}
 	}
 	if(!found){
 		*posicionTablaDeArchivo=-666;
-		printf("******************************* buscarElArchivoYDevolverOsadaFile -NO LO ENCONTRO! ******************************* \n");
+		log_info(logPokeDexServer, "******************************* buscarElArchivoYDevolverOsadaFile -NO LO ENCONTRO! ******************************* ");
 	}else{
 		*posicionTablaDeArchivo=pos;
 	}
@@ -477,11 +478,11 @@ void borrarBloquesDelBitmap(t_list *listado){
 }
 
 int ingresarElUTIMENS(char *nombre, uint16_t parent_directory, int tv_nsec){
-	printf("******************************** ENTRO EN borrarUnArchivo  ******************************** \n");
+	log_info(logPokeDexServer, "******************************** ENTRO EN borrarUnArchivo  ******************************** ");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
-	printf("file_name: %s\n", file_name);
+	log_info(logPokeDexServer, "file_name: %s", file_name);
 
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
@@ -495,7 +496,7 @@ int ingresarElUTIMENS(char *nombre, uint16_t parent_directory, int tv_nsec){
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			printf("******************************* LO ENCONTRO! ******************************* \n");
+			log_info(logPokeDexServer, "******************************* LO ENCONTRO! ******************************* ");
 			TABLA_DE_ARCHIVOS[pos].lastmod = tv_nsec;
 			posicion = pos;
 
@@ -511,11 +512,11 @@ int ingresarElUTIMENS(char *nombre, uint16_t parent_directory, int tv_nsec){
 }
 
 int borrarUnArchivo(char *nombre, uint16_t parent_directory){
-	printf("******************************** ENTRO EN borrarUnArchivo  ******************************** \n");
+	log_info(logPokeDexServer, "******************************** ENTRO EN borrarUnArchivo  ******************************** ");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
-	printf("file_name: %s\n", file_name);
+	log_info(logPokeDexServer, "file_name: %s", file_name);
 
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
@@ -529,7 +530,7 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			printf("******************************* LO ENCONTRO! ******************************* \n");
+			log_info(logPokeDexServer, "******************************* LO ENCONTRO! ******************************* ");
 			TABLA_DE_ARCHIVOS[pos].state = DELETED;
 			posicion = pos;
 
@@ -545,16 +546,16 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 }
 
 int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory){
-	printf("******************************** ENTRO EN sobreescribirNombre  ******************************** \n");
+	log_info(logPokeDexServer, "******************************** ENTRO EN sobreescribirNombre  ******************************** ");
 	int pos=0;
 	osada_block_pointer posicion = 0;
-	printf("antes file_name: %s\n", nombre);
-	printf("antes nuevoNombre: %s\n", nuevoNombre);
+	log_info(logPokeDexServer, "antes file_name: %s", nombre);
+	log_info(logPokeDexServer, "antes nuevoNombre: %s", nuevoNombre);
 	char *file_name = strrchr (nombre, '/') + 1;
-	printf("file_name: %s\n", file_name);
+	log_info(logPokeDexServer, "file_name: %s", file_name);
 
 	char *nuevo_Nombre = strrchr (nuevoNombre, '/') + 1;
-	printf("nuevo_Nombre: %s\n", nuevo_Nombre);
+	log_info(logPokeDexServer, "nuevo_Nombre: %s", nuevo_Nombre);
 	bool found = false;
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
@@ -566,11 +567,11 @@ int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directo
 		string_trim(&nac);
 		string_trim(&n);
 
-		//printf("nac: %s\n", &TABLA_DE_ARCHIVOS[pos].fname);
+		//log_info(logPokeDexServer, "nac: %s", &TABLA_DE_ARCHIVOS[pos].fname);
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			printf("******************************* LO ENCONTRO - sobreescribirNombre! ******************************* \n");
+			log_info(logPokeDexServer, "******************************* LO ENCONTRO - sobreescribirNombre! ******************************* ");
 
 			strcpy(TABLA_DE_ARCHIVOS[pos].fname, "\0");
 			strcat(TABLA_DE_ARCHIVOS[pos].fname, nuevo_Nombre);
@@ -649,10 +650,15 @@ int obtener_bloque_archivo(const char* path)
 
 }
 
-int obtener_bloque_padre (const char* path)
+int obtener_Nuevo_padre (const char* path)
 {
+	int sizeVectorPath = 0;
 	char** vector_path = armar_vector_path(path);
 	char *file_name = strrchr (path, '/') + 1;
+
+	while (vector_path[sizeVectorPath] != NULL){
+		sizeVectorPath++;
+	}
 
 	int parent_dir = 65535;
 
@@ -664,14 +670,16 @@ int obtener_bloque_padre (const char* path)
 			for (j = 0; j <= 2047; j++){
 				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir)){
-					/*
-					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s \n",TABLA_DE_ARCHIVOS[j].fname);
-					printf("****************obtener_bloque_padre - vector_path[i]: %s \n",vector_path[i]);
-					printf("****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i \n",TABLA_DE_ARCHIVOS[j].parent_directory);
-					printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
-					printf("****************obtener_bloque_padre - j: %i \n", j);
-					*/
-					parent_dir = j;
+
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - TABLA_DE_ARCHIVOS[j].fname: %s ",TABLA_DE_ARCHIVOS[j].fname);
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - vector_path[i]: %s ",vector_path[i]);
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i ",TABLA_DE_ARCHIVOS[j].parent_directory);
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - parent_dir: %i ", parent_dir);
+					log_info(logPokeDexServer, "****************obtener_Nuevo_padre - j: %i ", j);
+
+					if(sizeVectorPath != i){
+						parent_dir = j;
+					}
 
 				}
 				pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -679,7 +687,47 @@ int obtener_bloque_padre (const char* path)
 			i++;
 		}
 	}
-	printf("****************obtener_bloque_padre - parent_dir: %i \n", parent_dir);
+	log_info(logPokeDexServer, "****************obtener_Nuevo_padre - parent_dir: %i ", parent_dir);
+	return parent_dir;
+}
+
+
+int obtener_bloque_padre (const char* path)
+{
+	int sizeVectorPath = 0;
+	char** vector_path = armar_vector_path(path);
+	char *file_name = strrchr (path, '/') + 1;
+
+	while (vector_path[sizeVectorPath] != NULL){
+		sizeVectorPath++;
+	}
+
+	int parent_dir = 65535;
+
+	if ( strcmp (file_name, strrchr(path, '/')) !=0 )
+	{
+		int i = 0;
+		while (vector_path[i] != NULL){
+			int j;
+			for (j = 0; j <= 2047; j++){
+				pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+				if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir)){
+
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].fname: %s ",TABLA_DE_ARCHIVOS[j].fname);
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - vector_path[i]: %s ",vector_path[i]);
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - TABLA_DE_ARCHIVOS[j].parent_directory: %i ",TABLA_DE_ARCHIVOS[j].parent_directory);
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - parent_dir: %i ", parent_dir);
+					log_info(logPokeDexServer, "****************obtener_bloque_padre - j: %i ", j);
+
+					parent_dir = TABLA_DE_ARCHIVOS[j].parent_directory;
+
+				}
+				pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+			}
+			i++;
+		}
+	}
+	log_info(logPokeDexServer, "****************obtener_bloque_padre - parent_dir: %i ", parent_dir);
 	return parent_dir;
 }
 
@@ -689,13 +737,13 @@ int noEsVacio(int tamanio){
 }
 
 int elTamanioDelArchivoEntraEnElOsada(int tamanio){
-	printf("BYTES_LIBRES: %i\n",BYTES_LIBRES);
+	log_info(logPokeDexServer, "BYTES_LIBRES: %i",BYTES_LIBRES);
 	return tamanio<=BYTES_LIBRES;
 }
 
 void modificarEnLaTablaDeArchivos(int file_size, int posDelaTablaDeArchivos, int first_block){
-	printf("modificarEnLaTablaDeArchivos - posDelaTablaDeArchivos: %i \n", posDelaTablaDeArchivos);
-	printf("modificarEnLaTablaDeArchivos - file_size: %i \n", file_size);
+	log_info(logPokeDexServer, "modificarEnLaTablaDeArchivos - posDelaTablaDeArchivos: %i ", posDelaTablaDeArchivos);
+	log_info(logPokeDexServer, "modificarEnLaTablaDeArchivos - file_size: %i ", file_size);
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size = file_size;
 	if(TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].first_block==-999){
@@ -706,43 +754,43 @@ void modificarEnLaTablaDeArchivos(int file_size, int posDelaTablaDeArchivos, int
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	printf("modificarEnLaTablaDeArchivos - guarda osada 2 fuera\n");
+	log_info(logPokeDexServer, "modificarEnLaTablaDeArchivos - guarda osada fuera");
 
 }
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos){
-	printf("****** escribirEnLaTablaDeArchivos\n");
+	log_info(logPokeDexServer, "****** escribirEnLaTablaDeArchivos");
 	int pos=0;
 	int encontroLugar = 0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
-	printf("file_name: %s\n", file_name);
+	log_info(logPokeDexServer, "file_name: %s", file_name);
 	bool found = false;
     if (posDelaTablaDeArchivos == -999){//SI SE CREA EL ARCHIVO POR PRIMERA VEZ
 
 		for (pos=0; pos <= 2047; pos++){
-			//printf("EN EL FOR\n");
+			//log_info(logPokeDexServer, "EN EL FOR");
 			pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 			if (TABLA_DE_ARCHIVOS[pos].state == DELETED && TABLA_DE_ARCHIVOS[pos].state != REGULAR && TABLA_DE_ARCHIVOS[pos].state !=DIRECTORY){
-				//printf("EN EL if\n");
+				//log_info(logPokeDexServer, "EN EL if");
 				TABLA_DE_ARCHIVOS[pos].state = REGULAR;
-				//printf("state\n");
+				//log_info(logPokeDexServer, "state");
 
 				TABLA_DE_ARCHIVOS[pos].parent_directory = parent_directory;
-				//printf("parent_directory: %i\n",parent_directory);
+				//log_info(logPokeDexServer, "parent_directory: %i",parent_directory);
 
-				//printf("fname: %s\n", fname);
-				//printf("sizeof(fname): %i\n", strlen(file_name));
+				//log_info(logPokeDexServer, "fname: %s", fname);
+				//log_info(logPokeDexServer, "sizeof(fname): %i", strlen(file_name));
 				strcpy(TABLA_DE_ARCHIVOS[pos].fname, "\0");
 				strcat(TABLA_DE_ARCHIVOS[pos].fname, file_name);
 
-				//printf("fname: %s\n", file_name);
+				//log_info(logPokeDexServer, "fname: %s", file_name);
 				TABLA_DE_ARCHIVOS[pos].file_size = file_size;
-				//printf("file_size: %i\n",file_size);
+				//log_info(logPokeDexServer, "file_size: %i",file_size);
 				TABLA_DE_ARCHIVOS[pos].lastmod = 0;
-				//printf("lastmod\n");
+				//log_info(logPokeDexServer, "lastmod");
 
 				TABLA_DE_ARCHIVOS[pos].first_block= first_block;
-				//printf("first_block: %i\n",first_block);
+				//log_info(logPokeDexServer, "first_block: %i",first_block);
 
 				found = true;
 
@@ -768,13 +816,13 @@ int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname
 		pos=posDelaTablaDeArchivos;
 	}
 
-	//printf("k: %i\n", k);
-	//printf("tablaDeArchivo[k].fname: %s\n", TABLA_DE_ARCHIVOS[k].fname);
-	//printf("tablaDeArchivo[k].first_block: %i\n", TABLA_DE_ARCHIVOS[k].first_block);
+	//log_info(logPokeDexServer, "k: %i", k);
+	//log_info(logPokeDexServer, "tablaDeArchivo[k].fname: %s", TABLA_DE_ARCHIVOS[k].fname);
+	//log_info(logPokeDexServer, "tablaDeArchivo[k].first_block: %i", TABLA_DE_ARCHIVOS[k].first_block);
     pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	printf("guarda osada 2 fuera\n");
+	log_info(logPokeDexServer, "guarda osada 2 fuera");
 	return pos;
 
 }
@@ -785,7 +833,7 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantBloquesDeseados
 	int bloquesObtenidos = 0;
 	int i = 0;
 
-	printf("HEADER->fs_blocks:  %i\n",HEADER->fs_blocks);
+	log_info(logPokeDexServer, "HEADER->fs_blocks:  %i",HEADER->fs_blocks);
 	pthread_mutex_lock(&HEADERmutex);
 	uint32_t fs_blocks = HEADER->fs_blocks;
 	pthread_mutex_unlock(&HEADERmutex);
@@ -795,7 +843,7 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantBloquesDeseados
 		if(bitarray_test_bit(BITMAP, i) == 0){
 			list_add(listDeBloques, i);
 			bloquesObtenidos++;
-			//printf("Bloque - %i - LIBRE\n",i);
+//			log_info(logPokeDexServer, "Bloque - %i - LIBRE",i);
 			bitarray_set_bit(BITMAP, i);
 		}
 		pthread_mutex_unlock(&BITMAPmutex);
@@ -826,15 +874,14 @@ void escribirTablaDeAsignacion(int pos, int bloqueSiguiente){
 
 
 void _interarBloquesQueSeranAsignados(int bloque,int hola){
-	printf("el proximo: %i\n", bloque);
+	log_info(logPokeDexServer, "el proximo: %i", bloque);
 }
 
-void _prepararLaVariableGlobalParaGuadar(char* bloquePos, int* bloqueSig) {
+void _prepararLaVariableGlobalParaGuadar(char* bloquePos, int bloqueSig) {
 
-	//printf("Bloque Pos: %i\n", atoi(bloquePos));
-	//printf("Bloque Sig: %i\n", bloqueSig);
-	escribirTablaDeAsignacion(atoi(bloquePos), *bloqueSig);
-
+//	log_info(logPokeDexServer, "Bloque Pos: %i", atoi(bloquePos));
+//	log_info(logPokeDexServer, "Bloque Sig: %i", bloqueSig);
+	escribirTablaDeAsignacion(atoi(bloquePos), bloqueSig);
 
 	//free(archivo);
 
@@ -842,8 +889,8 @@ void _prepararLaVariableGlobalParaGuadar(char* bloquePos, int* bloqueSig) {
 
 //JOEL: NO DEBERIA USARSE MAS
 void _guardarEnTablaDeDatos(char* bloquePos, unsigned char* contenido){
-	//printf("_guardarEnTablaDeDatos - Bloque Pos: %i\n", atoi(bloquePos));
-	//printf("_guardarEnTablaDeDatos - contenido: %s\n",contenido);
+	//log_info(logPokeDexServer, "_guardarEnTablaDeDatos - Bloque Pos: %i", atoi(bloquePos));
+	//log_info(logPokeDexServer, "_guardarEnTablaDeDatos - contenido: %s",contenido);
 	int bloquePosInt = 0;
 	bloquePosInt = atoi(bloquePos);
 	int tamanioDelBloque = bloquePosInt *64;
@@ -852,7 +899,7 @@ void _guardarEnTablaDeDatos(char* bloquePos, unsigned char* contenido){
 	pthread_mutex_lock(&DATA_BLOCKSmutex);
 
 	memcpy(&OSADA[DATA_BLOCKS+tamanioDelBloque], contenido, OSADA_BLOCK_SIZE );
-	printf("_guardarEnTablaDeDatos - bloqueDeDatos: %s\n" ,contenido);
+	log_info(logPokeDexServer, "_guardarEnTablaDeDatos - bloqueDeDatos: %s" ,contenido);
 
 	pthread_mutex_unlock(&DATA_BLOCKSmutex);
 	pthread_mutex_unlock(&OSADAmutex);
@@ -863,28 +910,23 @@ void _guardarEnTablaDeDatos(char* bloquePos, unsigned char* contenido){
 
 
 void guardarBloqueDeDatos(t_list* listado, unsigned char *contenido){
-	printf("********** INICIO guardarBloqueDeDatos\n");
+	//log_info(logPokeDexServer, "********** INICIO guardarBloqueDeDatos");
 
 	int cantidadDeBloques = list_size(listado);
 	int bloquePos;
 	int i=0;
 
-	unsigned char *bloqueConDatos;
-	bloqueConDatos = malloc(OSADA_BLOCK_SIZE);
-
 	for(i = 0; i < cantidadDeBloques; i++){
-		//bloqueConDatos = string_repeat("\0", OSADA_BLOCK_SIZE);
-		memset(bloqueConDatos, 0, OSADA_BLOCK_SIZE);
 
 		bloquePos = list_get(listado, i);
 		int tamanioDelBloque = bloquePos * OSADA_BLOCK_SIZE;
 
 		pthread_mutex_lock(&OSADAmutex);
-			memcpy(&OSADA[DATA_BLOCKS + tamanioDelBloque], &contenido[i * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE );
+		memcpy(&OSADA[DATA_BLOCKS + tamanioDelBloque], &contenido[i * OSADA_BLOCK_SIZE ], OSADA_BLOCK_SIZE );
 		pthread_mutex_unlock(&OSADAmutex);
 
 	}
-	printf("**********FIN guardarBloqueDeDatos\n");
+	//log_info(logPokeDexServer, "**********FIN guardarBloqueDeDatos");
 }
 
 int calcularCantidadDeBloquesParaGrabar(int tamanio){
@@ -921,12 +963,12 @@ t_dictionary *armarDicDeTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesD
 	t_dictionary *dictionary = dictionary_create();
 	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
 
-	printf("cantidadDeElemento: %i\n", cantidadDeElemento);
+	log_info(logPokeDexServer, "cantidadDeElemento: %i", cantidadDeElemento);
 	for(i=0;i<cantidadDeElemento;i++){
 		bloquePosStr = string_repeat("\0", 10);
 		bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 		bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
-		//printf("bloquePos: %i\n", bloquePos);
+		//log_info(logPokeDexServer, "bloquePos: %i", bloquePos);
 
 		if(bloqueSig==0){
 			bloqueSig =-1;
@@ -936,14 +978,14 @@ t_dictionary *armarDicDeTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesD
 
 		dictionary_put(dictionary, bloquePosStr, bloqueSig);
 
-		//printf("bloqueSig: %i\n",bloqueSig);
+		//log_info(logPokeDexServer, "bloqueSig: %i",bloqueSig);
 
 	}
 	free(bloquePosStr);
 	return dictionary;
 }
 
-void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* listadoLosIndicesDeLosBloquesDisponibles, int ultimoPuntero){
+void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles, int ultimoPuntero){
 	bool flag = true;
 	int cantidadDeElemento = 0;
 	int bloquePos;
@@ -953,13 +995,13 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* list
 	t_dictionary *dictionary = dictionary_create();
 	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
 
-	printf("cantidadDeElemento: %i\n", cantidadDeElemento);
+	log_info(logPokeDexServer, "cantidadDeElemento: %i", cantidadDeElemento);
 	for(i = 0; i < cantidadDeElemento; i++){
-		char *bloquePosStr = string_repeat("\0", sizeof(bloquePos));
+
 
 		if (i==0){
 			if(ultimoPuntero!=-999){ //El ultimo puntero de un archivo nuevo se crea con -999
-				bloquePos =ultimoPuntero;
+				bloquePos = ultimoPuntero;
 				bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 			}else{
 				 flag = false;
@@ -971,18 +1013,18 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* list
 		}
 
 		if(flag){
-			memcpy(bloquePosStr,&bloquePos,sizeof(bloquePos));
-			dictionary_put(dictionary, bloquePosStr, &bloqueSig);
+			char *bloquePosStr = string_new();
+			string_append(&bloquePosStr,string_itoa(bloquePos));
+			dictionary_put(dictionary, bloquePosStr, bloqueSig);
 		}
+
 	}
 
-
-	char *bloquePosStr = string_repeat("\0", sizeof(bloqueSig));
 	// Al ultimo bloque utilizado le asigno el final de Archivo.
-	memcpy(bloquePosStr,&bloqueSig,sizeof(bloqueSig));
+	char *bloquePosStr = string_new();
+	string_append(&bloquePosStr,string_itoa(bloqueSig));
 	bloqueSig =-1;
-	dictionary_put(dictionary, bloquePosStr, &bloqueSig);
-
+	dictionary_put(dictionary, bloquePosStr, bloqueSig);
 
 	dictionary_iterator(dictionary, (void*) _prepararLaVariableGlobalParaGuadar);
 	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
@@ -990,52 +1032,8 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(t_list* list
 	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 }
 
-//void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles, t_list* conjuntoDeBloquesDelArchivoViejo){
-//	char *bloquePosStr=malloc(10);
-//	int cantidadDeElemento = 0;
-//	int bloquePos;
-//	int bloqueSig;
-//	int i;
-//	t_dictionary *dictionary = dictionary_create();
-//	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
-//
-//	printf("cantidadDeElemento: %i\n", cantidadDeElemento);
-//	for(i = 0; i < cantidadDeElemento; i++){
-//		bloquePosStr = string_repeat("\0", 10);
-//
-//		if (i==0){
-//			bloquePos =list_get(conjuntoDeBloquesDelArchivoViejo,  list_size(conjuntoDeBloquesDelArchivoViejo)-1);
-//			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
-//		}else{
-//			bloquePos = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
-//			bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i+1);
-//		}
-//		//printf("bloquePos: %i\n", bloquePos);
-//
-//		if(bloqueSig==0){
-//			bloqueSig =-1;
-//			sprintf(bloquePosStr, "%d", bloquePos);
-//			dictionary_put(dictionary, bloquePosStr, bloqueSig);
-//			break;
-//		}
-//
-//		sprintf(bloquePosStr, "%d", bloquePos);
-//
-//		dictionary_put(dictionary, bloquePosStr, bloqueSig);
-//
-//		//printf("bloqueSig: %i\n",bloqueSig);
-//
-//	}
-//	free(bloquePosStr);
-//
-//	dictionary_iterator(dictionary, (void*) _prepararLaVariableGlobalParaGuadar);
-//	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
-//	guardarEnOsada(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
-//	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
-//}
-
 void guardarEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeLosBloquesDisponibles){
-	modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(listadoLosIndicesDeLosBloquesDisponibles,0); //TODO: ESTO ESTA PARA EL CULO
+	modificarAgregandoBloquesEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles,0); //TODO: ESTO ESTA PARA EL CULO
 }
 
 int diferenciaEntreTamanioViejoYNuevo(int tamanioViejo, int tamanioNuevo){
@@ -1052,15 +1050,14 @@ void guardarLaMismaCantidadDeBloques(int cantidadDeBloquesParaGrabar,
 	if (conjuntoDeBloquesDelArchivo->elements_count
 			== cantidadDeBloquesParaGrabar) {
 		//SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO
-		printf(
-				"*SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO\n");
+		log_info(logPokeDexServer, "*SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO");
 		guardarBloqueDeDatos(conjuntoDeBloquesDelArchivo, contenido);
 		modificarEnLaTablaDeArchivos(tamanioNuevo,posDelaTablaDeArchivos, list_get(conjuntoDeBloquesDelArchivo, 0));
 	}
 }
 
 
-int agregarMasDatosAlArchivos_archivosGrandes(osada_file elArchivo,t_list *conjuntoDeBloquesDelArchivo,int posDelaTablaDeArchivos,char *contenido, int tamanioNuevo, char* fname,  uint16_t parent_directory){
+int agregarMasDatosAlArchivos(osada_file elArchivo,t_list *conjuntoDeBloquesDelArchivo,int posDelaTablaDeArchivos,char *contenido, int tamanioNuevo, char* fname,  uint16_t parent_directory){
 	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 
 	int ultimoPuntero = elArchivo.first_block; //Se asigna el primer bloque, para archivos nuevos que contienen -999
@@ -1068,16 +1065,15 @@ int agregarMasDatosAlArchivos_archivosGrandes(osada_file elArchivo,t_list *conju
 		ultimoPuntero = list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1);
 	}
 
-	printf("*********** agregarMasDatosAlArchivos_archivosGrandes - ultimoPuntero: %i\n", ultimoPuntero);
+	log_info(logPokeDexServer, "*********** agregarMasDatosAlArchivos - ultimoPuntero: %i", ultimoPuntero);
 
 	int cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
 	int nuevoSize = elArchivo.file_size + tamanioNuevo;
 
-	//printf("agregarMasDatosAlArchivos_archivosGrandes - SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
+	//log_info(logPokeDexServer, "agregarMasDatosAlArchivos_archivosGrandes - SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO");
 	listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadNuevaDeBloquesParaGrabar);
-	modificarAgregandoBloquesEnLaTablaDeAsignacion_archivosGrandes(listadoLosIndicesDeLosBloquesDisponibles, ultimoPuntero);
+	modificarAgregandoBloquesEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, ultimoPuntero);
 
-	printf("*********** agregarMasDatosAlArchivos_archivosGrandes - ultimoPuntero: %i\n", ultimoPuntero);
 	guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, contenido);
 	modificarEnLaTablaDeArchivos(nuevoSize, posDelaTablaDeArchivos, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0));
 
@@ -1094,7 +1090,7 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 //
 //	if(elTamanioDelArchivoEntraEnElOsada(tamanioNuevo) && noEsVacio(tamanioNuevo)){
 //		osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory,&posDelaTablaDeArchivos);
-//		printf("El archivo size: %i\n", elArchivo.file_size);
+//		log_info(logPokeDexServer, "El archivo size: %i", elArchivo.file_size);
 //
 //		osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
 //
@@ -1106,7 +1102,7 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 //		t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
 //
 //		if (hayNuevosDatosParaAgregar(elArchivo.file_size, tamanioNuevo)){
-//			printf("************ HAY MAS DATOS PARA AGREGAR\n");
+//			log_info(logPokeDexServer, "************ HAY MAS DATOS PARA AGREGAR");
 //			cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
 //
 //			guardarLaMismaCantidadDeBloques(cantidadNuevaDeBloquesParaGrabar,
@@ -1116,11 +1112,11 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 //			if (conjuntoDeBloquesDelArchivo->elements_count <  cantidadNuevaDeBloquesParaGrabar){
 //				//*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n
 //				char *nuevoContenido = string_new();
-//				printf("*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO\n");
+//				log_info(logPokeDexServer, "*SI ES MAYOR LA CANTIDAD DE BLOQUES, ENTONCES CREO  LOS NUEVOS BLOQUES CON EL NUEVO CONTENIDO");
 //				listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadNuevaDeBloquesParaGrabar);
 //				modificarAgregandoBloquesEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, conjuntoDeBloquesDelArchivo);
 //				nuevoContenido = string_substring(contenido, elArchivo.file_size, tamanioNuevo - elArchivo.file_size);
-//				printf("nuevoContenido: %s\n", nuevoContenido);
+//				log_info(logPokeDexServer, "nuevoContenido: %s", nuevoContenido);
 //				guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, nuevoContenido);
 //				modificarEnLaTablaDeArchivos(tamanioNuevo, posDelaTablaDeArchivos, list_get(conjuntoDeBloquesDelArchivo, 0));
 //			}
@@ -1131,7 +1127,7 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 //			*/
 //
 //		}else{
-//			printf("************ HAY MENOS DATOS PARA AGREGAR\n");
+//			log_info(logPokeDexServer, "************ HAY MENOS DATOS PARA AGREGAR");
 //			cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
 //
 //			guardarLaMismaCantidadDeBloques(cantidadNuevaDeBloquesParaGrabar,
@@ -1141,30 +1137,30 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 //			if (conjuntoDeBloquesDelArchivo->elements_count > cantidadNuevaDeBloquesParaGrabar){
 //				//*SI ES MENOR LA CANTIDAD DE BLOQUES, ENTONCES SACO  LOS VIEJO BLOQUES CON EL NUEVO CONTENIDO
 //				char *nuevoContenido = string_new();
-//				printf("*SI ES MENOR LA CANTIDAD DE BLOQUES, ENTONCES SACO  LOS VIEJO BLOQUES CON EL NUEVO CONTENIDO\n");
+//				log_info(logPokeDexServer, "*SI ES MENOR LA CANTIDAD DE BLOQUES, ENTONCES SACO  LOS VIEJO BLOQUES CON EL NUEVO CONTENIDO");
 //				 t_list* sublist = list_take(conjuntoDeBloquesDelArchivo, cantidadNuevaDeBloquesParaGrabar);
 //				borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
 //				list_add_in_index(sublist, cantidadNuevaDeBloquesParaGrabar, 0);
 //
 //				/*
 //				for(i=0; i <conjuntoDeBloquesDelArchivo->elements_count; i++ ){
-//					printf("conjuntoDeBloquesDelArchivo - pos: %i\n", list_get(conjuntoDeBloquesDelArchivo, i));
+//					log_info(logPokeDexServer, "conjuntoDeBloquesDelArchivo - pos: %i", list_get(conjuntoDeBloquesDelArchivo, i));
 //				}
 //
 //				for(i=0; i < sublist->elements_count; i++ ){
-//					printf("sublist - pos: %i\n", list_get(sublist, i));
+//					log_info(logPokeDexServer, "sublist - pos: %i", list_get(sublist, i));
 //				}
 //
 //
 //				int posicionDondeTieneQueHaberUnCero = conjuntoDeBloquesDelArchivo->elements_count - cantidadNuevaDeBloquesParaGrabar;
 //					for(i=0; i < sublist->elements_count; i++ ){
-//					printf("sublist - pos: %i\n", list_get(sublist, i));
+//					log_info(logPokeDexServer, "sublist - pos: %i", list_get(sublist, i));
 //				}
 //				*/
 //
 //				guardarEnLaTablaDeAsignacion(sublist);
 //				//nuevoContenido = string_substring(contenido, elArchivo.file_size, tamanioNuevo);
-//				//printf("nuevoContenido: %s\n", nuevoContenido);
+//				//log_info(logPokeDexServer, "nuevoContenido: %s", nuevoContenido);
 //				//guardarBloqueDeDatos(listadoLosIndicesDeLosBloquesDisponibles, nuevoContenido);
 //				modificarEnLaTablaDeArchivos(tamanioNuevo, posDelaTablaDeArchivos, list_get(conjuntoDeBloquesDelArchivo, 0));
 //			}
@@ -1173,7 +1169,7 @@ void modificarUnArchivo(char *contenido, int tamanioNuevo, char* fname,  uint16_
 //	}
 //
 //
-//	printf("************************ FIN MODIFICAR UN ARCHIVO ************************\n");
+//	log_info(logPokeDexServer, "************************ FIN MODIFICAR UN ARCHIVO ************************");
 }
 
 unsigned char *creoContenidoBinario(int tamanio){
@@ -1192,16 +1188,16 @@ void bajarLosBytesDelArchivo(char *contenido, int tamanioNuevo, char* fname,  ui
 //	if(elTamanioDelArchivoEntraEnElOsada(tamanioNuevo) && noEsVacio(tamanioNuevo)){
 //
 //		osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory,&posDelaTablaDeArchivos);
-//		printf("bajarLosBytesDelArchivo - tamanioNuevo: %i\n", tamanioNuevo);
-//		printf("bajarLosBytesDelArchivo - El archivo size: %i\n", elArchivo.file_size);
+//		log_info(logPokeDexServer, "bajarLosBytesDelArchivo - tamanioNuevo: %i", tamanioNuevo);
+//		log_info(logPokeDexServer, "bajarLosBytesDelArchivo - El archivo size: %i", elArchivo.file_size);
 //
 //		osada_block_pointer posicion = devolverOsadaBlockPointer(fname, parent_directory);
 //		t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
 //		borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
 //
-//		printf("************ bajarLosBytesDelArchivo - HAY MENOS DATOS PARA AGREGAR\n");
+//		log_info(logPokeDexServer, "************ bajarLosBytesDelArchivo - HAY MENOS DATOS PARA AGREGAR");
 //		cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
-//		printf("bajarLosBytesDelArchivo - cantidadDeBloquesParaGrabar: %i\n", cantidadNuevaDeBloquesParaGrabar);
+//		log_info(logPokeDexServer, "bajarLosBytesDelArchivo - cantidadDeBloquesParaGrabar: %i", cantidadNuevaDeBloquesParaGrabar);
 //
 //
 //		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(cantidadNuevaDeBloquesParaGrabar);
@@ -1214,7 +1210,7 @@ void bajarLosBytesDelArchivo(char *contenido, int tamanioNuevo, char* fname,  ui
 //	}
 //
 //
-//	printf("************************ FIN MODIFICAR UN ARCHIVO ************************\n");
+//	log_info(logPokeDexServer, "************************ FIN MODIFICAR UN ARCHIVO ************************");
 
 };
 
@@ -1223,7 +1219,7 @@ int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16
 //	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 //	unsigned char *contenido = creoContenidoBinario(tamanio);
 //
-//	printf("************************ FUNCION: hacerElTruncate ************************\n");
+//	log_info(logPokeDexServer, "************************ FUNCION: hacerElTruncate ************************");
 //
 //
 //	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory,&posDelaTablaDeArchivos);
@@ -1232,15 +1228,15 @@ int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16
 //
 //
 //	if (posicion != -999 && elArchivo.file_size != 0){
-//		printf("hacerElTruncate - El archivo size: %i\n", elArchivo.file_size);
+//		log_info(logPokeDexServer, "hacerElTruncate - El archivo size: %i", elArchivo.file_size);
 //		if (elArchivo.file_size  > tamanio){
-//			printf("hacerElTruncate - entra para truncate - elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+//			log_info(logPokeDexServer, "hacerElTruncate - entra para truncate - elArchivo.file_size: %i, tamanio: %i", elArchivo.file_size,tamanio);
 //			bajarLosBytesDelArchivo(contenido, tamanio,fname, parent_directory);
 //			return 1;
 //		}
 //			else
 //		{
-//			printf("hacerElTruncate -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+//			log_info(logPokeDexServer, "hacerElTruncate -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i", elArchivo.file_size,tamanio);
 //			t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
 //			return agregarMasDatosAlArchivos_archivosGrandes(elArchivo,conjuntoDeBloquesDelArchivo,posDelaTablaDeArchivos, contenido, tamanio, fname,  parent_directory);
 //		}
@@ -1251,10 +1247,10 @@ int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16
 //	/********************************************************/
 //
 //	if(elTamanioDelArchivoEntraEnElOsada(tamanio) && noEsVacio(tamanio)){
-//		printf("hacerElTruncate - tamanio: %i\n", tamanio);
+//		log_info(logPokeDexServer, "hacerElTruncate - tamanio: %i", tamanio);
 //
 //		cantidadDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanio);
-//		printf("hacerElTruncate - cantidadDeBloquesParaGrabar: %i\n", cantidadDeBloquesParaGrabar);
+//		log_info(logPokeDexServer, "hacerElTruncate - cantidadDeBloquesParaGrabar: %i", cantidadDeBloquesParaGrabar);
 //
 //
 //		listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadDeBloquesParaGrabar);
@@ -1265,29 +1261,25 @@ int hacerElTruncate(int tamanio, char* fname, int posDelaTablaDeArchivos, uint16
 //
 //	}
 //	return list_get(listadoLosIndicesDeLosBloquesDisponibles, listadoLosIndicesDeLosBloquesDisponibles->elements_count-1);
-//	printf("************************ FIN hacerElTruncate ************************\n");
+//	log_info(logPokeDexServer, "************************ FIN hacerElTruncate ************************");
 }
 
 int escribirUnArchivo(unsigned char *contenido, int tamanio, char* fname, uint16_t parent_directory){
 	int ultimoPuntero = -999;
 	int posDelaTablaDeArchivos = 0;
-	int cantidadDeBloquesParaGrabar = 0;
-	osada_block_pointer posicion;
-	t_list* listadoLosIndicesDeLosBloquesDisponibles;
 
-	osada_file elArchivo = 		buscarElArchivoYDevolverOsadaFile(fname, parent_directory,&posDelaTablaDeArchivos);
+	osada_file elArchivo = buscarElArchivoYDevolverOsadaFile(fname, parent_directory,&posDelaTablaDeArchivos);
 
-
-	printf("crearUnArchivo - El archivo size: %i\n", elArchivo.file_size);
+	log_info(logPokeDexServer, "escribirUnArchivo - El archivo size: %i", elArchivo.file_size);
 
 	// Agrandar Archivos
 	if (elArchivo.state == REGULAR){
-			printf("crearUnArchivo -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i\n", elArchivo.file_size,tamanio);
+			log_info(logPokeDexServer, "escribirUnArchivo -ES UN ARHIVO CON MUCHOS BLOQUES- elArchivo.file_size: %i, tamanio: %i", elArchivo.file_size,tamanio);
 			t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(elArchivo.first_block);
-			ultimoPuntero = agregarMasDatosAlArchivos_archivosGrandes(elArchivo,conjuntoDeBloquesDelArchivo,posDelaTablaDeArchivos, contenido, tamanio, fname,  parent_directory);
+			ultimoPuntero = agregarMasDatosAlArchivos(elArchivo,conjuntoDeBloquesDelArchivo,posDelaTablaDeArchivos, contenido, tamanio, fname,  parent_directory);
 	}
 
-	printf("************************ FIN CREAR UN ARCHIVO ************************\n");
+	log_info(logPokeDexServer, "************************ FIN CREAR UN ARCHIVO ************************");
 	return ultimoPuntero;
 }
 /************************FIN ARCHIVO************************************************/
@@ -1296,53 +1288,53 @@ int escribirUnArchivo(unsigned char *contenido, int tamanio, char* fname, uint16
 /****************LISTAR TODO *************************************************/
 void mostrarLosDirectorios(osada_file tablaDeArchivo, int pos){
 	if (tablaDeArchivo.state == DIRECTORY){
-		printf("Empieza: %i****************\n",pos);
-		printf("state_%i: %c\n",pos, tablaDeArchivo.state);
-		printf("parent_directory_%i: %i\n",pos, tablaDeArchivo.parent_directory);
-		printf("fname_%i: %s\n",pos, &tablaDeArchivo.fname);
-		printf("file_size_%i: %i\n",pos, tablaDeArchivo.file_size);
-		printf("lastmod_%i: %i\n",pos, tablaDeArchivo.lastmod);
-		printf("first_block_%i: %i\n",pos, tablaDeArchivo.first_block);
-		printf("Termina: %i****************\n",pos);
+		log_info(logPokeDexServer, "Empieza: %i****************",pos);
+		log_info(logPokeDexServer, "state_%i: %c",pos, tablaDeArchivo.state);
+		log_info(logPokeDexServer, "parent_directory_%i: %i",pos, tablaDeArchivo.parent_directory);
+		log_info(logPokeDexServer, "fname_%i: %s",pos, &tablaDeArchivo.fname);
+		log_info(logPokeDexServer, "file_size_%i: %i",pos, tablaDeArchivo.file_size);
+		log_info(logPokeDexServer, "lastmod_%i: %i",pos, tablaDeArchivo.lastmod);
+		log_info(logPokeDexServer, "first_block_%i: %i",pos, tablaDeArchivo.first_block);
+		log_info(logPokeDexServer, "Termina: %i****************",pos);
 	}
 }
 
 void mostrarLosRegulares(osada_file tablaDeArchivo, int pos){
 	if (tablaDeArchivo.state == REGULAR){
-		printf("Empieza: %i****************\n",pos);
-		printf("state_%i: %c\n",pos, tablaDeArchivo.state);
-		printf("parent_directory_%i: %i\n",pos, tablaDeArchivo.parent_directory);
-		printf("fname_%i: %s\n",pos, &tablaDeArchivo.fname);
-		printf("file_size_%i: %i\n",pos, tablaDeArchivo.file_size);
-		printf("lastmod_%i: %i\n",pos, tablaDeArchivo.lastmod);
-		printf("first_block_%i: %i\n",pos, tablaDeArchivo.first_block);
-		printf("Termina: %i****************\n",pos);
+		log_info(logPokeDexServer, "Empieza: %i****************",pos);
+		log_info(logPokeDexServer, "state_%i: %c",pos, tablaDeArchivo.state);
+		log_info(logPokeDexServer, "parent_directory_%i: %i",pos, tablaDeArchivo.parent_directory);
+		log_info(logPokeDexServer, "fname_%i: %s",pos, &tablaDeArchivo.fname);
+		log_info(logPokeDexServer, "file_size_%i: %i",pos, tablaDeArchivo.file_size);
+		log_info(logPokeDexServer, "lastmod_%i: %i",pos, tablaDeArchivo.lastmod);
+		log_info(logPokeDexServer, "first_block_%i: %i",pos, tablaDeArchivo.first_block);
+		log_info(logPokeDexServer, "Termina: %i****************",pos);
 	}
 }
 
 void mostrarLosBorrados(osada_file tablaDeArchivo, int pos){
 	if (tablaDeArchivo.state == DELETED){
-		printf("Empieza: %i****************\n",pos);
-		printf("state_%i: %c\n",pos, tablaDeArchivo.state);
-		printf("parent_directory_%i: %i\n",pos, tablaDeArchivo.parent_directory);
-		printf("fname_%i: %s\n",pos, &tablaDeArchivo.fname);
-		printf("file_size_%i: %i\n",pos, tablaDeArchivo.file_size);
-		printf("lastmod_%i: %i\n",pos, tablaDeArchivo.lastmod);
-		printf("first_block_%i: %i\n",pos, tablaDeArchivo.first_block);
-		printf("Termina: %i****************\n",pos);
+		log_info(logPokeDexServer, "Empieza: %i****************",pos);
+		log_info(logPokeDexServer, "state_%i: %c",pos, tablaDeArchivo.state);
+		log_info(logPokeDexServer, "parent_directory_%i: %i",pos, tablaDeArchivo.parent_directory);
+		log_info(logPokeDexServer, "fname_%i: %s",pos, &tablaDeArchivo.fname);
+		log_info(logPokeDexServer, "file_size_%i: %i",pos, tablaDeArchivo.file_size);
+		log_info(logPokeDexServer, "lastmod_%i: %i",pos, tablaDeArchivo.lastmod);
+		log_info(logPokeDexServer, "first_block_%i: %i",pos, tablaDeArchivo.first_block);
+		log_info(logPokeDexServer, "Termina: %i****************",pos);
 	}
 }
 
 void mostrarOtrosEstados(osada_file tablaDeArchivo, int pos){
 	if (tablaDeArchivo.state != DELETED && tablaDeArchivo.state != REGULAR && tablaDeArchivo.state !=DIRECTORY){
-		printf("Empieza: %i****************\n",pos);
-		printf("state_%i: %c\n",pos, tablaDeArchivo.state);
-		printf("parent_directory_%i: %i\n",pos, tablaDeArchivo.parent_directory);
-		printf("fname_%i: %s\n",pos, &tablaDeArchivo.fname);
-		printf("file_size_%i: %i\n",pos, tablaDeArchivo.file_size);
-		printf("lastmod_%i: %i\n",pos, tablaDeArchivo.lastmod);
-		printf("first_block_%i: %i\n",pos, tablaDeArchivo.first_block);
-		printf("Termina: %i****************\n",pos);
+		log_info(logPokeDexServer, "Empieza: %i****************",pos);
+		log_info(logPokeDexServer, "state_%i: %c",pos, tablaDeArchivo.state);
+		log_info(logPokeDexServer, "parent_directory_%i: %i",pos, tablaDeArchivo.parent_directory);
+		log_info(logPokeDexServer, "fname_%i: %s",pos, &tablaDeArchivo.fname);
+		log_info(logPokeDexServer, "file_size_%i: %i",pos, tablaDeArchivo.file_size);
+		log_info(logPokeDexServer, "lastmod_%i: %i",pos, tablaDeArchivo.lastmod);
+		log_info(logPokeDexServer, "first_block_%i: %i",pos, tablaDeArchivo.first_block);
+		log_info(logPokeDexServer, "Termina: %i****************",pos);
 	}
 }
 
@@ -1384,9 +1376,9 @@ void _recorrerDirectoriosPadres(char* key,t_list *datos) {
 
 	osada_file *archivo =  malloc(sizeof(osada_file));
 	archivo = list_get(datos, 0);
-	printf("Diccionario - Carpeta en el root: %s\n", key);
-	printf("Un elemento de la lista list, que seria el primer hijo del root: %s\n", archivo->fname);
-	printf("archivo->parent_directory: %i\n", archivo->parent_directory);
+	log_info(logPokeDexServer, "Diccionario - Carpeta en el root: %s", key);
+	log_info(logPokeDexServer, "Un elemento de la lista list, que seria el primer hijo del root: %s", archivo->fname);
+	log_info(logPokeDexServer, "archivo->parent_directory: %i", archivo->parent_directory);
 
 	//free(archivo);
 
@@ -1401,7 +1393,7 @@ void reconocerDirectorio(osada_file *archivo, int pos, t_dictionary *dictionary)
 		sprintf(str, "%d", pos);
 		list_add(list, archivo);
 
-		//printf("pos: %s", str);
+		//log_info(logPokeDexServer, "pos: %s", str);
 
 		//dictionary_put(dictionary, (char *)archivo->fname , list);
 		dictionary_put(dictionary, str , list);
@@ -1429,24 +1421,24 @@ void reconocerDirectorioHijos(osada_file *archivo, int pos, t_dictionary *dictio
 
 
 	if (archivo->state == DIRECTORY && archivo->parent_directory != 65535){
-		//printf("error!");
+		//log_info(logPokeDexServer, "error!");
 		char str[10];
 		sprintf(str, "%d", archivo->parent_directory);
 		//list_add(list, archivo);
 
-		//printf("pos: %i\n",  archivo->parent_directory);
+		//log_info(logPokeDexServer, "pos: %i",  archivo->parent_directory);
 
 		//dictionary_put(dictionary, (char *)archivo->fname , list);
 		t_list *list = dictionary_get(dictionaryDirRoot, str);
-		//printf("list: %i\n",  list);
+		//log_info(logPokeDexServer, "list: %i",  list);
 
 		if (list != 0){
 			list_add(list, archivo);
 			dictionary_put(dictionaryDirRoot, str , list);
 		}else{
 
-			printf("Directorios sin padres: %i\n",  archivo->parent_directory);
-			printf("Sin Nombre: %s\n", archivo->fname);
+			log_info(logPokeDexServer, "Directorios sin padres: %i",  archivo->parent_directory);
+			log_info(logPokeDexServer, "Sin Nombre: %s", archivo->fname);
 		}
 
 
@@ -1471,14 +1463,14 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list*
 
 
 	if (archivo->parent_directory == padre && (archivo->state == DIRECTORY || archivo->state == REGULAR)){
-		printf("EMPIEZA reconocerArchivosParaArbol %i: ****************\n", pos);
-		printf("state_: %c\n", archivo->state);
-		printf("parent_directory_: %i\n", archivo->parent_directory);
-		printf("fname_: %s\n", &archivo->fname);
-		printf("file_size_: %i\n", archivo->file_size);
-		printf("lastmod_: %i\n", archivo->lastmod);
-		printf("first_block_: %i\n", archivo->first_block);
-		printf("Termina reconocerArchivosParaArbol %i ****************\n", pos);
+		log_info(logPokeDexServer, "EMPIEZA reconocerArchivosParaArbol %i: ****************", pos);
+		log_info(logPokeDexServer, "state_: %c", archivo->state);
+		log_info(logPokeDexServer, "parent_directory_: %i", archivo->parent_directory);
+		log_info(logPokeDexServer, "fname_: %s", &archivo->fname);
+		log_info(logPokeDexServer, "file_size_: %i", archivo->file_size);
+		log_info(logPokeDexServer, "lastmod_: %i", archivo->lastmod);
+		log_info(logPokeDexServer, "first_block_: %i", archivo->first_block);
+		log_info(logPokeDexServer, "Termina reconocerArchivosParaArbol %i ****************", pos);
 		list_add(lista, archivo);
 	}
 
@@ -1486,14 +1478,14 @@ void reconocerArchivosParaArbol(osada_file *archivo, int pos, int padre, t_list*
 
 void reconocerDirectorioPadre(osada_file *archivo, int pos, int padre){
 	if (archivo[padre].state == DIRECTORY  ){
-		printf("EMPIEZA reconocerDirectorioPadre %i: ****************\n", pos);
-		printf("state_: %c\n", archivo->state);
-		printf("parent_directory_: %i\n", archivo->parent_directory);
-		printf("fname_: %s\n", &archivo->fname);
-		printf("file_size_: %i\n", archivo->file_size);
-		printf("lastmod_: %i\n", archivo->lastmod);
-		printf("first_block_: %i\n", archivo->first_block);
-		printf("Termina reconocerDirectorioPadre %i: ****************\n", pos);
+		log_info(logPokeDexServer, "EMPIEZA reconocerDirectorioPadre %i: ****************", pos);
+		log_info(logPokeDexServer, "state_: %c", archivo->state);
+		log_info(logPokeDexServer, "parent_directory_: %i", archivo->parent_directory);
+		log_info(logPokeDexServer, "fname_: %s", &archivo->fname);
+		log_info(logPokeDexServer, "file_size_: %i", archivo->file_size);
+		log_info(logPokeDexServer, "lastmod_: %i", archivo->lastmod);
+		log_info(logPokeDexServer, "first_block_: %i", archivo->first_block);
+		log_info(logPokeDexServer, "Termina reconocerDirectorioPadre %i: ****************", pos);
 	}
 }
 
@@ -1523,37 +1515,36 @@ void encontrarArbolPadre(int padre){
 }
 
 /*****************************************************/
-int crearUnDirectorio(char *fname, uint16_t parent_directory){
+int crearUnDirectorio(char *fname){
 	int k=0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
-	printf("**********************************crearUnDirectorio - file: %s\n", fname);
-	printf("**********************************crearUnDirectorio - file_name: %s\n", file_name);
+	log_info(logPokeDexServer, "**********************************crearUnDirectorio - file: %s", fname);
+	log_info(logPokeDexServer, "**********************************crearUnDirectorio - file_name: %s", file_name);
 
-
-	int bloque = obtener_bloque_padre(fname);
-	printf("**********************************crearUnDirectorio - bloque: %i\n", bloque);
+	int bloque = obtener_Nuevo_padre(fname);
+	log_info(logPokeDexServer, "**********************************crearUnDirectorio - bloque: %i", bloque);
 
 	bool found = false;
 	for (k=0; k <= 2047; k++){
-		//printf("EN EL FOR\n");
+		//log_info(logPokeDexServer, "EN EL FOR");
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[k].state == DELETED && TABLA_DE_ARCHIVOS[k].state != REGULAR && TABLA_DE_ARCHIVOS[k].state != DIRECTORY){
 			TABLA_DE_ARCHIVOS[k].state = DIRECTORY;
 
 			TABLA_DE_ARCHIVOS[k].parent_directory = bloque;
-			printf("parent_directory: %i\n",bloque);
+			log_info(logPokeDexServer, "parent_directory: %i",bloque);
 
-			//printf("fname: %s\n", fname);
+			//log_info(logPokeDexServer, "fname: %s", fname);
 			strcpy(TABLA_DE_ARCHIVOS[k].fname, "\0");
 			strcat(TABLA_DE_ARCHIVOS[k].fname, file_name);
 
 			TABLA_DE_ARCHIVOS[k].file_size = 0;
 			TABLA_DE_ARCHIVOS[k].lastmod = 0;
-			printf("lastmod\n");
+			log_info(logPokeDexServer, "lastmod");
 
 			TABLA_DE_ARCHIVOS[k].first_block= 0;
-			printf("first_block: %i\n",0);
+			log_info(logPokeDexServer, "first_block: %i",0);
 
 			found = true;
 
@@ -1563,18 +1554,18 @@ int crearUnDirectorio(char *fname, uint16_t parent_directory){
 			break;
 		}
 	}//for (k=0; k <= 2047; k++)
-	//printf("afuera del if\n");
+	//log_info(logPokeDexServer, "afuera del if");
 
 
 
-	printf("k: %i\n", k);
-	printf("tablaDeArchivo[k].fname: %s\n", TABLA_DE_ARCHIVOS[k].fname);
+	log_info(logPokeDexServer, "k: %i", k);
+	log_info(logPokeDexServer, "tablaDeArchivo[k].fname: %s", TABLA_DE_ARCHIVOS[k].fname);
 
 
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	printf("SALIO EN GUARDAR OSADA \n");
+	log_info(logPokeDexServer, "SALIO EN GUARDAR OSADA ");
 	return k;
 }
 
@@ -1582,7 +1573,7 @@ int borrarUnDirectorio(char *fname, uint16_t parent_directory){
 	int pos=0;
 	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
 	char *file_name = strrchr (fname, '/') + 1;
-	printf("borrarUnDirectorio - file_name: %s\n", file_name);
+	log_info(logPokeDexServer, "borrarUnDirectorio - file_name: %s", file_name);
 	bool found = false;
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
@@ -1597,10 +1588,10 @@ int borrarUnDirectorio(char *fname, uint16_t parent_directory){
 
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		if (TABLA_DE_ARCHIVOS[pos].state == DIRECTORY && TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			printf("EN EL if\n");
+			log_info(logPokeDexServer, "EN EL if");
 			TABLA_DE_ARCHIVOS[pos].state =  DELETED;
 			TABLA_DE_ARCHIVOS[pos].parent_directory = -1;
-			printf("state\n");
+			log_info(logPokeDexServer, "state");
 			found = true;
 
 		}
@@ -1616,7 +1607,7 @@ int borrarUnDirectorio(char *fname, uint16_t parent_directory){
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	printf("SALIO DE GUARDAR EN OSADA\n");
+	log_info(logPokeDexServer, "SALIO DE GUARDAR EN OSADA");
 	return pos;
 }
 
