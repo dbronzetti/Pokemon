@@ -265,7 +265,7 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 				case FUSE_WRITE:{
-					log_info(logPokeDexServer,"************************ Processing FUSE_WRITE message ********************************\n");
+					//log_info(logPokeDexServer,"************************ Processing FUSE_WRITE message ********************************\n");
 					int posDelaTablaDeArchivos = -999;
 					int pathLength = 0;
 					int ultimoPunteroDeLosBloques = 1;
@@ -300,7 +300,7 @@ void processMessageReceived(void *parameter){
 
 					sendMessage(&serverData->socketClient, &ultimoPuntero, sizeof(ultimoPuntero));
 
-					log_info(logPokeDexServer,"********************************* TERMINO EL WRITE *********************\n");
+					//log_info(logPokeDexServer,"********************************* TERMINO EL WRITE *********************\n");
 					free(content);
 					free(path);
 

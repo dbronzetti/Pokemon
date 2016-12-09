@@ -671,24 +671,12 @@ void modificarElArchivo(const char* path, const char* buf, size_t size){
 
 }
 
-static int fuse_write(const char* path, const char* buf, size_t size,  off_t offset)
-{
+static int fuse_write(const char* path, const char* buf, size_t size,  off_t offset) {
+	time_t tiempo1 = time(0);
 	int ultimoPunteroDeLosBloques_write = 666;
 
-	printf("********************************* fuse_write *********************\n");
-/*
-	if (size > CUATROGB) {
-		printf("NO CUMPLE TAMANIO DE ARCHIVO OSADA: %i\n", size);
-		return -1;
-	}
-*/
 
 	char *file_name = strrchr (path, '/') + 1;
-
-//	//bytes_escritos = enviarArchivo(path,offset);
-//	log_info(logPokeCliente, "fuse_write - path: %s\n", path);
-//	log_info(logPokeCliente, "fuse_write - buf: %s\n", buf);
-//	log_info(logPokeCliente, "fuse_write - size: %i\n", size);
 
 	if (string_length(file_name)>17){
 		//printf("fuse_write - EL fuse_write ES MAYOR A 17: %i\n", string_length(file_name));
@@ -696,12 +684,6 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 		return -1;
 	}
 
-	/*
-	if (HABILITAR_MODIFICACION == 1){
-		modificarElArchivo(path, buf, size);
-		return size;
-	}
-	*/
 
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 
@@ -742,6 +724,9 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 
 	bzero(buf,size);
 
+	time_t tiempo2 = time(0);
+	double segsSinResponder = difftime(tiempo2, tiempo1);
+	printf("\n------------------> Tiempo WRITE %f  | Size: %i | offset %i \n",segsSinResponder,size,offset);
 	return size;
 }
 

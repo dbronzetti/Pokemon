@@ -1086,7 +1086,7 @@ void agregarMasDatosAlArchivos(osada_file elArchivo,int posDelaTablaDeArchivos, 
 		ultimoPuntero = list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1);
 	}
 
-	log_info(logPokeDexServer, "*********** agregarMasDatosAlArchivos - ultimoPuntero: %i", ultimoPuntero);
+	//(logPokeDexServer, "*********** agregarMasDatosAlArchivos - ultimoPuntero: %i", ultimoPuntero);
 
 	int cantidadNuevaDeBloquesParaGrabar = calcularCantidadDeBloquesParaGrabar(tamanioNuevo);
 
@@ -1302,6 +1302,7 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 }
 
 int escribirUnArchivo(unsigned char *contenido, int size, char* fname, int offset){
+	time_t tiempo1 = time(0);
 	int ultimoPuntero = -999;
 	int possbloque = -999;
 	int pos_archivo=0;
@@ -1318,8 +1319,9 @@ int escribirUnArchivo(unsigned char *contenido, int size, char* fname, int offse
 	// Agrandar Archivos
 	guardarBloqueDeDatos(conjuntoDeBloquesDelArchivo,contenido,size);
 	ultimoPuntero =  list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1);
-
-	log_info(logPokeDexServer, "************************ FIN CREAR UN ARCHIVO ************************");
+	time_t tiempo2 = time(0);
+	double segsSinResponder = difftime(tiempo2, tiempo1);
+	log_info(logPokeDexServer, "Tiempo escribirUnArchivo %f | Size %i",segsSinResponder,size + offset);
 	return ultimoPuntero;
 }
 /************************FIN ARCHIVO************************************************/
