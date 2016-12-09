@@ -804,14 +804,11 @@ void modificarEnLaTablaDeArchivos(int size, int posDelaTablaDeArchivos, int firs
 	if(TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].first_block==-999){
 		TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].first_block = first_block;
 	}
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	//TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].lastmod = 1;
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-//	log_info(logPokeDexServer, "modificarEnLaTablaDeArchivos - guarda osada fuera");
-
+	//TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].lastmod = 1;
 }
+
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos){
 	int pos=0;
 	int encontroLugar = 0;
@@ -1051,13 +1048,6 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 	bloqueSig =-1;
 	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 	ARRAY_TABLA_ASIGNACION[bloquePos] = bloqueSig;
-	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
-
-	pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
-
-//	log_info(logPokeDexServer, "DESDE_PARA_TABLA_ASIGNACION %d",DESDE_PARA_TABLA_ASIGNACION);
-//	log_info(logPokeDexServer, "TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION %d",TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
-
 	guardarEnOsada(DESDE_PARA_TABLA_ASIGNACION, ARRAY_TABLA_ASIGNACION, TAMANIO_QUE_OCUPA_LA_TABLA_DE_ASIGNACION);
 	pthread_mutex_unlock(&ARRAY_TABLA_ASIGNACIONmutex);
 }
@@ -1241,35 +1231,34 @@ void bajarLosBytesDelArchivo(char *contenido, int tamanioNuevo, char* fname,  ui
 
 };
 
-int hacerElTruncate(int offset, char* path){
-	int pos_archivo = 0;
-	int parent_dir = obtener_bloque_padre_NUEVO (path,&pos_archivo);
+int hacerElTruncate(int offset, char* path,int* pos_archivo){
+	int parent_dir = obtener_bloque_padre_NUEVO (path,pos_archivo);
 
 	//Achicar archivo
-	if(TABLA_DE_ARCHIVOS[pos_archivo].file_size > offset)	{
+	if(TABLA_DE_ARCHIVOS[*pos_archivo].file_size > offset)	{
 
 		int cant_bloques = (offset / OSADA_BLOCK_SIZE);
 		int off_bloque = (offset % OSADA_BLOCK_SIZE);
 
 		if(offset == 0) {
 			int i;
-			t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(TABLA_DE_ARCHIVOS[pos_archivo].first_block);
+			t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(TABLA_DE_ARCHIVOS[*pos_archivo].first_block);
 
 			for(i=0; i < list_size(conjuntoDeBloquesDelArchivo);i++){
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
-			TABLA_DE_ARCHIVOS[pos_archivo].file_size = 0;
+			TABLA_DE_ARCHIVOS[*pos_archivo].file_size = 0;
 			return 0;
 		}
 
 		if((cant_bloques == 0) && (off_bloque > 0)){//Menos de un bloque
 			int i;
-			t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(TABLA_DE_ARCHIVOS[pos_archivo].first_block);
+			t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(TABLA_DE_ARCHIVOS[*pos_archivo].first_block);
 
 			for(i=1; i < list_size(conjuntoDeBloquesDelArchivo);i++){
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
-			TABLA_DE_ARCHIVOS[pos_archivo].file_size = OSADA_BLOCK_SIZE;
+			TABLA_DE_ARCHIVOS[*pos_archivo].file_size = OSADA_BLOCK_SIZE;
 			return 0;
 		}
 
@@ -1278,7 +1267,7 @@ int hacerElTruncate(int offset, char* path){
 			int nuevaCantidadBloques = cant_bloques;
 
 			if(off_bloque > 0) {//Valido si estoy en la mitad del bloque, si es asi, paso al siguiente
-				t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(TABLA_DE_ARCHIVOS[pos_archivo].first_block);
+				t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(TABLA_DE_ARCHIVOS[*pos_archivo].first_block);
 				nuevaCantidadBloques++;
 				if(list_size(conjuntoDeBloquesDelArchivo)<nuevaCantidadBloques){
 					return -1; // Retorno Error si la cantidad de bloques a eliminar es mayor al archivo actual.
@@ -1290,23 +1279,21 @@ int hacerElTruncate(int offset, char* path){
 			for(i=0; nuevaCantidadBloques<list_size(conjuntoDeBloquesDelArchivo);i++){
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
-			TABLA_DE_ARCHIVOS[pos_archivo].file_size = nuevaCantidadBloques*OSADA_BLOCK_SIZE;
+			TABLA_DE_ARCHIVOS[*pos_archivo].file_size = nuevaCantidadBloques*OSADA_BLOCK_SIZE;
 			return 0;
 		}
 	} //Hasta aca chequeado
 
 	//Agrandar archivo
-	if(TABLA_DE_ARCHIVOS[pos_archivo].file_size < offset){
+	if(TABLA_DE_ARCHIVOS[*pos_archivo].file_size < offset){
 
-		int cant_bloques = (TABLA_DE_ARCHIVOS[pos_archivo].file_size / OSADA_BLOCK_SIZE);
-		int off_bloque = (TABLA_DE_ARCHIVOS[pos_archivo].file_size % OSADA_BLOCK_SIZE);
 		int bytes_por_reservar;
-		if (TABLA_DE_ARCHIVOS[pos_archivo].file_size == 0) {//el archivo es nuevo
+		if (TABLA_DE_ARCHIVOS[*pos_archivo].file_size == 0) {//el archivo es nuevo
 			bytes_por_reservar = offset;
 		} else { //filesize > 0 El archivo ya tiene datos grabados
-			bytes_por_reservar = offset - TABLA_DE_ARCHIVOS[pos_archivo].file_size;
+			bytes_por_reservar = offset - TABLA_DE_ARCHIVOS[*pos_archivo].file_size;
 		}
-		agregarMasDatosAlArchivos(TABLA_DE_ARCHIVOS[pos_archivo],pos_archivo, bytes_por_reservar);
+		agregarMasDatosAlArchivos(TABLA_DE_ARCHIVOS[*pos_archivo],*pos_archivo, bytes_por_reservar);
 		return 0;
 	}
 
@@ -1316,8 +1303,15 @@ int hacerElTruncate(int offset, char* path){
 
 int escribirUnArchivo(unsigned char *contenido, int size, char* fname, int offset){
 	int ultimoPuntero = -999;
+	int possbloque = -999;
+	int pos_archivo=0;
+	hacerElTruncate(size + offset, fname, &pos_archivo);
 
-	int possbloque = (offset / OSADA_BLOCK_SIZE);
+	if(offset!=0){
+		possbloque = (offset / OSADA_BLOCK_SIZE);
+	}else{
+		possbloque = TABLA_DE_ARCHIVOS[pos_archivo].first_block;
+	}
 
 	t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(possbloque);
 

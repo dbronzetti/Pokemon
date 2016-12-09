@@ -294,8 +294,6 @@ void processMessageReceived(void *parameter){
 					int bufferOffset = 0;
 					receiveMessage(&serverData->socketClient, &bufferOffset, sizeof(bufferOffset));
 
-					hacerElTruncate(contentSize + bufferOffset, path);
-
 					int ultimoPuntero = escribirUnArchivo(content, contentSize, path,bufferOffset);
 					//log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
 					//printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
@@ -369,7 +367,6 @@ void processMessageReceived(void *parameter){
 					    log_info(logPokeDexServer, "-------Processing FUSE_TRUNCATE message");
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
 						int pathLength = 0;
-						int ultimoPunteroDeLosBloques = 1;
 
 						//1) Receive path length
 						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -385,11 +382,11 @@ void processMessageReceived(void *parameter){
 						receiveMessage(&serverData->socketClient, &offset, sizeof(offset));
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - offset: %d", offset);
 
-						int ultimoPuntero = hacerElTruncate(offset, path);
-						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", ultimoPuntero);
-						printf("FUSE_TRUNCATE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
+						int possArchivo;
+						int exit_code = hacerElTruncate(offset, path,&possArchivo); //possArchivo->Esto esta porque se utiliza tambien en el write
+						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", exit_code);
 
-						sendMessage(&serverData->socketClient, &ultimoPuntero, sizeof(int));
+						sendMessage(&serverData->socketClient, &exit_code, sizeof(exit_code));
 						log_info(logPokeDexServer, "-------FIN FUSE_TRUNCATE message");
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
 

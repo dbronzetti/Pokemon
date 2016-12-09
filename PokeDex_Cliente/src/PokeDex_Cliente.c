@@ -347,7 +347,6 @@ static int fuse_truncate(const char* path, off_t offset) {
 	}
 
 
-	int resultado = 0;
 	int exitCode;
 
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
@@ -376,18 +375,15 @@ static int fuse_truncate(const char* path, off_t offset) {
 		exitCode = sendMessage(&socketPokeServer, &offsetSend , sizeof(offsetSend));
 
 		//Receive message size
-		int ultimoPunteroDeLosBloques_write2;
-		int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write2 ,sizeof(ultimoPunteroDeLosBloques_write2));
-		log_info(logPokeCliente, "fuse_truncate -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
-		printf("fuse_truncate - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write2);
+		receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
+		log_info(logPokeCliente, "fuse_truncate -RECEIVE - exitCode: %d", exitCode);
 
-		return 0;
 	}else{
 
 		exitCode = EXIT_SUCCESS;
 	}
 
-	return resultado;
+	return exitCode;
 
 }
 
