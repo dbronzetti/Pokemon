@@ -1643,7 +1643,7 @@ int crearUnDirectorio(char *fname){
 }
 
 int borrarUnDirectorio(char *fname){
-	int pos=0;
+	int pos=-1;
 	int exitCode = 1;//error por default
 
 	//get padre from path
@@ -1652,7 +1652,7 @@ int borrarUnDirectorio(char *fname){
 	char *file_name = strrchr (fname, '/') + 1;
 	log_info(logPokeDexServer, "borrarUnDirectorio - file_name: %s", file_name);
 
-	if(pos !=0 ){
+	if(pos !=-1 ){
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		TABLA_DE_ARCHIVOS[pos].state =  DELETED;
 		TABLA_DE_ARCHIVOS[pos].parent_directory = -1;

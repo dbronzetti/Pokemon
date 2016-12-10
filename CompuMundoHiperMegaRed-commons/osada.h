@@ -84,7 +84,7 @@ osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint1
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory);
 int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory);
 int crearUnDirectorio(char *fname);
-int borrarUnDirectorio(char *fname, uint16_t parent_directory);
+int borrarUnDirectorio(char *fname);
 int hacerElTruncate(int offset, char* path,int* pos_archivo);
 
 static int TAMANIO_QUE_OCUPA_EL_HEADER;
