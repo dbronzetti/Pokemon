@@ -8,7 +8,6 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include src/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -23,26 +22,22 @@ endif
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
-all: Mapa
-
-dependents:
-	-cd /home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug && $(MAKE) clean all
+all: libCompuMundoHiperMegaRed-commons.so
 
 # Tool invocations
-Mapa: $(OBJS) $(USER_OBJS) /home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug/libCompuMundoHiperMegaRed-commons.so
+libCompuMundoHiperMegaRed-commons.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug" -o "Mapa" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "libCompuMundoHiperMegaRed-commons.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES) Mapa
+	-$(RM) $(OBJS)$(C_DEPS)$(LIBRARIES) libCompuMundoHiperMegaRed-commons.so
 	-@echo ' '
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug/libCompuMundoHiperMegaRed-commons.so:
 
 -include ../makefile.targets
