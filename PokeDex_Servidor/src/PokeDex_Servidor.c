@@ -210,8 +210,7 @@ void processMessageReceived(void *parameter){
 		//pthread_mutex_lock(&mutexG);
 		if ( receivedBytes > 0 ){
 
-			log_info(logPokeDexServer, "Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i",*FUSEOperation);
-			printf("Processing POKEDEX_CLIENTE message received,  FUSEOperation: %i\n",*FUSEOperation);
+
 
 			switch (*FUSEOperation){
 				case FUSE_UTIMENS:{
@@ -266,44 +265,42 @@ void processMessageReceived(void *parameter){
 					break;
 				}
 				case FUSE_WRITE:{
-					log_info(logPokeDexServer, "Processing FUSE_WRITE message");
-					printf("************************ Processing FUSE_WRITE message ********************************\n");
+					//log_info(logPokeDexServer,"************************ Processing FUSE_WRITE message ********************************\n");
 					int posDelaTablaDeArchivos = -999;
 					int pathLength = 0;
-					int parent_directory;
 					int ultimoPunteroDeLosBloques = 1;
 
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-					log_info(logPokeDexServer, "FUSE_WRITE - pathLength'%d': %d", serverData->socketClient, pathLength);
+					//log_info(logPokeDexServer, "FUSE_WRITE - pathLength'%d': %d", serverData->socketClient, pathLength);
 					char *path = malloc(pathLength);
 
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
-					log_info(logPokeDexServer, "FUSE_WRITE - path: %s\n",path);
+					//log_info(logPokeDexServer, "FUSE_WRITE - path: %s\n",path);
 
 					//3) Content size
 					int contentSize = 0;
 					receiveMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
-					log_info(logPokeDexServer, "FUSE_WRITE - Content size: %d", contentSize);
+					//log_info(logPokeDexServer, "FUSE_WRITE - Content size: %d", contentSize);
 
 					unsigned char *content = malloc(contentSize);
 
 					//4) Content path
 					receiveMessage(&serverData->socketClient, content, contentSize);
-					log_info(logPokeDexServer, "FUSE_WRITE - Message content received : %s\n",content);
+					//log_info(logPokeDexServer, "FUSE_WRITE - Message content received : %s\n",content);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					//5) Receive offset
+					int bufferOffset = 0;
+					receiveMessage(&serverData->socketClient, &bufferOffset, sizeof(bufferOffset));
 
-					int ultimoPuntero = escribirUnArchivo(content, contentSize, path, parent_directory);
-					log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
-					printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
+					int ultimoPuntero = escribirUnArchivo(content, contentSize, path,bufferOffset);
+					//log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
+					//printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
 
 					sendMessage(&serverData->socketClient, &ultimoPuntero, sizeof(ultimoPuntero));
 
-					log_info(logPokeDexServer, "FUSE_WRITE - FIN sendMessage");
-					printf("********************************* TERMINO EL WRITE *********************\n");
+					//log_info(logPokeDexServer,"********************************* TERMINO EL WRITE *********************\n");
 					free(content);
 					free(path);
 
@@ -369,10 +366,7 @@ void processMessageReceived(void *parameter){
 				case FUSE_TRUNCATE:{
 					    log_info(logPokeDexServer, "-------Processing FUSE_TRUNCATE message");
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
-						int posDelaTablaDeArchivos = -999;
 						int pathLength = 0;
-						uint16_t parent_directory;
-						int ultimoPunteroDeLosBloques = 1;
 
 						//1) Receive path length
 						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -383,25 +377,16 @@ void processMessageReceived(void *parameter){
 						receiveMessage(&serverData->socketClient, path, pathLength);
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - path: %s\n",path);
 
-						//3) Content size
-						int contentSize = 0;
-						receiveMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
-						log_info(logPokeDexServer, "FUSE_TRUNCATE - Content size: %d", contentSize);
-						char *content = malloc(contentSize);
+						//3) offset
+						int offset = 0;
+						receiveMessage(&serverData->socketClient, &offset, sizeof(offset));
+						log_info(logPokeDexServer, "FUSE_TRUNCATE - offset: %d", offset);
 
-						//4) posDelaTablaDeArchivos
-						receiveMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
-						log_info(logPokeDexServer, "FUSE_TRUNCATE - Message posDelaTablaDeArchivos received : %i\n",posDelaTablaDeArchivos);
+						int possArchivo;
+						int exit_code = hacerElTruncate(offset, path,&possArchivo); //possArchivo->Esto esta porque se utiliza tambien en el write
+						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", exit_code);
 
-						//get padre from path received
-						//parent_directory = obtener_bloque_padre(path);
-						parent_directory = 65535;
-
-						int ultimoPuntero = hacerElTruncate(contentSize, path, posDelaTablaDeArchivos, parent_directory);
-						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", ultimoPuntero);
-						printf("FUSE_TRUNCATE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
-
-						sendMessage(&serverData->socketClient, &ultimoPuntero, sizeof(int));
+						sendMessage(&serverData->socketClient, &exit_code, sizeof(exit_code));
 						log_info(logPokeDexServer, "-------FIN FUSE_TRUNCATE message");
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
 
@@ -602,7 +587,7 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "FUSE_READDIR - Message size received : %s\n",path);
 
 					//get padre from path received
-					int posBloquePadre = obtener_bloque_padre(path);
+					int posBloquePadre = obtener_Nuevo_padre(path);
 					log_info(logPokeDexServer,"FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
 					printf("FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
 
