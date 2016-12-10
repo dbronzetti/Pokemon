@@ -454,48 +454,6 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 	return pos;
 }
 
-osada_file buscarElArchivoYDevolverOsadaFile(char *nombre, uint16_t parent_directory, int* posicionTablaDeArchivo){
-
-
-	log_info(logPokeDexServer, "******************************** ENTRO EN buscarElArchivoYDevolverOsadaFile  ******************************** ");
-	log_info(logPokeDexServer, "DATOS INICIALES: nombre: %s - parent_directory: %d - posicionTablaDeArchivo %d",nombre,parent_directory,posicionTablaDeArchivo);
-	int pos=0;
-	osada_block_pointer posicion = 0;
-	char *file_name = strrchr (nombre, '/') + 1;
-
-	//log_info(logPokeDexServer, "file_name: %s", file_name);
-	bool found = false;
-	for (pos=0; pos <= 2047; pos++){
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory ){
-			char *nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
-			char *n   = string_duplicate(file_name);
-			string_trim(&nac);
-			string_trim(&n);
-			//log_info(logPokeDexServer, "nac: %s", &TABLA_DE_ARCHIVOS[pos].fname);
-			if (strcmp(nac, n) == 0){
-				log_info(logPokeDexServer, "*******************************buscarElArchivoYDevolverOsadaFile - LO ENCONTRO! ******************************* ");
-				found = true;
-			}
-			free(nac);
-			free(n);
-		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-
-		if(found){
-			break;
-		}
-	}
-	if(!found){
-		*posicionTablaDeArchivo=-666;
-		log_info(logPokeDexServer, "******************************* buscarElArchivoYDevolverOsadaFile -NO LO ENCONTRO! ******************************* ");
-	}else{
-		*posicionTablaDeArchivo=pos;
-	}
-
-	return TABLA_DE_ARCHIVOS[pos];
-}
-
 void borrarBloqueDelBitmap(int bloque){
 
 	pthread_mutex_lock(&BITMAPmutex);
@@ -848,7 +806,7 @@ void modificarEnLaTablaDeArchivos(int size, int posDelaTablaDeArchivos, int firs
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos){
 	int pos=0;
 	int encontroLugar = 0;
-	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
+	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJOobtener_bloque_padre_NUEVO
 	char *file_name = strrchr (fname, '/') + 1;
 	log_info(logPokeDexServer, "file_name: %s", file_name);
 	bool found = false;
@@ -1684,49 +1642,24 @@ int crearUnDirectorio(char *fname){
 	return k;
 }
 
-int borrarUnDirectorio(char *fname, uint16_t parent_directory){
+int borrarUnDirectorio(char *fname){
 	int pos=0;
-	//TODO: HACERLO RECURSIVO LA LINEA DE ABAJO
+	int exitCode = 1;//error por default
+
+	//get padre from path
+	uint16_t parent_directory = obtener_bloque_padre_NUEVO(fname, &pos);
+
 	char *file_name = strrchr (fname, '/') + 1;
 	log_info(logPokeDexServer, "borrarUnDirectorio - file_name: %s", file_name);
-	bool found = false;
-	for (pos=0; pos <= 2047; pos++){
-		char *nac;
-		char *n;
 
+	if(pos !=0 ){
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
+		TABLA_DE_ARCHIVOS[pos].state =  DELETED;
+		TABLA_DE_ARCHIVOS[pos].parent_directory = -1;
+		guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-		n = string_duplicate(file_name);
-		string_trim(&nac);
-		string_trim(&n);
-
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		if (TABLA_DE_ARCHIVOS[pos].state == DIRECTORY && TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			log_info(logPokeDexServer, "EN EL if");
-			TABLA_DE_ARCHIVOS[pos].state =  DELETED;
-			TABLA_DE_ARCHIVOS[pos].parent_directory = -1;
-			log_info(logPokeDexServer, "state");
-			found = true;
-
-		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-		free(n);
-		free(nac);
-
-		if (found){
-			break;
-		}
+		exitCode = 0;
 	}
 
-	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	log_info(logPokeDexServer, "SALIO DE GUARDAR EN OSADA");
-	return pos;
+	return exitCode;
 }
-
-bool calcularEspacioTruncar(int actualSize,int nuevoSize) {
-
-}
-/*******************************************FIN DIRECTORIO*************************/

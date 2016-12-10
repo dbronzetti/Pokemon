@@ -255,13 +255,10 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message size received : %s\n",path);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					int exitCode = borrarUnDirectorio(path);
+					log_info(logPokeDexServer, "Message exitCode : %i\n",exitCode);
 
-					posTablaDeArchivos = borrarUnDirectorio(path, parent_directory);
-					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
-
-					sendMessage(&serverData->socketClient, &posTablaDeArchivos , sizeof(int));
+					sendMessage(&serverData->socketClient, &exitCode , sizeof(exitCode));
 					break;
 				}
 				case FUSE_WRITE:{
@@ -349,19 +346,15 @@ void processMessageReceived(void *parameter){
 
 					//get padre from path received
 					int posArchivo = 0;
-					parent_directory = obtener_bloque_padre_NUEVO(path, &posArchivo);
 
-					if	(posArchivo != -1){
+					hacerElTruncate(0,path, &posArchivo); //No semaforear
 
-						hacerElTruncate(0,path, posArchivo); //No semaforear
-
-						pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-						memset(TABLA_DE_ARCHIVOS[posArchivo].fname, 0, OSADA_FILENAME_LENGTH);
-						TABLA_DE_ARCHIVOS[posArchivo].state = 0;
-						TABLA_DE_ARCHIVOS[posArchivo].parent_directory = 65535;//reseteo a bloque padre
-						guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
-						pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-					}
+					pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+					memset(TABLA_DE_ARCHIVOS[posArchivo].fname, 0, OSADA_FILENAME_LENGTH);
+					TABLA_DE_ARCHIVOS[posArchivo].state = 0;
+					TABLA_DE_ARCHIVOS[posArchivo].parent_directory = 65535;//reseteo a bloque padre
+					guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+					pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 
 					int exitCode = EXIT_SUCCESS;
 					sendMessage(&serverData->socketClient, &exitCode , sizeof(exitCode));
