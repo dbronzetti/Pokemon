@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DEPLOY_FOLDER="/home/utnso/tp-2016-2c-CompuMundoHiperMegaRed"
+DEPLOY_FOLDER="/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/"
 
 #CREATING DESTINATION FOLDER
 mkdir -p $DEPLOY_FOLDER
@@ -44,17 +44,17 @@ make all
 sudo make install 
 
 #DOWNLOADING LIBFUSE
-cd $DEPLOY_FOLDER/libraries
-git clone --branch fuse-3.0.0 https://github.com/libfuse/libfuse
+#cd $DEPLOY_FOLDER/libraries
+#git clone --branch fuse-3.0.0 https://github.com/libfuse/libfuse
 
 #INSTALLING LIBFUSE
-cd $DEPLOY_FOLDER/libraries/libfuse/
-sudo apt-get install dh-autoreconf
-sudo apt-get install build-essential libtool
-sh makeconf.sh 
-./configure
-make -j8
-sudo make install
+#cd $DEPLOY_FOLDER/libraries/libfuse/
+#sudo apt-get install dh-autoreconf
+#sudo apt-get install build-essential libtool
+#sh makeconf.sh 
+#./configure
+#make -j8
+#sudo make install
 
 cd $DEPLOY_FOLDER/CompuMundoHiperMegaRed-commons/Debug
 make
