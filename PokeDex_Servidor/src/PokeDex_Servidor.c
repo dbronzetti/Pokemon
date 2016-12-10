@@ -342,24 +342,29 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
 					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
 					char *path = malloc(pathLength);
+
 					//2) Receive path
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message path received : %s\n",path);
 
 					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					int posArchivo = 0;
+					parent_directory = obtener_bloque_padre_NUEVO(path, &posArchivo);
 
-					osada_block_pointer posicion = devolverOsadaBlockPointer(path, parent_directory);
-					printf("FUSE_UNLINK - posicion: %i\n",posicion);
+					if	(posArchivo != -1){
 
-					if (posicion != -999){
-						t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
-						borrarBloquesDelBitmap(conjuntoDeBloquesDelArchivo);
+						hacerElTruncate(0,path, posArchivo); //No semaforear
+
+						pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+						memset(TABLA_DE_ARCHIVOS[posArchivo].fname, 0, OSADA_FILENAME_LENGTH);
+						TABLA_DE_ARCHIVOS[posArchivo].state = 0;
+						TABLA_DE_ARCHIVOS[posArchivo].parent_directory = 65535;//reseteo a bloque padre
+						guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+						pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 					}
 
-					borrarUnArchivo(path, parent_directory);
-
-					sendMessage(&serverData->socketClient, &posicion , sizeof(posicion));
+					int exitCode = EXIT_SUCCESS;
+					sendMessage(&serverData->socketClient, &exitCode , sizeof(exitCode));
 
 					break;
 				}
@@ -412,33 +417,6 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
 
 					sendMessage(&serverData->socketClient, &posTablaDeArchivos , sizeof(int));
-					break;
-				}
-				case FUSE_OPEN:{
-					log_info(logPokeDexServer, "-------Processing FUSE_OPEN message");
-					printf("******************* Processing FUSE_OPEN message ****************\n");
-					int parent_directory=0;
-					int posDelaTablaDeArchivos = 0;
-					int pathLength = 0;
-					osada_file osadaFile;
-
-					//1) Receive path length
-					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
-					char *path = malloc(pathLength);
-					//2) Receive path
-					receiveMessage(&serverData->socketClient, path, pathLength);
-					log_info(logPokeDexServer, "Message path received : %s\n",path);
-
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
-
-					osadaFile = buscarElArchivoYDevolverOsadaFile(path, parent_directory,&posDelaTablaDeArchivos); //posDelaTablaDeArchivos= No es usado para Abrrir el archivo
-					sendMessage(&serverData->socketClient, &osadaFile.file_size , sizeof(int));
-
-					log_info(logPokeDexServer, "-------FIN FUSE_OPEN message");
-					printf("******************* Processing FUSE_OPEN message ****************\n");
-
 					break;
 				}
 				case FUSE_READ:{

@@ -331,6 +331,8 @@ void borrarListadoDeBloquesCorrespondientesAlArchivo(int bloqueDesde, int bloque
 
 		while (elProximo != -1){
 			bloqueDeseado = elProximo;
+			char *bloqueVacio = string_repeat('\0',OSADA_BLOCK_SIZE);
+			guardarEnTablaDeDatos(bloqueDeseado, bloqueVacio);
 			pthread_mutex_lock(&ARRAY_TABLA_ASIGNACIONmutex);
 			elProximo = ARRAY_TABLA_ASIGNACION[bloqueDeseado];
 			ARRAY_TABLA_ASIGNACION[bloqueDeseado] = -1; //reseteo el bloque deseado
@@ -833,7 +835,7 @@ void modificarEnLaTablaDeArchivos(int size, int posDelaTablaDeArchivos, int firs
 //	log_info(logPokeDexServer, "modificarEnLaTablaDeArchivos - posDelaTablaDeArchivos: %i ", posDelaTablaDeArchivos);
 //	log_info(logPokeDexServer, "modificarEnLaTablaDeArchivos - file_size: %i ", file_size);
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size += size;
+	TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size = size;
 	if(TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].first_block==-999 || (first_block == -999)){
 		//esto es para cuando el archivo es nuevo y asigno el primer bloque o cuando borro el archivo y dejo el primer bloque en -999
 		TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].first_block = first_block;
@@ -972,23 +974,17 @@ void _prepararLaVariableGlobalParaGuadar(char* bloquePos, int bloqueSig) {
 
 }
 
-//JOEL: NO DEBERIA USARSE MAS
-void _guardarEnTablaDeDatos(char* bloquePos, unsigned char* contenido){
+void guardarEnTablaDeDatos(int bloquePos, unsigned char* contenido){
 	//log_info(logPokeDexServer, "_guardarEnTablaDeDatos - Bloque Pos: %i", atoi(bloquePos));
 	//log_info(logPokeDexServer, "_guardarEnTablaDeDatos - contenido: %s",contenido);
-	int bloquePosInt = 0;
-	bloquePosInt = atoi(bloquePos);
-	int tamanioDelBloque = bloquePosInt *64;
+	int tamanioDelBloque = bloquePos *64;
 
 	pthread_mutex_lock(&OSADAmutex);
 	pthread_mutex_lock(&DATA_BLOCKSmutex);
-
 	memcpy(&OSADA[DATA_BLOCKS+tamanioDelBloque], contenido, OSADA_BLOCK_SIZE );
-	log_info(logPokeDexServer, "_guardarEnTablaDeDatos - bloqueDeDatos: %s" ,contenido);
-
 	pthread_mutex_unlock(&DATA_BLOCKSmutex);
 	pthread_mutex_unlock(&OSADAmutex);
-
+//	log_info(logPokeDexServer, "_guardarEnTablaDeDatos - bloqueDeDatos: %s" ,contenido);
 
 }
 
@@ -1125,6 +1121,10 @@ void agregarMasDatosAlArchivos(int ultimoPuntero,int posDelaTablaDeArchivos, int
 
 	listadoLosIndicesDeLosBloquesDisponibles = obtenerLosIndicesDeLosBloquesDisponiblesYGuardar (cantidadNuevaDeBloquesParaGrabar);
 	modificarAgregandoBloquesEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, ultimoPuntero);
+
+	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	tamanioNuevo +=  TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size;
+	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 
 	modificarEnLaTablaDeArchivos(tamanioNuevo, posDelaTablaDeArchivos, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0));
 	list_destroy(conjuntoDeBloquesDelArchivo);
@@ -1276,12 +1276,14 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 
 	if(fileSize > offset)	{
 
+		log_info(logPokeDexServer, "FUSE_TRUNCATE - Achicar archivo");
 		int cant_bloques = (offset / OSADA_BLOCK_SIZE);
 		int off_bloque = (offset % OSADA_BLOCK_SIZE);
 
 		t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(firstBloque);
 
 		if(offset == 0) {//borro el archivo completo
+			log_info(logPokeDexServer, "FUSE_TRUNCATE - borro el archivo completo");
 			int i;
 
 			for(i=0; i < list_size(conjuntoDeBloquesDelArchivo);i++){
@@ -1296,24 +1298,34 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 
 			fileSize = 0;
 
-			modificarEnLaTablaDeArchivos (fileSize,*pos_archivo,-999);//-999 --> esto es porque mi primer bloque ahora debe ser vacio
+			modificarEnLaTablaDeArchivos(fileSize,*pos_archivo,-999);//-999 --> esto es porque mi primer bloque ahora debe ser vacio
 
 			return 0;
 		}
 
 		if((cant_bloques == 0) && (off_bloque > 0)){//Menos de un bloque
+			log_info(logPokeDexServer, "FUSE_TRUNCATE - borro Menos de un bloque");
 			int i;
 
 			for(i=1; i < list_size(conjuntoDeBloquesDelArchivo);i++){
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
+
+			pthread_mutex_lock(&BITMAPmutex);
+			guardarEnOsada(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
+			pthread_mutex_unlock(&BITMAPmutex);
+
+			borrarListadoDeBloquesCorrespondientesAlArchivo(firstBloque, -1, conjuntoDeBloquesDelArchivo); // -1 --> porque tiene que ir hasta el final de bloques del archivo
+
 			fileSize = OSADA_BLOCK_SIZE;
-			//TODO guardar en osada
+
+			modificarEnLaTablaDeArchivos(fileSize,*pos_archivo, firstBloque);
+
 			return 0;
 		}
 
 		if(cant_bloques > 0){ //1 Bloque entero y un poco mas || N Bloques enteros y un poco mas
-
+			log_info(logPokeDexServer, "FUSE_TRUNCATE - borro 1 Bloque entero y un poco mas || N Bloques enteros y un poco mas");
 			int nuevaCantidadBloques = cant_bloques;
 
 			if(off_bloque > 0) {//Valido si estoy en la mitad del bloque, si es asi, paso al siguiente
@@ -1327,18 +1339,27 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 			conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(nuevaCantidadBloques);
 
 			int i;
-			for(i=0; nuevaCantidadBloques<list_size(conjuntoDeBloquesDelArchivo);i++){
+			for(i=0; nuevaCantidadBloques < list_size(conjuntoDeBloquesDelArchivo);i++){
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
+
+			pthread_mutex_lock(&BITMAPmutex);
+			guardarEnOsada(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
+			pthread_mutex_unlock(&BITMAPmutex);
+
+			borrarListadoDeBloquesCorrespondientesAlArchivo(nuevaCantidadBloques, -1, conjuntoDeBloquesDelArchivo); // -1 --> porque tiene que ir hasta el final de bloques del archivo
+
 			fileSize = nuevaCantidadBloques*OSADA_BLOCK_SIZE;
-			//TODO guardar en osada
+
+			modificarEnLaTablaDeArchivos(fileSize,*pos_archivo, firstBloque);
+
 			return 0;
 		}
 	} //Hasta aca chequeado
 
 	//Agrandar archivo
 	if(fileSize < offset){
-
+//		log_info(logPokeDexServer, "FUSE_TRUNCATE - Agrandar archivo");
 		int bytes_por_reservar;
 		if (fileSize == 0) {//el archivo es nuevo
 			bytes_por_reservar = offset;
