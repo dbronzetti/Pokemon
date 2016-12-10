@@ -282,7 +282,7 @@ void processMessageReceived(void *parameter){
 					//3) Content size
 					int contentSize = 0;
 					receiveMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
-					//log_info(logPokeDexServer, "FUSE_WRITE - Content size: %d", contentSize);
+					log_info(logPokeDexServer, "FUSE_WRITE - Content size: %d", contentSize);
 
 					unsigned char *content = malloc(contentSize);
 
@@ -412,41 +412,6 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "Message posTablaDeArchivosreceived : %i\n",posTablaDeArchivos);
 
 					sendMessage(&serverData->socketClient, &posTablaDeArchivos , sizeof(int));
-					break;
-				}
-				case FUSE_MODIFICAR:{
-					log_info(logPokeDexServer, "Processing FUSE_MODIFICAR message");
-					int pathLength = 0;
-					int parent_directory;
-
-					//1) Receive path length
-					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
-					log_info(logPokeDexServer, "FUSE_MODIFICAR - Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
-					char *path = malloc(pathLength);
-					//2) Receive path
-					receiveMessage(&serverData->socketClient, path, pathLength);
-					log_info(logPokeDexServer, "FUSE_MODIFICAR - Message path received : %s\n",path);
-					//3) Content size
-					int contentSize = 0;
-					receiveMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
-					log_info(logPokeDexServer, "FUSE_MODIFICAR - Content size: %d", contentSize);
-					char *content = malloc(contentSize);
-					//4) Content path
-					receiveMessage(&serverData->socketClient, content, contentSize);
-					log_info(logPokeDexServer, "FUSE_MODIFICAR - Message content received : %s\n",content);
-
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
-
-					modificarUnArchivo(content, contentSize, path, parent_directory);
-					log_info(logPokeDexServer, "FUSE_MODIFICAR - TERMINO DE CREAR\n");
-
-					sendMessage(&serverData->socketClient, &contentSize, sizeof(contentSize));
-
-					log_info(logPokeDexServer, "FUSE_MODIFICAR - FIN sendMessage");
-					printf("********************************* TERMINO EL FUSE_MODIFICAR *********************\n");
-					free(content);
-					free(path);
 					break;
 				}
 				case FUSE_OPEN:{

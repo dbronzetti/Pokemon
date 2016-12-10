@@ -608,49 +608,6 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 	return exitCode;
 }
 
-void modificarElArchivo(const char* path, const char* buf, size_t size){
-	int bytes_escritos = 0;
-	printf("********************************* FUSE_MODIFICAR *********************\n");
-	printf("buf: %s\n", buf);
-	printf("size: %i\n", size);
-	log_info(logPokeCliente, "FUSE_MODIFICAR  - path: %s\n", path);
-	log_info(logPokeCliente, "FUSE_MODIFICAR  - buf: %s\n", buf);
-	log_info(logPokeCliente, "FUSE_MODIFICAR  - size: %i\n", size);
-
-	int exitCode = EXIT_FAILURE; //DEFAULT Failure
-	//0) Send Fuse Operations
-	enum_FUSEOperations operacion = FUSE_MODIFICAR;
-	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
-
-	string_append(&path, "\0");
-	log_info(logPokeCliente, "FUSE_MODIFICAR -  &path: %s\n", path);
-	log_info(logPokeCliente, "FUSE_MODIFICAR -  &buf: %s\n", buf);
-
-	//1) send path length (+1 due to \0)
-	int pathLength = strlen(path) + 1;
-	exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
-	log_info(logPokeCliente, "FUSE_MODIFICAR - pathLength: %i\n", pathLength);
-
-	//2) send path
-	exitCode = sendMessage(&socketPokeServer, path , pathLength );
-	log_info(logPokeCliente, "FUSE_MODIFICAR - path: %s\n", path);
-
-	//3) send buffer length (+1 due to \0)
-	int bufferSize = size;
-	exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(bufferSize));
-	log_info(logPokeCliente, "FUSE_MODIFICAR - bufferSize: %i\n", bufferSize);
-
-	//4) send buffer
-	exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
-	log_info(logPokeCliente, "FUSE_MODIFICAR - buffer: %s\n", buf);
-
-	//Receive message size
-	int receivedBytes = receiveMessage(&socketPokeServer, &bytes_escritos ,sizeof(bytes_escritos));
-	log_info(logPokeCliente, "FUSE_MODIFICAR - bytes_escritos: %i\n", bytes_escritos);
-	HIZO_TRUNCATE = 0;
-
-}
-
 static int fuse_write(const char* path, const char* buf, size_t size,  off_t offset) {
 	time_t tiempo1 = time(0);
 	int ultimoPunteroDeLosBloques_write = 666;
@@ -687,7 +644,8 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 	//3) send buffer length (+1 due to \0)
 	int bufferSize = size;
 	exitCode = sendMessage(&socketPokeServer, &bufferSize , sizeof(bufferSize));
-	//log_info(logPokeCliente, "fuse_write - bufferSize: %i\n", bufferSize);
+	log_info(logPokeCliente, "fuse_write - size: %d\n", size);
+	log_info(logPokeCliente, "fuse_write - bufferSize: %d\n", bufferSize);
 
 	//4) send buffer
 	exitCode = sendMessage(&socketPokeServer, buf , bufferSize );
