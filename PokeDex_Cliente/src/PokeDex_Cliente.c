@@ -18,6 +18,7 @@ static int FILE_SIZE;
 //TODO: PONER CONTROL DE NOMBRE EL SERVIDOR, O EN EL OSADA
 /************************************* FIN GLOBALES *************************************************/
 
+
 int crearDirectorio(char *path){
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	int resultado = 1;
@@ -550,6 +551,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		//Receive if the file was found
 		receivedBytes = receiveMessage(&socketPokeServer, &fileFound ,sizeof(fileFound));
 		log_info(logPokeCliente, "fuse_read - fileFound: %d\n", fileFound);
+//		pthread_mutex_lock(&ReadMutex);
 
 		if (receivedBytes > 0){
 			if (fileFound != -999){//el archivo no fue encontrado por el server
@@ -560,87 +562,65 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 				bzero(buf, size); //Limpio el buffer
 				int bytes_leidos = 0;
 
+				int cant_bloques_por_leer = size / OSADA_BLOCK_SIZE;
+				int bytes_por_leer = size % OSADA_BLOCK_SIZE;
+
+				log_info(logPokeCliente, "fuse_read - cant_bloques_por_leer: %d\n", cant_bloques_por_leer );
+
+				//Receive message size
+				receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+
+				char *messageRcv = malloc(messageSize);
+				receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+
+				int bloqueLeido = 0;
+
 				if ((OSADA_BLOCK_SIZE - off_bloque) >= size){
 					//Receive message size
-					receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-
-					char *messageRcv = malloc(messageSize);
-					receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-
-					memcpy(buf, messageRcv, size);
-					free(messageRcv);
-
+					memcpy(buf, messageRcv + (bloqueLeido * OSADA_BLOCK_SIZE), size);
 					bytes_leidos = size;
+
 				}else{
-
-					//Receive message size
-					receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-
-					char *messageRcv = malloc(messageSize);
-					receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-
-					memcpy(buf, messageRcv, OSADA_BLOCK_SIZE - off_bloque);
+					memcpy(buf, messageRcv + (bloqueLeido * OSADA_BLOCK_SIZE), OSADA_BLOCK_SIZE - off_bloque);
+					bloqueLeido++;
 					bytes_leidos += OSADA_BLOCK_SIZE - off_bloque;
 					size -= OSADA_BLOCK_SIZE - off_bloque;
 
-					free(messageRcv);
-
-					int cant_bloques_por_leer = size / OSADA_BLOCK_SIZE;
-					int bytes_por_leer = size % OSADA_BLOCK_SIZE;
-
-					log_info(logPokeCliente, "fuse_read - cant_bloques_por_leer: %d\n", cant_bloques_por_leer + 1);
+					cant_bloques_por_leer = size / OSADA_BLOCK_SIZE;
+					bytes_por_leer = size % OSADA_BLOCK_SIZE;
 
 					if (cant_bloques_por_leer == 0){
-						//Receive message size
-						receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-
-						char *messageRcv = malloc(messageSize);
-						receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-
-						memcpy(buf + bytes_leidos, messageRcv, bytes_por_leer);
-
+						memcpy(buf + bytes_leidos, messageRcv + (bloqueLeido * OSADA_BLOCK_SIZE), bytes_por_leer);
+						bloqueLeido++;
 						bytes_leidos += bytes_por_leer;
 						size -= bytes_por_leer;
 
-						free(messageRcv);
-
 					}else{
-
 						int k;
 						for (k = 1; k <= cant_bloques_por_leer; k++){
-							//Receive message size
-							receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
+							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",k , messageSize);
 
-							char *messageRcv = malloc(messageSize);
-							receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-							memcpy(buf + bytes_leidos, messageRcv, OSADA_BLOCK_SIZE);
+							memcpy(buf + bytes_leidos, messageRcv + (bloqueLeido * OSADA_BLOCK_SIZE), OSADA_BLOCK_SIZE);
+							bloqueLeido++;
 							bytes_leidos += OSADA_BLOCK_SIZE;
 							size -= OSADA_BLOCK_SIZE;
 							//string_append(&buf, messageRcv);
-							printf("read - cantidadBloques: %i\n", k);
-
-							free(messageRcv);
 						}
 
-						if(bytes_por_leer > 0){
-							//Receive message size
-							printf("entro en el bytes por leet\n");
-							receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
-							//bytes_leidos += messageSize;
+						printf("read - cantidadBloques: %i\n", k);
 
-							char *messageRcv = malloc(messageSize);
-							receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
-							memcpy(buf + bytes_leidos, messageRcv, bytes_por_leer);
+						if(bytes_por_leer > 0){
+							printf("entro en el bytes por leet\n");
+							//log_info(logPokeCliente, "fuse_read - MessageSize #'%d': %d\n",i , messageSize);
+
+							memcpy(buf + bytes_leidos, messageRcv + (bloqueLeido * OSADA_BLOCK_SIZE), bytes_por_leer);
 							bytes_leidos += bytes_por_leer;
 							size -= bytes_por_leer;
-
-							free(messageRcv);
 						}
 					}
 				}
 
+				free(messageRcv);
 				//log_info(logPokeCliente, "messageRcv: %s\n", messageRcv);
 				//memcpy(buf, "hola\0", strlen("hola\0")+1);
 				log_info(logPokeCliente, "fuse_read - buf: %s\n", buf);
@@ -654,7 +634,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		}else{
 			exitCode=EXIT_SUCCESS;
 		}//if (receivedBytes > 0)
-
+//		pthread_mutex_unlock(&ReadMutex);
 	}else{
 		exitCode=EXIT_SUCCESS;
 	}
@@ -875,10 +855,6 @@ static struct fuse_operations xmp_oper = {
 	.releasedir	= fuse_releasedir,
 };
 
-
-
-
-
 int main(int argc, char **argv) {
 	char *logFile = NULL;
 	char *mountPoint = string_new();
@@ -910,6 +886,8 @@ int main(int argc, char **argv) {
 	}
 
 	logPokeCliente = log_create(logFile, "POKEDEX_CLIENTE", 0, LOG_LEVEL_TRACE);
+
+	pthread_mutex_init(&ReadMutex, NULL);
 
 	//getting environment variable for connecting to server
 	IP_SERVER = getenv("POKEIP");
