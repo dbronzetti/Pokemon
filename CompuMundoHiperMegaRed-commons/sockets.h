@@ -95,7 +95,7 @@ int sendClientMessage(int *socketClient, char* mensaje, enum_messages tipoMensaj
 void serializeClientMessage(t_Mensaje *value, char *buffer, int valueSize);
 void deserializeClientMessage(t_Mensaje *value, char *bufferReceived);
 char *serializeListaBloques(t_list* listaASerializar, int *offset);
-void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int cantidadDeElementos);
+t_list*  deserializeListaBloques(char* listaSerializada);
 char *serializeBloque(osada_file* unaPosicion, char* value, int *offset);
 void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *offset);
 

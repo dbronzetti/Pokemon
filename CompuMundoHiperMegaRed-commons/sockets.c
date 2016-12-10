@@ -197,7 +197,7 @@ int sendMessage (int *socketClient, void *buffer, int bufferSize){
 
 int receiveMessage(int *socketClient, void *messageRcv, int bufferSize){
 
-	int receivedBytes = recv(*socketClient, messageRcv, bufferSize, 0);
+	int receivedBytes = recv(*socketClient, messageRcv, bufferSize, MSG_WAITALL);
 
 	return receivedBytes;
 }
@@ -348,9 +348,10 @@ char *serializeListaBloques(t_list* listaASerializar,int *offset) {
 	*offset = 0;
 
 	//Request more memory for the quantity of elements to be serialized
-	nuevoElementoSerializado = malloc(sizeof(listaASerializar->elements_count));
-	memcpy(nuevoElementoSerializado, &listaASerializar->elements_count, sizeof(listaASerializar->elements_count));
-	*offset += sizeof(listaASerializar->elements_count);
+	int cantidadElementos = listaASerializar->elements_count;
+	nuevoElementoSerializado = malloc(sizeof(cantidadElementos));
+	memcpy(nuevoElementoSerializado, &cantidadElementos, sizeof(cantidadElementos));
+	*offset += sizeof(cantidadElementos);
 
 	int i;
 	for (i = 0; i < listaASerializar->elements_count; i++) {
@@ -364,11 +365,14 @@ char *serializeListaBloques(t_list* listaASerializar,int *offset) {
 	return nuevoElementoSerializado;
 }
 
-void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int cantidadDeElementos){
+t_list *deserializeListaBloques(char* listaSerializada){
+	t_list *listaBloques = list_create();
 	int offset = 0;
+	int cantidadDeElementos = 0;
 
+	memcpy(&cantidadDeElementos, listaSerializada, sizeof(cantidadDeElementos));
+	offset += sizeof(cantidadDeElementos);
 	//Getting element count
-	printf("deserializeListaBloques - cantidadDeElementos: %i\n", cantidadDeElementos);
 
 	int i;
 	for(i=0; i < cantidadDeElementos; i++){
@@ -376,19 +380,18 @@ void deserializeListaBloques(t_list* listaBloques, char* listaSerializada, int c
 		deserializeBloque(nuevoBloque, listaSerializada, &offset);
 		list_add(listaBloques, nuevoBloque);
 	}
-
+	return listaBloques;
 }
 
 char *serializeBloque(osada_file* unaPosicion, char* value, int *offset) {
 	char *nuevoBloqueSerializado;
 
 	//Request more memory for the new element to be serialized
-	int tamanioRegistroNuevo = *offset + sizeof(unaPosicion->state) + sizeof(unaPosicion->fname) + sizeof(unaPosicion->parent_directory) + sizeof(unaPosicion->file_size) + sizeof(unaPosicion->lastmod) + sizeof(unaPosicion->first_block);
+	int tamanioRegistroNuevo = *offset + sizeof(osada_file);
 	nuevoBloqueSerializado = malloc(tamanioRegistroNuevo);
 	memcpy(nuevoBloqueSerializado, value, *offset);
 
 	free(value);
-
 	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->state, sizeof(unaPosicion->state));
 	*offset += sizeof(unaPosicion->state);
 	memcpy(nuevoBloqueSerializado + *offset, &unaPosicion->fname, sizeof(unaPosicion->fname));
@@ -406,7 +409,6 @@ char *serializeBloque(osada_file* unaPosicion, char* value, int *offset) {
 }
 
 void deserializeBloque(osada_file* unaPosicion, char* posicionRecibida, int *offset) {
-
 	memcpy(&unaPosicion->state, posicionRecibida + *offset, sizeof(unaPosicion->state));
 	*offset += sizeof(unaPosicion->state);
 	memcpy(&unaPosicion->fname, posicionRecibida + *offset, sizeof(unaPosicion->fname));

@@ -776,6 +776,7 @@ void modificarEnLaTablaDeArchivos(int size, int posDelaTablaDeArchivos, int firs
 	//TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].lastmod = 1;
 }
 
+
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos){
 	int pos=0;
 	int encontroLugar = 0;
@@ -1635,4 +1636,47 @@ int borrarUnDirectorio(char *fname){
 	}
 
 	return exitCode;
+}
+
+int buscar_nodo_vacio ()
+{
+	int i;
+	for (i = 0; i <= 2047; i++)
+	{
+		if (TABLA_DE_ARCHIVOS[i].state == DELETED)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+int inicializarNuevoArchivo( char* path){
+	int posFree;
+	int posArchivo;
+	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	posFree = buscar_nodo_vacio ();
+	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+
+	if (posFree != -1)	{
+
+		int bloquePadre = obtener_bloque_padre_NUEVO(path,&posArchivo);
+		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+
+			TABLA_DE_ARCHIVOS[posFree].state = REGULAR;
+			TABLA_DE_ARCHIVOS[posFree].lastmod = 0;
+			char * newFileName = strrchr (path, '/') + 1;
+			memset(TABLA_DE_ARCHIVOS[posFree].fname, 0, OSADA_FILENAME_LENGTH); //reseteo nombre
+			memcpy(TABLA_DE_ARCHIVOS[posFree].fname, newFileName, OSADA_FILENAME_LENGTH); //compio nuevo nobre
+
+			TABLA_DE_ARCHIVOS[posFree].file_size = 0;
+			TABLA_DE_ARCHIVOS[posFree].first_block=-999;
+			TABLA_DE_ARCHIVOS[posFree].parent_directory = bloquePadre; //&posArchivo es condicion del metodo no es necesario
+
+			guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+
+		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+	}
+
+	return posFree;
 }

@@ -199,7 +199,6 @@ void handShake(void *parameter) {
 void processMessageReceived(void *parameter){
 	t_serverData *serverData = (t_serverData*) parameter;
 
-	t_list* lista = list_create();
 	enum_FUSEOperations *FUSEOperation = malloc(sizeof(enum_FUSEOperations));
 	bool exitLoop = false;
 
@@ -307,27 +306,24 @@ void processMessageReceived(void *parameter){
 				case FUSE_CREATE:{
 					log_info(logPokeDexServer, "Processing FUSE_CREATE message");
 					int pathLength = 0;
-					int posDelaTablaDeArchivos = -999;
-					int first_block_init = -999;
+					int posDelaTablaDeArchivos = -1;
 
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
 					log_info(logPokeDexServer, "Message size received in socket cliente '%d': %d", serverData->socketClient, pathLength);
-					char *path = malloc(pathLength);
+
 					//2) Receive path
+					char *path = malloc(pathLength);
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "Message received : %s\n",path);
 
-					//get padre from path received for passing it to escribirEnLaTablaDeArchivos
-					int posBloquePadre = obtener_Nuevo_padre(path);
 
-					log_info(logPokeDexServer, "FUSE_CREATE - escribirEnLaTablaDeArchivos");
-					posDelaTablaDeArchivos = escribirEnLaTablaDeArchivos(posBloquePadre, 0, path, first_block_init, posDelaTablaDeArchivos);
-
+					posDelaTablaDeArchivos = inicializarNuevoArchivo(path);
 					log_info(logPokeDexServer, "FUSE_CREATE - posDelaTablaDeArchivos a enviar %d", posDelaTablaDeArchivos);
 
 					sendMessage(&serverData->socketClient, &posDelaTablaDeArchivos, sizeof(posDelaTablaDeArchivos));
 					log_info(logPokeDexServer, "FUSE_CREATE - TERMINO");
+					free(path);
 					break;
 				}
 				case FUSE_UNLINK:{
@@ -527,14 +523,24 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer,"FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
 					printf("FUSE_READDIR - posBloquePadre: %i\n", posBloquePadre);
 
+					t_list* lista = list_create();
 					lista = crearArbolAPartirDelPadre(posBloquePadre);
 
 					log_info(logPokeDexServer,"FUSE_READDIR - lista->elements_count: %i\n",lista->elements_count);
-					printf("FUSE_READDIR - lista->elements_count: %i\n",lista->elements_count);
 
 					int messageSize = 0;
 					char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+
+					log_info(logPokeDexServer, "FUSE_READDIR - messageSize: %i\n",messageSize);
+
+
+					sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
 					sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
+
+					list_destroy(lista);//no borro los elementos porque son posiciones de memoria de la tabla de archivos
+
+					log_info(logPokeDexServer, "FUSE_READDIR SEND\n");
+
 
 					break;
 				}
@@ -550,34 +556,28 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "FUSE_GETATTR - Message size received : %s\n",path);
 
 					int posArchivo = -666;
-					int bloquePadre = obtener_bloque_padre_NUEVO(path, &posArchivo);
+					posArchivo = obtener_bloque_archivo(path);//(path, &posArchivo);
 
-					int elementCount;
-					char *mensajeOsada = malloc(sizeof(elementCount));
-					int messageSize = sizeof(elementCount);
+					int messageSize = 0;
+					t_list* lista = list_create();
 
 					if (posArchivo != -666){
-						printf("FUSE_GETATTR - Paso el buscarArchivo: \n");
 						pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 						osada_file bloqueArchivo = TABLA_DE_ARCHIVOS[posArchivo];
-						printf("FUSE_GETATTR - File Name: %s\n", bloqueArchivo.fname);
-
-						elementCount = 1;
-						memcpy(mensajeOsada, &elementCount, sizeof(elementCount));//this will tell to PokeDexCliente that the message is going to contain only 1 OSADA_FILE
-						mensajeOsada = serializeBloque(&bloqueArchivo, mensajeOsada, &messageSize);
 						pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-						log_info(logPokeDexServer, "FUSE_GETATTR - !=666 elementCount: %i\n",elementCount);
 
+						list_add(lista, &bloqueArchivo);
+						log_info(logPokeDexServer, "FUSE_GETATTR - !=666 elementCount: %i\n",lista->elements_count);
 					}else{
-						elementCount = 0;
-						log_info(logPokeDexServer, "FUSE_GETATTR - ==-666 - elementCount: %i\n",elementCount);
-						memcpy(mensajeOsada, &elementCount, sizeof(elementCount));//this will tell to PokeDexCliente that the message is going to contain 0 OSADA_FILE because the file was not found
+						log_info(logPokeDexServer, "FUSE_GETATTR - ==-666 - elementCount: %i\n",lista->elements_count);
 					}
-					log_info(logPokeDexServer, "FUSE_GETATTR - messageSize: %i\n",messageSize);
 
+					char *mensajeOsada = serializeListaBloques(lista, &messageSize);
+
+					sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
 					sendMessage(&serverData->socketClient, mensajeOsada , messageSize);
 
-					log_info(logPokeDexServer, "HIZO SEND\n");
+					list_destroy(lista);//no borro los elementos porque son posiciones de memoria de la tabla de archivos
 
 					break;
 				}
