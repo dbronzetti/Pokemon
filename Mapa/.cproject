@@ -42,7 +42,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.808870477" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
 								<option id="gnu.c.link.option.paths.1118934921" name="Library search path (-L)" superClass="gnu.c.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CompuMundoHiperMegaRed-commons/Debug}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/nivel/Debug}&quot;"/>
 								</option>
 								<option id="gnu.c.link.option.libs.2080098385" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="pthread"/>
