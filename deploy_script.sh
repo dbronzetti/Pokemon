@@ -1,6 +1,6 @@
 #!/bin/sh
 
-DEPLOY_FOLDER="/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/"
+DEPLOY_FOLDER="/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed"
 
 #CREATING DESTINATION FOLDER
 mkdir -p $DEPLOY_FOLDER
