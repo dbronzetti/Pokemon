@@ -549,22 +549,24 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "FUSE_GETATTR - Message size received : %s\n",path);
 
-					int posArchivo = obtener_bloque_archivo(path);
+					int posArchivo = -666;
+					int bloquePadre = obtener_bloque_padre_NUEVO(path, &posArchivo);
 
 					int elementCount;
 					char *mensajeOsada = malloc(sizeof(elementCount));
 					int messageSize = sizeof(elementCount);
 
 					if (posArchivo != -666){
-						osada_file bloqueArchivo = TABLA_DE_ARCHIVOS[posArchivo];
-
 						printf("FUSE_GETATTR - Paso el buscarArchivo: \n");
+						pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+						osada_file bloqueArchivo = TABLA_DE_ARCHIVOS[posArchivo];
 						printf("FUSE_GETATTR - File Name: %s\n", bloqueArchivo.fname);
+
 						elementCount = 1;
 						memcpy(mensajeOsada, &elementCount, sizeof(elementCount));//this will tell to PokeDexCliente that the message is going to contain only 1 OSADA_FILE
-						log_info(logPokeDexServer, "FUSE_GETATTR - !=666 elementCount: %i\n",elementCount);
-						//TODO: PARA ANALIZAR
 						mensajeOsada = serializeBloque(&bloqueArchivo, mensajeOsada, &messageSize);
+						pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+						log_info(logPokeDexServer, "FUSE_GETATTR - !=666 elementCount: %i\n",elementCount);
 
 					}else{
 						elementCount = 0;
