@@ -82,7 +82,7 @@ t_list *obtenerElListadoDeBloquesCorrespondientesAlArchivo(int bloqueActual);
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos);
 osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre);
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory);
-int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory);
+void sobreescribirNombre(char *nombre, char *nuevoNombre);
 int crearUnDirectorio(char *fname);
 int borrarUnDirectorio(char *fname);
 int hacerElTruncate(int offset, char* path,int* pos_archivo);

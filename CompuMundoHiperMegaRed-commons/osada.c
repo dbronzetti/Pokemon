@@ -540,58 +540,31 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 	return posicion;
 }
 
-int sobreescribirNombre(char *nombre, char *nuevoNombre, uint16_t parent_directory){
+void sobreescribirNombre(char *nombre, char *nuevoNombre){
+	//NOTA aca el nuevo archivo siempre llega sabiendo que el padre del mismo existe por lo cual me olvido de validarlo porque ya lo hizo el fuse
 	log_info(logPokeDexServer, "******************************** ENTRO EN sobreescribirNombre  ******************************** ");
-	int pos=0;
-	osada_block_pointer posicion = 0;
-	log_info(logPokeDexServer, "antes file_name: %s", nombre);
-	log_info(logPokeDexServer, "antes nuevoNombre: %s", nuevoNombre);
-	char *file_name = strrchr (nombre, '/') + 1;
-	log_info(logPokeDexServer, "file_name: %s", file_name);
+	int posArchivoViejo=-1;
+	int posArchivoNuevo=-1;
+	log_info(logPokeDexServer, "old file_name: %s", nombre);
+	log_info(logPokeDexServer, "nuevo file_name: %s", nuevoNombre);
+	char * newFileName = strrchr (nuevoNombre, '/') + 1;
+	log_info(logPokeDexServer, "nuevoNombre: %s", newFileName);
 
-	char *nuevo_Nombre = strrchr (nuevoNombre, '/') + 1;
-	log_info(logPokeDexServer, "nuevo_Nombre: %s", nuevo_Nombre);
-	bool found = false;
-	for (pos=0; pos <= 2047; pos++){
-		char *nac;
-		char *n;
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-		n = string_duplicate(file_name);
-		string_trim(&nac);
-		string_trim(&n);
+	//get padre from path received
+	uint16_t parent_directoryOldFile = obtener_bloque_padre_NUEVO(nombre, &posArchivoViejo);
+	uint16_t parent_directoryNewFile = obtener_bloque_padre_NUEVO(nuevoNombre, &posArchivoNuevo);
 
-		//log_info(logPokeDexServer, "nac: %s", &TABLA_DE_ARCHIVOS[pos].fname);
-
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			log_info(logPokeDexServer, "******************************* LO ENCONTRO - sobreescribirNombre! ******************************* ");
-
-			strcpy(TABLA_DE_ARCHIVOS[pos].fname, "\0");
-			strcat(TABLA_DE_ARCHIVOS[pos].fname, nuevo_Nombre);
-			posicion = pos;
-			found = true;
-
-		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-		free(nac);
-		free(n);
-
-		if (found){
-			break;
-		}
+	if (parent_directoryOldFile != parent_directoryNewFile){
+		parent_directoryOldFile = parent_directoryNewFile;// asigno nuevo padre al viejo si eran distintos
 	}
 
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	memset(TABLA_DE_ARCHIVOS[posArchivoViejo].fname, 0, OSADA_FILENAME_LENGTH); //reseteo nombre
+	memcpy(TABLA_DE_ARCHIVOS[posArchivoViejo].fname, newFileName, OSADA_FILENAME_LENGTH); //compio nuevo nobre
+	TABLA_DE_ARCHIVOS[posArchivoViejo].parent_directory = parent_directoryOldFile;
 	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-	if (!found){
-		//NO LO ENCONTRO
-		return -999;
-	}
 
-	return posicion;
 }
 
 char**  armar_vector_path(const char* text)

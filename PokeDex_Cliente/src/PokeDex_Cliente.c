@@ -47,41 +47,39 @@ int crearDirectorio(char *path){
 
 int renombrarArchivo(char* oldname,char* newName){
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
-			int resultado = 1;
-			enum_FUSEOperations fuseOperation =  FUSE_RENAME;
+	enum_FUSEOperations fuseOperation =  FUSE_RENAME;
 
-			//0) Send Fuse Operations
-			exitCode = sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
-			log_info(logPokeCliente, "renombrarArchivo - fuseOperation: %d\n", fuseOperation);
-			string_append(&oldname, "\0");
-			string_append(&newName, "\0");
+	//0) Send Fuse Operations
+	sendMessage(&socketPokeServer, &fuseOperation , sizeof(fuseOperation));
+	log_info(logPokeCliente, "renombrarArchivo - fuseOperation: %d\n", fuseOperation);
+	string_append(&oldname, "\0");
+	string_append(&newName, "\0");
 
-			//1) send path length (+1 due to \0)
-			int pathLength = strlen(oldname) + 1;
-			exitCode = sendMessage(&socketPokeServer, &pathLength , sizeof(int));
+	//1) send path length (+1 due to \0)
+	int pathLength = strlen(oldname) + 1;
+	sendMessage(&socketPokeServer, &pathLength , sizeof(int));
 
-			log_info(logPokeCliente, "renombrarArchivo - pathLength: %i\n", pathLength);
+	log_info(logPokeCliente, "renombrarArchivo - pathLength: %i\n", pathLength);
 
-			//2) send path length (+1 due to \0)
-			int newPathLength = strlen(newName) + 1;
-			exitCode = sendMessage(&socketPokeServer, &newPathLength , sizeof(int));
-			log_info(logPokeCliente, "renombrarArchivo - newPathLength: %i\n", newPathLength);
+	//2) send path length (+1 due to \0)
+	int newPathLength = strlen(newName) + 1;
+	sendMessage(&socketPokeServer, &newPathLength , sizeof(int));
+	log_info(logPokeCliente, "renombrarArchivo - newPathLength: %i\n", newPathLength);
 
-			//3) send path ORIGINAL
-			exitCode = sendMessage(&socketPokeServer, oldname , strlen(oldname) + 1 );
-			log_info(logPokeCliente, "renombrarArchivo - oldname: %s\n", oldname);
+	//3) send path ORIGINAL
+	sendMessage(&socketPokeServer, oldname , strlen(oldname) + 1 );
+	log_info(logPokeCliente, "renombrarArchivo - oldname: %s\n", oldname);
 
-			//4) send path RENOMBRADO
-			exitCode = sendMessage(&socketPokeServer, newName , newPathLength );
-			log_info(logPokeCliente, "renombrarArchivo - newName: %s\n", newName);
+	//4) send path RENOMBRADO
+	sendMessage(&socketPokeServer, newName , newPathLength );
+	log_info(logPokeCliente, "renombrarArchivo - newName: %s\n", newName);
 
-			//Receive element Count
-			int osada_block_pointer = -1;
-			int receivedBytes = receiveMessage(&socketPokeServer, &osada_block_pointer ,sizeof(int));
+	//Receive element Count
+	receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
 
-			log_info(logPokeCliente, "renombrarArchivo - osada_block_pointer: %i\n", osada_block_pointer);
+	log_info(logPokeCliente, "renombrarArchivo - exitCode: %i\n", exitCode);
 
-			return 0;
+	return exitCode;
 };
 
 

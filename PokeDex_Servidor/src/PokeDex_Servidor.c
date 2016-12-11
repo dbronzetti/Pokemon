@@ -581,7 +581,6 @@ void processMessageReceived(void *parameter){
 				}
 				case FUSE_RENAME:{
 					log_info(logPokeDexServer, "-------Processing FUSE_RENAME message");
-					int parent_directory=0;
 					int pathLength = 0;
 					int newPathLength = 0;
 
@@ -603,13 +602,10 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, newPath, newPathLength);
 					log_info(logPokeDexServer, "Message newPath received : %s\n",newPath);
 
-					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					sobreescribirNombre(path, newPath);
 
-					int posicion = sobreescribirNombre(path, newPath, parent_directory);
-					log_info(logPokeDexServer, "Message posicion received : %i\n",posicion);
-
-					sendMessage(&serverData->socketClient, &posicion , sizeof(int));
+					int exitCode = EXIT_SUCCESS; //voy a retornar siempre ok
+					sendMessage(&serverData->socketClient, &exitCode , sizeof(exitCode));
 
 					break;
 				}
