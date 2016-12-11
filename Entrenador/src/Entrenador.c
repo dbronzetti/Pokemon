@@ -537,6 +537,8 @@ void copiarArchivos(char* archivoOrigen, char* archivoDestino) {
 	char *command = string_from_format("cp %s %s", archivoOrigenSinBlancos,
 			archivoDestinoSinBlancos);
 
+
+
 //	printf("----------------------------------------\n");
 //	printf("%s \n", command);
 //	printf("----------------------------------------\n");
@@ -622,6 +624,7 @@ void yoYaGane() {
 	turno = SIN_MENSAJE;
 	pthread_mutex_unlock(&turnoMutex);
 	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
+	printf(ANSI_COLOR_YELLOW   "Obtenida medalla de %s"   ANSI_COLOR_RESET "\n",mapaActual);
 	borrarArchivos(rutaDirDeBill);
 	desconectarse();
 	pthread_cancel(hiloEscuchar);
