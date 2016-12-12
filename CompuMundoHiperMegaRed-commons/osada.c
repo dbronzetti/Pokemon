@@ -651,9 +651,7 @@ int obtener_bloque_archivo(const char* path)
 	   i++;
    }
 
-
    return pos_archivo;
-
 
 }
 
@@ -1020,7 +1018,7 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 	int i;
 
 	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
-
+	log_info(logPokeDexServer,"cantidad de elementos en bloques disponibles: %d",cantidadDeElemento);
 	for(i = 0; i < cantidadDeElemento; i++){
 
 		if (i==0){
@@ -1028,7 +1026,8 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 				bloquePos = ultimoPuntero;
 				bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
 			}else{
-				 flag = false;
+				bloqueSig = list_get(listadoLosIndicesDeLosBloquesDisponibles, i);
+				flag = false;
 			}
 		}else{
 			flag = true;
@@ -1561,10 +1560,8 @@ int borrarUnDirectorio(char *fname){
 int buscar_nodo_vacio ()
 {
 	int i;
-	for (i = 0; i <= 2047; i++)
-	{
-		if (TABLA_DE_ARCHIVOS[i].state == DELETED)
-		{
+	for (i = 0; i <= 2047; i++)	{
+		if (TABLA_DE_ARCHIVOS[i].state == DELETED){
 			return i;
 		}
 	}
@@ -1583,17 +1580,17 @@ int inicializarNuevoArchivo( char* path){
 		int bloquePadre = obtener_bloque_padre_NUEVO(path,&posArchivo);
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 
-			TABLA_DE_ARCHIVOS[posFree].state = REGULAR;
-			TABLA_DE_ARCHIVOS[posFree].lastmod = 0;
-			char * newFileName = strrchr (path, '/') + 1;
-			memset(TABLA_DE_ARCHIVOS[posFree].fname, 0, OSADA_FILENAME_LENGTH); //reseteo nombre
-			memcpy(TABLA_DE_ARCHIVOS[posFree].fname, newFileName, OSADA_FILENAME_LENGTH); //compio nuevo nobre
+		TABLA_DE_ARCHIVOS[posFree].state = REGULAR;
+		TABLA_DE_ARCHIVOS[posFree].lastmod = 0;
+		char * newFileName = strrchr (path, '/') + 1;
+		memset(TABLA_DE_ARCHIVOS[posFree].fname, 0, OSADA_FILENAME_LENGTH); //reseteo nombre
+		memcpy(TABLA_DE_ARCHIVOS[posFree].fname, newFileName, OSADA_FILENAME_LENGTH); //compio nuevo nobre
 
-			TABLA_DE_ARCHIVOS[posFree].file_size = 0;
-			TABLA_DE_ARCHIVOS[posFree].first_block=-999;
-			TABLA_DE_ARCHIVOS[posFree].parent_directory = bloquePadre; //&posArchivo es condicion del metodo no es necesario
+		TABLA_DE_ARCHIVOS[posFree].file_size = 0;
+		TABLA_DE_ARCHIVOS[posFree].first_block=-999;
+		TABLA_DE_ARCHIVOS[posFree].parent_directory = bloquePadre; //&posArchivo es condicion del metodo no es necesario
 
-			guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+		guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 	}

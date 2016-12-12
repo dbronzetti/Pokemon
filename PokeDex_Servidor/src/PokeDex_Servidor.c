@@ -444,6 +444,7 @@ void processMessageReceived(void *parameter){
 
 						pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 						osada_file elArchivo = TABLA_DE_ARCHIVOS[posicionArchivo];
+						log_info(logPokeDexServer,"FUSE_READ - fname: %s\n",elArchivo.fname);
 						int bloqueInicialArchivo = elArchivo.first_block;
 						pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 
@@ -576,7 +577,7 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "FUSE_GETATTR - Message size received : %s\n",path);
 
 					int posArchivo = -666;
-					posArchivo = obtener_bloque_archivo(path);//(path, &posArchivo);
+					int bloquePadre = obtener_bloque_padre_NUEVO(path,&posArchivo);//(path, &posArchivo);
 
 					int messageSize = 0;
 					t_list* lista = list_create();
