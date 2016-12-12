@@ -78,7 +78,7 @@ char**  armar_vector_path(const char* text);
 int escribirUnArchivo(unsigned char *contenido, int tamanio, char* fname, int offset);
 int obtener_bloque_archivo(const char* path);
 t_list* crearArbolAPartirDelPadre(int padre);
-t_list *obtenerElListadoDeBloquesCorrespondientesAlArchivo(int bloqueActual);
+t_list *obtenerElListadoDeBloquesCorrespondientesAlArchivo(int bloqueInicial, int offsetBloque);
 int escribirEnLaTablaDeArchivos(int parent_directory, int file_size, char* fname, int first_block, int posDelaTablaDeArchivos);
 osada_block_pointer comprobarElNombreDelArchivo(osada_file tablaDeArchivo, uint16_t parent_directory, char *nombre);
 osada_block_pointer devolverOsadaBlockPointer(char *nombre, uint16_t parent_directory);

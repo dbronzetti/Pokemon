@@ -461,7 +461,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 				int off_bloque = (offset % OSADA_BLOCK_SIZE);
 
 				int messageSize = 0;
-				bzero(buf, size); //Limpio el buffer
+				memset(buf, 0 , size); //Limpio el buffer
 				int bytes_leidos = 0;
 
 				int cant_bloques_por_leer = size / OSADA_BLOCK_SIZE;
@@ -477,12 +477,12 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 				int bloqueLeido = 0;
 
-				if ((OSADA_BLOCK_SIZE - off_bloque) >= size){
+				if ((OSADA_BLOCK_SIZE - off_bloque) >= size){ //menos de un bloque para leer.
 					//Receive message size
 					memcpy(buf, messageRcv + (bloqueLeido * OSADA_BLOCK_SIZE), size);
 					bytes_leidos = size;
 
-				}else{
+				}else{ //1 Bloque entero y un poco mas || N Bloques enteros y un poco mas
 					memcpy(buf, messageRcv + (bloqueLeido * OSADA_BLOCK_SIZE), OSADA_BLOCK_SIZE - off_bloque);
 					bloqueLeido++;
 					bytes_leidos += OSADA_BLOCK_SIZE - off_bloque;

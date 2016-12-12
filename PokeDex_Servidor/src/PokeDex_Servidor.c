@@ -343,7 +343,7 @@ void processMessageReceived(void *parameter){
 					//get padre from path received
 					int posArchivo = 0;
 
-					hacerElTruncate(0,path, &posArchivo); //No semaforear
+					hacerElTruncate(0, path, &posArchivo); //No semaforear
 
 					pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 					memset(TABLA_DE_ARCHIVOS[posArchivo].fname, 0, OSADA_FILENAME_LENGTH);
@@ -412,7 +412,6 @@ void processMessageReceived(void *parameter){
 
 					printf("******************* Processing FUSE_READ message ****************\n");
 					log_info(logPokeDexServer, "Processing FUSE_READ message");
-					int parent_directory=0;
 					int pathLength = 0;
 
 					//1) Receive path length
@@ -441,64 +440,85 @@ void processMessageReceived(void *parameter){
 
 					if (path != NULL){
 
-						parent_directory = obtener_bloque_padre(path);
-						log_info(logPokeDexServer, "FUSE_READ - parent_directory : %d\n",parent_directory);
-						osada_block_pointer posicion = devolverOsadaBlockPointer(path, parent_directory);
+						int posicionArchivo = obtener_bloque_archivo(path);
 
-						printf("FUSE_READ - posicion: %i\n",posicion);
+						pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+						osada_file elArchivo = TABLA_DE_ARCHIVOS[posicionArchivo];
+						int bloqueInicialArchivo = elArchivo.first_block;
+						pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+
+						log_info(logPokeDexServer,"FUSE_READ - bloqueInicialArchivo: %i\n",bloqueInicialArchivo);
 						//char *string = string_new();
-						if (posicion != -999){// -999 = NO LO ENCONTRO
+						if (bloqueInicialArchivo != -999){// -999 = NO LO ENCONTRO
 
-							t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(posicion);
+							int cantBloquesParaEnviar = size / OSADA_BLOCK_SIZE;
+							int offsetBloque = offset / OSADA_BLOCK_SIZE;
+
+							t_list *conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(bloqueInicialArchivo,offsetBloque);
 
 							log_info(logPokeDexServer, "FUSE_READ - conjuntoDeBloquesDelArchivo: %i\n",conjuntoDeBloquesDelArchivo->elements_count);
 
-							//sending notification to client about the file found
-							int fileFound = EXIT_SUCCESS;
-							sendMessage(&serverData->socketClient, &fileFound , sizeof(fileFound));
+							//if (cantBloquesParaEnviar <= conjuntoDeBloquesDelArchivo->elements_count){//checking that the block requested is WITHIN the file block
+								//sending notification to client about the file found
+								int fileFound = EXIT_SUCCESS;
+								sendMessage(&serverData->socketClient, &fileFound , sizeof(fileFound));
 
-							int cantBloquesParaEnviar = size / OSADA_BLOCK_SIZE;
-							int bloqueOffset = offset / OSADA_BLOCK_SIZE;
+								log_info(logPokeDexServer, "FUSE_READ - cantBloquesParaEnviar: %d\n",cantBloquesParaEnviar);
+								log_info(logPokeDexServer, "FUSE_READ - bloqueOffset: %d", offsetBloque);
 
-							log_info(logPokeDexServer, "FUSE_READ - cantBloquesParaEnviar: %d\n",cantBloquesParaEnviar);
-							log_info(logPokeDexServer, "FUSE_READ - bloqueOffset: %d", bloqueOffset);
-
-							if (bloqueOffset <= conjuntoDeBloquesDelArchivo->elements_count){//checking that the block requested is WITHIN the file block
+								int messageSize = size;
 								char *bloqueDeDatos = malloc(size);
 								memset(bloqueDeDatos,0,size);
 
-								int ultimoBloqueParaEnviar = bloqueOffset + cantBloquesParaEnviar;
-								log_info(logPokeDexServer, "ultimoBloqueParaEnviar: %d", ultimoBloqueParaEnviar);
-								int i, j = 0;
-
-								int messageSize = size;
+								int i;
 								int offset;
-								for (i = bloqueOffset; i < ultimoBloqueParaEnviar ; i++) { //we need to send the number of blocks requested (by the size) from the offset received
-									int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
-									bloque2 *= 64;
+								if (list_size(conjuntoDeBloquesDelArchivo) < cantBloquesParaEnviar){
+									log_info(logPokeDexServer, "list_size(conjuntoDeBloquesDelArchivo) < cantBloquesParaEnviar");
+									for (i = 0; i < list_size(conjuntoDeBloquesDelArchivo) ; i++) { //Para cuando la lista es mas chica que la cantidad de bloques a enviar
+										int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
+										log_info(logPokeDexServer, "bloque2: %i\n", bloque2);
+										bloque2 *= OSADA_BLOCK_SIZE;
 
-									offset = (j * OSADA_BLOCK_SIZE);
+										offset = (i * OSADA_BLOCK_SIZE);
 
-									pthread_mutex_lock(&OSADAmutex);
-									memcpy(bloqueDeDatos + offset, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
-									pthread_mutex_unlock(&OSADAmutex);
-//									log_info(logPokeDexServer, "bloqueDeDatos: %s", bloqueDeDatos);
+										pthread_mutex_lock(&OSADAmutex);
+										memcpy(bloqueDeDatos + offset, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
+										pthread_mutex_unlock(&OSADAmutex);
+										//									log_info(logPokeDexServer, "bloqueDeDatos: %s", bloqueDeDatos);
 
-									//bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
-									//log_info(logPokeDexServer, "messageSize: %i\n", messageSize);
+										//bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
+										//log_info(logPokeDexServer, "messageSize: %i\n", messageSize);
+									}
+								}else{
+									log_info(logPokeDexServer, "list_size(conjuntoDeBloquesDelArchivo) MAYOR cantBloquesParaEnviar");
+									for (i = 0; i < cantBloquesParaEnviar ; i++) { //Para cuando la lista es mas chica que la cantidad de bloques a enviar
+										int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
+										bloque2 *= OSADA_BLOCK_SIZE;
 
-									j++;
+										offset = (i * OSADA_BLOCK_SIZE);
+
+										pthread_mutex_lock(&OSADAmutex);
+										memcpy(bloqueDeDatos + offset, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
+										pthread_mutex_unlock(&OSADAmutex);
+										//									log_info(logPokeDexServer, "bloqueDeDatos: %s", bloqueDeDatos);
+
+										//bloqueDeDatos[OSADA_BLOCK_SIZE] = '\0';
+										//log_info(logPokeDexServer, "messageSize: %i\n", messageSize);
+									}
 								}
 
 								sendMessage(&serverData->socketClient, &messageSize , sizeof(messageSize));
 								sendMessage(&serverData->socketClient, bloqueDeDatos , messageSize);
-								log_info(logPokeDexServer, "j: %d", j);
 								free(bloqueDeDatos);
-							}
+//							}else{
+//								log_info(logPokeDexServer, "Cantidad de bloques deseados mayores a los que tengo en el archivo");
+//								int error = -999;
+//								sendMessage(&serverData->socketClient, &error , sizeof(error));//si no encontro el file retorno -999 como error al fuse
+//							}
 
 						}else{
 							log_info(logPokeDexServer, "file %s not found",path);
-							int error = posicion;
+							int error = bloqueInicialArchivo;
 							sendMessage(&serverData->socketClient, &error , sizeof(error));//si no encontro el file retorno -999 como error al fuse
 						}
 
