@@ -127,7 +127,7 @@ void contarBloques(){
 		pthread_mutex_unlock(&BITMAPmutex);
 
 		pthread_mutex_lock(&BITMAPmutex);
-		if(bitarray_test_bit(BITMAP, i) == 1){
+		if(bitarray_test_bit(BITMAP, i)){
 			bloquesOcupados++;
 			//log_info(logPokeDexServer, "Bloque - %i - OCUPADO",i);
 		}
@@ -464,7 +464,7 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 void borrarBloqueDelBitmap(int bloque){
 
 	pthread_mutex_lock(&BITMAPmutex);
-	if(bitarray_test_bit(BITMAP, bloque) == 1){
+	if(bitarray_test_bit(BITMAP, bloque)){
 		bitarray_clean_bit(BITMAP, bloque);
 	}
 	pthread_mutex_unlock(&BITMAPmutex);
@@ -861,7 +861,7 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantBloquesDeseados
 	for (i=START_DATA_BLOCKS; i < fs_blocks; i++){//SIEMPRE ARRANCO DESDE EL PRIMER BLOQUE DE DATOS
 
 		pthread_mutex_lock(&BITMAPmutex);
-		if(bitarray_test_bit(BITMAP, i) == 0){
+		if(!bitarray_test_bit(BITMAP, i)){
 			list_add(listDeBloques, i);
 			bloquesObtenidos++;
 //			log_info(logPokeDexServer, "Bloque - %i - LIBRE",i);
