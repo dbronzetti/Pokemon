@@ -8,38 +8,37 @@
 #ifndef MAPA_H_
 #define MAPA_H_
 
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "sockets.h"
-#include "commons/log.h"
 #include "metadata.h"
-#include <stdlib.h>
+#include <pthread.h>
+#include <semaphore.h>
 #include <curses.h>
-#include <commons/collections/list.h>
 #include <dirent.h>
-#include <errno.h>
 #include <tad_items.h>
 #include <nivel.h>
 #include <curses.h>
+#include <signal.h>
 #include <time.h>
 #include <pkmn/battle.h>
 #include <pkmn/factory.h>
-#include <signal.h>
+#include <commons/collections/queue.h>
+#include <commons/log.h>
+#include <commons/config.h>
 
+//Variables
 t_log* logMapa;
 char *mapa;
+char *nombrePokenest;
 t_metadataMapa metadataMapa;
 DIR *dipPokenest;
 struct dirent *ditPokenest;
 DIR *dipPokemones;
 struct dirent *ditPokemones;
-int semaforo_wait;
-int planificandoRR; //flag que dice si estamos planificando en RR (1 para RR, 0 para srdf).
 t_list* listaDePokenest;
 t_list* items;
 t_list* listaDeEntrenadores;
 t_list* entrenadoresDeadLock;
+t_list* listaDeNombres;
 t_queue* colaDeListos;
 t_queue* colaDeBloqueados;
 pthread_mutex_t setFDmutex;
@@ -49,10 +48,14 @@ pthread_mutex_t colaDeBloqueadosMutex;
 pthread_mutex_t itemsMutex;
 pthread_mutex_t listaDePokenestMutex;
 pthread_mutex_t setRecibirMsj;
-pthread_mutex_t borradoDeEntrenadores;
-pthread_mutex_t rafagaMutex; //se bloquea cuando entra en rafaga para que no se pueda switchear
-pthread_t planificador;
+pthread_mutex_t metadataMutex;
+sem_t processNextMessageSem;
+sem_t borradoDePersonajesSem;
+int SEM_INIT_VALUE = 1;//This is for receiving the 1st trainer
 
+
+char* rutaMetadata;//needed as global for reloading metadata file
+char entrenadorAnterior;
 // Estructuras
 typedef struct {
 	int socketServer;
@@ -61,7 +64,7 @@ typedef struct {
 } t_serverData;
 
 typedef struct {
-	int* pokemon;
+//	int* pokemon;
 	t_list* listaDePokemones;
 	t_metadataPokenest metadata;
 } t_pokenest;
@@ -94,49 +97,6 @@ typedef struct {
 	int cantDeadLock; // Cantidad de veces en deadLock
 } t_entrenador;
 
-// Funciones de conexion
-void startServerProg();
-void newClients(int *socketServer, fd_set *master, int *fdmax);
-void handShake(void *parameter);
-void processMessageReceived(void *parameter);
-
-// Funcion de mapa que la lib no traia
-void sumarRecurso(t_list* items, char id);
-
-// Funciones
-int recorrerdirDePokenest(char* rutaDirPokenest); //Se encarga de recorrer las carpetas que esta dentro de la pokenest (pikachu,bulbasaur,charmander,etc...)
-int recorrerCadaPokenest(char* rutaDeUnaPokenest, char* nombreDelaPokenest); //Se encarga de recorrer lo que esta ADENTRO de las carpetas pokenest (pikachu001,pikachu002,metadata.dat,etc..)
-t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest, const char* nombreDeLaPokenest);
-int levantarNivelDelPokemon(char* rutaDelPokemon);
-void dibujarMapa();
-void crearEntrenadorYDibujar(char simbolo, int socket);
-bool igualarACaracterCondicion(void* paramatrer);
-void eliminarEntrenador(char simbolo);
-void planificarRR();
-char* convertirPosicionesAString(int posX, int posY);
-void calcularCantidadMovimientos(t_entrenador* entrenador);
-void ordenarColaEntrenadores();
-void planificarSRDF();
-void ejecutarAccionEntrenador (t_entrenador* entrenador, int* i);
-void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX );
-void detectarDeadlocks();
-t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador);
-void matar(t_entrenador* entrenador);
-void devolverPokemones(t_list* pokemones);
-bool existePokenest(char idPokemon);
-void cargarListaAsignacion(t_list *asignacion);
-void cargarListaSolicitud(t_list *solicitud);
-void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList);
-void cargarEntrenadores(t_list *entrenadores);
-void quitarEntrenadoresSinAsignacion(t_list *asignacion,t_list *entrenadoresNoBloqueados);
-void cargarPokemonesExistentes(t_list *pokemonesList) ;
-void cargarCantidadPokemonesExistentes(t_list *pokemonesList);
-t_list* detectarInterbloqueo();
-bool existePokenest(char idPokemon);
-void recibirSignal();
-void switchear();
-void planificar();
-
 typedef struct {
 	char entrenador;
 	t_list* pokemonesAsignados;	//esta lista contendra elementos del tipo t_pokemones_Asignacion
@@ -147,4 +107,62 @@ typedef struct {
 	int cantidad;
 } t_pokemones_Asignacion;
 
+typedef struct {
+	char pokemon_id;
+	char* nombrePokemon;
+} t_pokemonNombre;
+
+
+// Funciones de conexion
+void startServerProg();
+void newClients(int *socketServer, fd_set *master, int *fdmax);
+void handShake(void *parameter);
+void processMessageReceived(void *parameter);
+
+// Funcion de mapa que la lib no traia
+
+// Funciones
+int recorrerdirDePokenest(char* rutaDirPokenest);
+int recorrerCadaPokenest(char* rutaDeUnaPokenes);
+t_metadataPokenest crearArchivoMetadataPokenest(char* rutaMetadataPokenest);
+int levantarNivelDelPokemon(char* rutaDelPokemon);
+void dibujarMapa();
+void crearEntrenadorYDibujar(char simbolo, int socket);
+void eliminarEntrenador(char simbolo);
+void devolverPokemones(t_list* pokemones);
+void sumarRecurso(t_list* items, char id);
+void planificar();
+void planificarRR();
+void ejecutarAccionEntrenador(t_entrenador* entrenador, int* i);
+bool existePokenest(char idPokemon);
+char* convertirAString(int posX, int posY);
+void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y, int* seMovioEnX);
+void planificarSRDF();
+void ordenarColaEntrenadores();
+void calcularCantidadMovimientos(t_entrenador* entrenador);
+void detectarDeadlocks();
+t_list* detectarInterbloqueo();
+void cargarListaAsignacion(t_list *asignacion);
+void cargarPokemonesExistentes(t_list *pokemonesList);
+void cargarPokeNests(t_list *pokemonesAsignados, t_list* pokemonesList);
+void cargarListaSolicitud(t_list *solicitud);
+void cargarEntrenadores(t_list *entrenadores);
+void quitarEntrenadoresSinAsignacion(t_list *asignacion, t_list *entrenadoresNoBloqueados);
+void cargarCantidadPokemonesExistentes(t_list *pokemonesList);
+t_pokemones* dameTuMejorPokemon(t_entrenador* entrenador);
+void matar(t_entrenador* entrenador);
+void recibirSignal();
+void reloadMetadata();
+void evaluarEstadoEntrenador(t_entrenador* entrenador); //evalua en que estado se encuentra y segun su estado le indica que tiene que hacer
+bool noSeBorro(t_entrenador* entrneador);
+void saleColaBloqueados(t_entrenador* entrenador);
+void iformarEstadosRecursos(t_list* asignacion,t_list* solicitud,t_list* pokemonesDisponibles);
+void loguearEntrenadorAsignacion(t_list* asignacion);
+void loguearPokemonesAsignacion(t_list* asignacion);
+void iformarEstadosColas();
+void loguearColaListos();
+void loguearColaBloqueados();
+char* dameElNombre(char id);
+void eliminarDeColaListos(char simbolo);
+void eliminarDeColaBloequeados(char simbolo);
 #endif /* MAPA_H_ */

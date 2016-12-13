@@ -120,7 +120,7 @@ void contarBloques(){
 	for (i=0; i < fs_blocks; i++){//para 150k
 
 		pthread_mutex_lock(&BITMAPmutex);
-		if(bitarray_test_bit(BITMAP, i) == 0){
+		if(!bitarray_test_bit(BITMAP, i)){
 			bloquesLibres++;
 			//log_info(logPokeDexServer, "Bloque - %i - LIBRE",i);
 		}
@@ -487,12 +487,12 @@ void borrarBloquesDelBitmap(t_list *listado){
 }
 
 int ingresarElUTIMENS(char *nombre, uint16_t parent_directory, int tv_nsec){
-	log_info(logPokeDexServer, "******************************** ENTRO EN borrarUnArchivo  ******************************** ");
+	log_info(logPokeDexServer, "******************************** ENTRO EN ingresarElUTIMENS  ******************************** ");
 	int pos=0;
 	osada_block_pointer posicion = 0;
 	char *file_name = strrchr (nombre, '/') + 1;
 	log_info(logPokeDexServer, "file_name: %s", file_name);
-
+	bool found = false;
 	for (pos=0; pos <= 2047; pos++){
 		char *nac;
 		char *n;
@@ -508,9 +508,12 @@ int ingresarElUTIMENS(char *nombre, uint16_t parent_directory, int tv_nsec){
 			log_info(logPokeDexServer, "******************************* LO ENCONTRO! ******************************* ");
 			TABLA_DE_ARCHIVOS[pos].lastmod = tv_nsec;
 			posicion = pos;
-
+			found = true;
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+		if (found){
+			break;
+		}
 	}
 
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
@@ -545,6 +548,7 @@ int borrarUnArchivo(char *nombre, uint16_t parent_directory){
 
 		}
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
+
 	}
 
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
@@ -596,7 +600,7 @@ char**  armar_vector_path(const char* text)
 int obtener_bloque_archivo(const char* path)
 {
    char** vector_path = armar_vector_path(path);
-
+   char *file_name = strrchr (path, '/') + 1;
    int parent_dir = 65535;
    int pos_archivo = -666;
 
@@ -609,11 +613,12 @@ int obtener_bloque_archivo(const char* path)
 	   for (j=0;j<=2047;j++)
 	   {
 		   pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir) && (TABLA_DE_ARCHIVOS[j].state != DELETED))
-		   {
+		   if ((strcmp(TABLA_DE_ARCHIVOS[j].fname, vector_path[i]) == 0) && (TABLA_DE_ARCHIVOS[j].parent_directory == parent_dir) && (TABLA_DE_ARCHIVOS[j].state != DELETED)){
 			   parent_dir = j;
-			   pos_archivo = j;
-			   found = true;
+			   if (strcmp(file_name, TABLA_DE_ARCHIVOS[j].fname) == 0){
+				   pos_archivo = j;
+				   found = true;
+			   }
 		   }
 		   pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 		   if (found){
@@ -1047,8 +1052,7 @@ int hayNuevosDatosParaAgregar(int tamanioViejo, int tamanioNuevo){
 void guardarLaMismaCantidadDeBloques(int cantidadDeBloquesParaGrabar,
 		uint16_t parent_directory, int tamanioNuevo, int posDelaTablaDeArchivos,
 		t_list* conjuntoDeBloquesDelArchivo, char* contenido, char* fname) {
-	if (conjuntoDeBloquesDelArchivo->elements_count
-			== cantidadDeBloquesParaGrabar) {
+	if (conjuntoDeBloquesDelArchivo->elements_count == cantidadDeBloquesParaGrabar) {
 		//SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO
 		log_info(logPokeDexServer, "*SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO");
 		guardarBloqueDeDatos(conjuntoDeBloquesDelArchivo, contenido,tamanioNuevo); //TODO: esto esta mal!!!
@@ -1511,7 +1515,7 @@ int crearUnDirectorio(char *fname){
 			log_info(logPokeDexServer, "parent_directory: %i",bloque);
 
 			//log_info(logPokeDexServer, "fname: %s", fname);
-			strcpy(TABLA_DE_ARCHIVOS[k].fname, "\0");
+			memset(TABLA_DE_ARCHIVOS[k].fname, 0, OSADA_FILENAME_LENGTH);
 			strcat(TABLA_DE_ARCHIVOS[k].fname, file_name);
 
 			TABLA_DE_ARCHIVOS[k].file_size = 0;

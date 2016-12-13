@@ -597,8 +597,7 @@ void processMessageReceived(void *parameter){
 					receiveMessage(&serverData->socketClient, path, pathLength);
 					log_info(logPokeDexServer, "FUSE_GETATTR - Message size received : %s\n",path);
 
-					int posArchivo = -666;
-					int bloquePadre = obtener_bloque_padre_NUEVO(path,&posArchivo);//(path, &posArchivo);
+					int posArchivo = obtener_bloque_archivo(path);//(path, &posArchivo);
 
 					int messageSize = 0;
 					t_list* lista = list_create();
