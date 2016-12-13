@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
     obtenerTablaDeArchivos();
     obtenerTablaDeAsignacion();
 
+    //verBitmap();
 
 	puts("Soy el PokeDex Servidor"); /* prints Soy el PokeDex Servidor */
 
@@ -476,14 +477,14 @@ void processMessageReceived(void *parameter){
 								if (list_size(conjuntoDeBloquesDelArchivo) < cantBloquesParaEnviar){
 									log_info(logPokeDexServer, "list_size(conjuntoDeBloquesDelArchivo) < cantBloquesParaEnviar");
 									for (i = 0; i < list_size(conjuntoDeBloquesDelArchivo) ; i++) { //Para cuando la lista es mas chica que la cantidad de bloques a enviar
-										int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
-										log_info(logPokeDexServer, "bloque2: %i\n", bloque2);
-										bloque2 *= OSADA_BLOCK_SIZE;
+										int offsetbloque = list_get(conjuntoDeBloquesDelArchivo, i);
+										log_info(logPokeDexServer, "bloque2: %i\n", offsetbloque);
+										offsetbloque *= OSADA_BLOCK_SIZE;
 
 										offset = (i * OSADA_BLOCK_SIZE);
 
 										pthread_mutex_lock(&OSADAmutex);
-										memcpy(bloqueDeDatos + offset, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
+										memcpy(bloqueDeDatos + offset, &OSADA[offsetbloque], OSADA_BLOCK_SIZE );
 										pthread_mutex_unlock(&OSADAmutex);
 										//									log_info(logPokeDexServer, "bloqueDeDatos: %s", bloqueDeDatos);
 
@@ -493,13 +494,13 @@ void processMessageReceived(void *parameter){
 								}else{
 									log_info(logPokeDexServer, "list_size(conjuntoDeBloquesDelArchivo) MAYOR cantBloquesParaEnviar");
 									for (i = 0; i < cantBloquesParaEnviar ; i++) { //Para cuando la lista es mas chica que la cantidad de bloques a enviar
-										int bloque2 = list_get(conjuntoDeBloquesDelArchivo, i);
-										bloque2 *= OSADA_BLOCK_SIZE;
+										int offsetbloque = list_get(conjuntoDeBloquesDelArchivo, i);
+										offsetbloque *= OSADA_BLOCK_SIZE;
 
 										offset = (i * OSADA_BLOCK_SIZE);
 
 										pthread_mutex_lock(&OSADAmutex);
-										memcpy(bloqueDeDatos + offset, &OSADA[DATA_BLOCKS+bloque2], OSADA_BLOCK_SIZE );
+										memcpy(bloqueDeDatos + offset, &OSADA[offsetbloque], OSADA_BLOCK_SIZE );
 										pthread_mutex_unlock(&OSADAmutex);
 										//									log_info(logPokeDexServer, "bloqueDeDatos: %s", bloqueDeDatos);
 

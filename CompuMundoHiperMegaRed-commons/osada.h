@@ -106,7 +106,7 @@ static int BYTES_OCUPADOS;
 static unsigned char *OSADA;
 static osada_header *HEADER;
 static t_bitarray *BITMAP;
-static int DATA_BLOCKS;
+static int START_DATA_BLOCKS;
 static int *ARRAY_TABLA_ASIGNACION;
 static osada_file *TABLA_DE_ARCHIVOS;
 

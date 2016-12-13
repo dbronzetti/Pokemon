@@ -597,12 +597,16 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 	int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write ,sizeof(ultimoPunteroDeLosBloques_write));
 	log_info(logPokeCliente, "fuse_write -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write);
 
-	memset(buf,0,size);
+	if(ultimoPunteroDeLosBloques_write != -1 ){
+		memset(buf,0,size);
 
-	time_t tiempo2 = time(0);
-	double segsSinResponder = difftime(tiempo2, tiempo1);
-	printf("\n------------------> Tiempo WRITE %f  | Size: %i | offset %i \n",segsSinResponder,size,offset);
-	return size;
+		time_t tiempo2 = time(0);
+		double segsSinResponder = difftime(tiempo2, tiempo1);
+		printf("\n------------------> Tiempo WRITE %f  | Size: %i | offset %i \n",segsSinResponder,size,offset);
+		return size;
+	}else{
+		return -1;// EL DISCO ESTA LLENO
+	}
 }
 
 static int fuse_rename (const char *oldname, const char *newName){
