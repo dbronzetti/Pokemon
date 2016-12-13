@@ -469,6 +469,13 @@ void borrarBloqueDelBitmap(int bloque){
 	}
 	pthread_mutex_unlock(&BITMAPmutex);
 
+	pthread_mutex_lock(&OSADAmutex);
+		log_info(logPokeDexServer, "ANTES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %i", BYTES_LIBRES, BYTES_OCUPADOS);
+		BYTES_LIBRES -=  OSADA_BLOCK_SIZE;
+		BYTES_OCUPADOS +=  OSADA_BLOCK_SIZE;
+		log_info(logPokeDexServer, "DESPUES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %i", BYTES_LIBRES, BYTES_OCUPADOS);
+	pthread_mutex_unlock(&OSADAmutex);
+
 }
 
 void borrarBloquesDelBitmap(t_list *listado){
@@ -876,8 +883,13 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantBloquesDeseados
 
 	// Quitamos los nuevos bloques asignados.
 	// TODO : Poner Mutex
-	BYTES_LIBRES -=  bloquesObtenidos * OSADA_BLOCK_SIZE;
-	BYTES_OCUPADOS +=  bloquesObtenidos * OSADA_BLOCK_SIZE;
+	pthread_mutex_lock(&OSADAmutex);
+		log_info(logPokeDexServer, "ANTES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %d", BYTES_LIBRES, BYTES_OCUPADOS);
+		BYTES_LIBRES -=  bloquesObtenidos * OSADA_BLOCK_SIZE;
+		BYTES_OCUPADOS +=  bloquesObtenidos * OSADA_BLOCK_SIZE;
+		log_info(logPokeDexServer, "DESPUES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %d", BYTES_LIBRES, BYTES_OCUPADOS);
+	pthread_mutex_unlock(&OSADAmutex);
+
 
 	pthread_mutex_lock(&BITMAPmutex);
 	guardarEnOsada(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);

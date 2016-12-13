@@ -42,7 +42,10 @@ int main(int argc, char **argv) {
 	setearConstantesDePosicionDeOsada();
 
 	obtenerBitmap();
-    obtenerTablaDeArchivos();
+	log_info(logPokeDexServer, "--------------------------------------------------------------------------------------------");
+	log_info(logPokeDexServer, "INICIO DEL SISTEMA: BYTES_LIBRES %i|  BYTES_OCUPADOS: %i", BYTES_LIBRES, BYTES_OCUPADOS);
+	log_info(logPokeDexServer, "--------------------------------------------------------------------------------------------");
+	obtenerTablaDeArchivos();
     obtenerTablaDeAsignacion();
 
     //verBitmap();
@@ -266,6 +269,7 @@ void processMessageReceived(void *parameter){
 					int posDelaTablaDeArchivos = -999;
 					int pathLength = 0;
 					int ultimoPunteroDeLosBloques = 1;
+					int ultimoPuntero = -1;
 
 					//1) Receive path length
 					receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -291,10 +295,18 @@ void processMessageReceived(void *parameter){
 					int bufferOffset = 0;
 					receiveMessage(&serverData->socketClient, &bufferOffset, sizeof(bufferOffset));
 
-					int ultimoPuntero = escribirUnArchivo(content, contentSize, path,bufferOffset);
-					//log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
-					//printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
+					pthread_mutex_lock(&OSADAmutex);
+						bool entraFlag	= (BYTES_LIBRES>=contentSize);
+					pthread_mutex_unlock(&OSADAmutex);
 
+					if(entraFlag){
+						ultimoPuntero = escribirUnArchivo(content, contentSize, path,bufferOffset);
+						//log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
+
+						//printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
+					}else{
+						log_info(logPokeDexServer, "FUSE_WRITE - NO TE DEJO");
+					}
 					sendMessage(&serverData->socketClient, &ultimoPuntero, sizeof(ultimoPuntero));
 
 					//log_info(logPokeDexServer,"********************************* TERMINO EL WRITE *********************\n");
@@ -362,6 +374,7 @@ void processMessageReceived(void *parameter){
 					    log_info(logPokeDexServer, "-------Processing FUSE_TRUNCATE message");
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
 						int pathLength = 0;
+						int exit_code  = -1;
 
 						//1) Receive path length
 						receiveMessage(&serverData->socketClient, &pathLength, sizeof(pathLength));
@@ -378,9 +391,16 @@ void processMessageReceived(void *parameter){
 						log_info(logPokeDexServer, "FUSE_TRUNCATE - offset: %d", offset);
 
 						int possArchivo;
-						int exit_code = hacerElTruncate(offset, path,&possArchivo); //possArchivo->Esto esta porque se utiliza tambien en el write
-						log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", exit_code);
+						pthread_mutex_lock(&OSADAmutex);
+							bool entraFlag	= (BYTES_LIBRES>=offset);
+						pthread_mutex_unlock(&OSADAmutex);
 
+						if(entraFlag){
+							exit_code = hacerElTruncate(offset, path,&possArchivo); //possArchivo->Esto esta porque se utiliza tambien en el write
+							log_info(logPokeDexServer, "FUSE_TRUNCATE - ultimoPuntero: %d\n", exit_code);
+						}else{
+							log_info(logPokeDexServer, "FUSE_TRUNCATE - NO TE DEJO");
+						}
 						sendMessage(&serverData->socketClient, &exit_code, sizeof(exit_code));
 						log_info(logPokeDexServer, "-------FIN FUSE_TRUNCATE message");
 						printf("******************* Processing FUSE_TRUNCATE message ****************\n");
