@@ -628,6 +628,7 @@ void processMessageReceived(void *parameter) {
 						entrenador->tiempoBloqueado);
 				entrenador->accion = ESTADISTICAS;
 				sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
+				log_info(logMapa,"Map send the stats to Trainer: '%c'", entrenador->simbolo);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
 //				eliminarEntrenador(entrenador->simbolo);
 				break;
@@ -737,10 +738,12 @@ void eliminarEntrenador(char simbolo) {
 	}
 	pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
-	pthread_mutex_lock(&setEntrenadoresMutex);
-	free(entrenador);
-	pthread_mutex_unlock(&setEntrenadoresMutex);
-
+	if(entrenador->estaEnTurno != 1){
+		pthread_mutex_lock(&setEntrenadoresMutex);
+		free(entrenador);
+		pthread_mutex_unlock(&setEntrenadoresMutex);
+	}
+	else entrenador->simbolo = '.';
 }
 
 void devolverPokemones(t_list* pokemones) {
@@ -871,6 +874,10 @@ void planificarRR() {
 					pthread_mutex_unlock(&colaDeBloqueadosMutex);
 				}
 			}
+			else {
+				free(entrenador);
+			}
+
 		}
 	}
 }
@@ -1220,14 +1227,14 @@ void moverEntrenador(int* pos_x, int* pos_y, int posD_x, int posD_y,
 }
 
 void planificarSRDF() {
-	pthread_mutex_lock(&colaDeListosMutex);
-	int tamanioColaListos = queue_size(colaDeListos);
-	pthread_mutex_unlock(&colaDeListosMutex);
-
-	if (tamanioColaListos) {
 
 		ordenarColaEntrenadores();
 
+		pthread_mutex_lock(&colaDeListosMutex);
+		int tamanioColaListos = queue_size(colaDeListos);
+		pthread_mutex_unlock(&colaDeListosMutex);
+
+		if (tamanioColaListos) {
 		pthread_mutex_lock(&colaDeListosMutex);
 		t_entrenador* entrenador = queue_pop(colaDeListos);
 		pthread_mutex_unlock(&colaDeListosMutex);
@@ -1270,11 +1277,16 @@ void planificarSRDF() {
 			}
 			entrenadorAnterior = entrenador->simbolo;
 		}
+		else{
+			free(entrenador);
+		}
+
 
 	}
 }
 
 void ordenarColaEntrenadores() {
+
 	t_list* listAuxOrdenar = list_create();
 	int i;
 
@@ -1289,15 +1301,21 @@ void ordenarColaEntrenadores() {
 		t_entrenador* entrenadorAux = queue_pop(colaDeListos);
 		pthread_mutex_unlock(&colaDeListosMutex);
 
-		if (noSeBorro(entrenadorAux)) {
-			entrenadorAux->estaEnTurno = 1;
-			calcularCantidadMovimientos(entrenadorAux);
-			entrenadorAux->estaEnTurno = 0;
 			pthread_mutex_lock(&setEntrenadoresMutex);
-			list_add(listAuxOrdenar, entrenadorAux);
+			entrenadorAux->estaEnTurno = 1;
+			pthread_mutex_unlock(&setEntrenadoresMutex);
+			calcularCantidadMovimientos(entrenadorAux);
+			pthread_mutex_lock(&setEntrenadoresMutex);
+			if(noSeBorro(entrenadorAux)){
+				entrenadorAux->estaEnTurno = 0;
+				list_add(listAuxOrdenar, entrenadorAux);
+			}
+			else{
+				free(entrenadorAux);
+			}
 			pthread_mutex_unlock(&setEntrenadoresMutex);
 
-		}
+
 		tamanioColaListos--; //le resto uno al tamanio para que no quede en bucle infinito
 	}
 
@@ -2016,29 +2034,31 @@ void evaluarEstadoEntrenador(t_entrenador* entrenador) {
 }
 
 bool noSeBorro(t_entrenador* entrenador) {
-	char simbolo;
-	bool buscarPorSimbolo(t_entrenador* entrenadorDeLaLista) {
-		if ((entrenadorDeLaLista != NULL && entrenadorDeLaLista->simbolo != NULL)
-				&& (simbolo != NULL)) {
-			return (entrenadorDeLaLista->simbolo == simbolo);
-		} else {
-			log_info(logMapa,"2026");
-		}
-		return false;
+//	char simbolo;
+//	bool buscarPorSimbolo(t_entrenador* entrenadorDeLaLista) {
+//		if ((entrenadorDeLaLista != NULL && entrenadorDeLaLista->simbolo != NULL)
+//				&& (simbolo != NULL)) {
+//			return (entrenadorDeLaLista->simbolo == simbolo);
+//		} else {
+//			log_info(logMapa,"2026");
+//		}
+//		return false;
+//
+//	}
+//
+//	pthread_mutex_lock(&setEntrenadoresMutex);
+//	simbolo = entrenador->simbolo;
+//	bool noSeDesconectoNadie = list_any_satisfy(listaDeEntrenadores,
+//			(void*) buscarPorSimbolo);
+//	pthread_mutex_unlock(&setEntrenadoresMutex);
+//
+//	if (noSeDesconectoNadie == 0){
+//		return noSeDesconectoNadie;
+//	}
+//
+//	else return (entrenador->accion != ESTADISTICAS);
 
-	}
-
-	pthread_mutex_lock(&setEntrenadoresMutex);
-	simbolo = entrenador->simbolo;
-	bool noSeDesconectoNadie = list_any_satisfy(listaDeEntrenadores,
-			(void*) buscarPorSimbolo);
-	pthread_mutex_unlock(&setEntrenadoresMutex);
-
-	if (noSeDesconectoNadie == 0){
-		return noSeDesconectoNadie;
-	}
-
-	else return (entrenador->accion != ESTADISTICAS);
+	return (entrenador->simbolo != '.');
 
 }
 
