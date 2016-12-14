@@ -1035,8 +1035,7 @@ int hayNuevosDatosParaAgregar(int tamanioViejo, int tamanioNuevo){
 void guardarLaMismaCantidadDeBloques(int cantidadDeBloquesParaGrabar,
 		uint16_t parent_directory, int tamanioNuevo, int posDelaTablaDeArchivos,
 		t_list* conjuntoDeBloquesDelArchivo, char* contenido, char* fname) {
-	if (conjuntoDeBloquesDelArchivo->elements_count
-			== cantidadDeBloquesParaGrabar) {
+	if (conjuntoDeBloquesDelArchivo->elements_count == cantidadDeBloquesParaGrabar) {
 		//SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO
 		log_info(logPokeDexServer, "*SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO");
 		guardarBloqueDeDatos(conjuntoDeBloquesDelArchivo, contenido,tamanioNuevo); //TODO: esto esta mal!!!

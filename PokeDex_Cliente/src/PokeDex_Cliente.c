@@ -124,8 +124,10 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 	}else {
 		if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 
+			pthread_mutex_lock(&mutex);
 			//Esta funcion llama al socket y pide el bloque
 			t_list* listaNodo = obtenerDirectorio(path, FUSE_GETATTR);
+			pthread_mutex_unlock(&mutex);
 
 			if (listaNodo->elements_count == 1 ){// listaNodo->elements_count SIEMPRE va a ser 1, porque el servidor solo manda 1 elemento
 
@@ -175,7 +177,9 @@ static int fuse_readdir(const char *path, void *buffer, fuse_fill_dir_t filler, 
 	int i;
 	log_info(logPokeCliente, "****************fuse_readdir****************\n");
 	log_info(logPokeCliente, "obtenerDirectorio FUSE_READDIR");
+	pthread_mutex_lock(&mutex);
 	t_list* nodos = obtenerDirectorio(path, FUSE_READDIR);
+	pthread_mutex_unlock(&mutex);
 
 	if(nodos->elements_count>0){
 		log_info(logPokeCliente, "FUSE_READDIR - listaNodo->elements_count: %i\n", nodos->elements_count);
@@ -202,6 +206,7 @@ static int fuse_rmdir(const char* path){
 	int exitCode;
 
 	log_info(logPokeCliente, "****************fuse_rmdir****************\n");
+	pthread_mutex_lock(&mutex);
 	//0) Send Fuse Operations
 	enum_FUSEOperations operacion = FUSE_RMDIR;
 	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -221,6 +226,7 @@ static int fuse_rmdir(const char* path){
 	int messageSize = -1;
 	int receivedBytes = receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
 	log_info(logPokeCliente, "fuse_rmdir - exitCode received: %i", exitCode);
+	pthread_mutex_unlock(&mutex);
 
 	if (exitCode == 1){
 		exitCode = -ENOENT;
@@ -246,6 +252,7 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 	}else{
 		if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){ 	// JOEL: NO DEBE GUARDARSE LOS  .swx y swp
 			int posDelaTablaDeArchivos = -999;
+			pthread_mutex_lock(&mutex);
 			//0) Send Fuse Operations
 			enum_FUSEOperations operacion = FUSE_CREATE;
 			exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -264,6 +271,7 @@ static int fuse_create (const char* path, mode_t mode, struct fuse_file_info * f
 			int receivedBytes = receiveMessage(&socketPokeServer, &posDelaTablaDeArchivos ,sizeof(posDelaTablaDeArchivos));
 
 			log_info(logPokeCliente, "fuse_create - posDelaTablaDeArchivos: %i\n", posDelaTablaDeArchivos);
+			pthread_mutex_unlock(&mutex);
 
 			if(posDelaTablaDeArchivos == -1){
 				printf("fuse_create - NO SE PUEDE CREAR MAS DE 2048\n");
@@ -296,6 +304,8 @@ static int fuse_mkdir(const char* path, mode_t mode){
     mode = S_IFDIR | 0777;
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 	log_info(logPokeCliente, "****************fuse_mkdir****************\n");
+
+	pthread_mutex_lock(&mutex);
 	//0) Send Fuse Operations
 	enum_FUSEOperations operacion = FUSE_MKDIR;
 	exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -314,6 +324,8 @@ static int fuse_mkdir(const char* path, mode_t mode){
 	//Receive message size
 	int messageSize = -1;
 	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
+	pthread_mutex_unlock(&mutex);
+
 	log_info(logPokeCliente, "fuse_mkdir - pos de la tabla de archivos: %i\n", messageSize);
 
 
@@ -336,6 +348,7 @@ static int fuse_truncate(const char* path, off_t offset) {
 		log_info(logPokeCliente, "--------------------- fuse_truncate ------------ \n");
 		log_info(logPokeCliente,"offset: %llu\n", offset);
 
+		pthread_mutex_lock(&mutex);
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_TRUNCATE;
 		sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -358,6 +371,7 @@ static int fuse_truncate(const char* path, off_t offset) {
 		//Receive message size
 		receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
 		log_info(logPokeCliente, "fuse_truncate -RECEIVE - exitCode: %d", exitCode);
+		pthread_mutex_unlock(&mutex);
 
 	}else{
 
@@ -376,6 +390,7 @@ static int fuse_unlink(const char* path){
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp")){
 		log_info(logPokeCliente, "****************FUSE_UNLINK****************\n");
 
+		pthread_mutex_lock(&mutex);
 		//0) Send Fuse Operations
 		enum_FUSEOperations operacion = FUSE_UNLINK;
 		exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -392,6 +407,8 @@ static int fuse_unlink(const char* path){
 
 		//Receive message size
 		int receivedBytes = receiveMessage(&socketPokeServer, &exitCode ,sizeof(exitCode));
+		pthread_mutex_unlock(&mutex);
+
 		log_info(logPokeCliente, "fuse_unlink - exitCode: %i\n", exitCode);
 	}else{
 		exitCode=EXIT_SUCCESS;
@@ -419,6 +436,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 	if(!string_ends_with(path, "swx") && !string_ends_with(path, "swp") && !string_is_empty(path)){
 
+		pthread_mutex_lock(&mutex);
 		int fileFound = -1;
 		int receivedBytes;
 		log_info(logPokeCliente, "****************fuse_read****************\n");
@@ -453,7 +471,6 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 		//Receive if the file was found
 		receivedBytes = receiveMessage(&socketPokeServer, &fileFound ,sizeof(fileFound));
 		log_info(logPokeCliente, "fuse_read - fileFound: %d\n", fileFound);
-//		pthread_mutex_lock(&ReadMutex);
 
 		if (receivedBytes > 0){
 			if (fileFound != -999){//el archivo no fue encontrado por el server
@@ -474,6 +491,8 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 
 				char *messageRcv = malloc(messageSize);
 				receivedBytes = receiveMessage(&socketPokeServer, messageRcv ,messageSize);
+
+				pthread_mutex_unlock(&mutex);
 
 				int bloqueLeido = 0;
 
@@ -534,6 +553,7 @@ static int fuse_read(const char *path, char *buf, size_t size, off_t offset, str
 				exitCode = EXIT_SUCCESS;
 			}//if (cantidadBloques != -999)
 		}else{
+			pthread_mutex_unlock(&mutex);
 			exitCode=EXIT_SUCCESS;
 		}//if (receivedBytes > 0)
 //		pthread_mutex_unlock(&ReadMutex);
@@ -561,6 +581,7 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 
 	int exitCode = EXIT_FAILURE; //DEFAULT Failure
 
+	pthread_mutex_lock(&mutex);
 	//0) Send Fuse Operations
 	enum_FUSEOperations operacion = FUSE_WRITE;
 
@@ -596,6 +617,7 @@ static int fuse_write(const char* path, const char* buf, size_t size,  off_t off
 	//Receive message size
 	int receivedBytes = receiveMessage(&socketPokeServer, &ultimoPunteroDeLosBloques_write ,sizeof(ultimoPunteroDeLosBloques_write));
 	log_info(logPokeCliente, "fuse_write -RECEIVE - ultimoPunteroDeLosBloques_write2: %d\n", ultimoPunteroDeLosBloques_write);
+	pthread_mutex_unlock(&mutex);
 
 	if(ultimoPunteroDeLosBloques_write != -1 ){
 		memset(buf,0,size);
@@ -620,12 +642,14 @@ static int fuse_rename (const char *oldname, const char *newName){
 		return -1;
 	}
 
+	pthread_mutex_lock(&mutex);
 	int resultado = renombrarArchivo(oldname, newName);
+	pthread_mutex_unlock(&mutex);
 
 	if (resultado == -999)	{
-			printf("[Error_Fuse] rename(%s,%s)\n", oldname, newName);
-			return 1;
-		}
+		printf("[Error_Fuse] rename(%s,%s)\n", oldname, newName);
+		return 1;
+	}
 
 	return 0;
 
@@ -635,6 +659,7 @@ static int fuse_utimens(const char *path, const struct timespec ts[2]){
 	//			NOTA VEAMOS JUNTOS COMO IMPLEMENTARLO LO QUE HAY QUE OBTENER ES EL
 	//			uint32_t lastmod;
 
+	pthread_mutex_lock(&mutex);
 	//0) Send Fuse Operations
 	enum_FUSEOperations operacion = FUSE_UTIMENS;
 	int exitCode = sendMessage(&socketPokeServer, &operacion , sizeof(enum_FUSEOperations));
@@ -657,6 +682,7 @@ static int fuse_utimens(const char *path, const struct timespec ts[2]){
 	int messageSize = -1;
 	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
 	log_info(logPokeCliente, "fuse_utimens - MessageSize: %i\n", messageSize);
+	pthread_mutex_unlock(&mutex);
 
 	return 0;
 }
@@ -735,7 +761,7 @@ int main(int argc, char **argv) {
 
 	logPokeCliente = log_create(logFile, "POKEDEX_CLIENTE", 0, LOG_LEVEL_TRACE);
 
-	pthread_mutex_init(&ReadMutex, NULL);
+	pthread_mutex_init(&mutex, NULL);
 
 	//getting environment variable for connecting to server
 	IP_SERVER = getenv("POKEIP");

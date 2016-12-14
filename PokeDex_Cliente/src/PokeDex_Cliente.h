@@ -17,7 +17,7 @@
 int PORT;
 char *IP_SERVER;
 int socketPokeServer = 0;
-pthread_mutex_t ReadMutex;
+pthread_mutex_t mutex;
 
 //Logger
 t_log* logPokeCliente;
