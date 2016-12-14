@@ -629,6 +629,7 @@ void processMessageReceived(void *parameter) {
 				entrenador->accion = ESTADISTICAS;
 				sendClientMessage(&entrenador->socket, stats, ESTADISTICAS);
 				pthread_mutex_unlock(&setEntrenadoresMutex);
+//				eliminarEntrenador(entrenador->simbolo);
 				break;
 			}
 			default: {
@@ -2264,7 +2265,7 @@ void eliminarDeColaBloequeados(char simbolo) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	for (i = 0; i < list_size(listAuxOrdenar); i++) {
 		t_entrenador* entrenadorAux = list_get(listAuxOrdenar, i);
-		log_info(logMapa, string_from_format("%c", entrenadorAux->simbolo));
+//		log_info(logMapa, string_from_format("%c", entrenadorAux->simbolo));
 		pthread_mutex_lock(&colaDeBloqueadosMutex);
 		queue_push(colaDeBloqueados, entrenadorAux);
 		pthread_mutex_unlock(&colaDeBloqueadosMutex);
@@ -2303,7 +2304,7 @@ void eliminarDeColaListos(char simbolo) {
 	pthread_mutex_lock(&setEntrenadoresMutex);
 	for (i = 0; i < list_size(listAuxOrdenar); i++) {
 		t_entrenador* entrenadorAux = list_get(listAuxOrdenar, i);
-		log_info(logMapa, string_from_format("%c", entrenadorAux->simbolo));
+//		log_info(logMapa, string_from_format("%c", entrenadorAux->simbolo));
 		pthread_mutex_lock(&colaDeListosMutex);
 		queue_push(colaDeListos, entrenadorAux);
 		pthread_mutex_unlock(&colaDeListosMutex);

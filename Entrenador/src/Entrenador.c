@@ -68,6 +68,11 @@ int main(int argc, char **argv) {
 	i = 0;
 	//for (i = 0; i < queue_size(metadataEntrenador.hojaDeViaje); i++) {
 	while (queue_size(metadataEntrenador.hojaDeViaje) > 0) {
+
+		pthread_mutex_lock(&turnoMutex);
+		turno = SIN_MENSAJE;
+		pthread_mutex_unlock(&turnoMutex);
+
 		mapaActual = queue_pop(metadataEntrenador.hojaDeViaje);
 		objetivosActuales = queue_pop(metadataEntrenador.obj); // un string con los objetivos separados por coma.
 
