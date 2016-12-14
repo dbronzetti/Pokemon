@@ -26,13 +26,13 @@ endif
 all: Mapa
 
 dependents:
-	-cd /home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug && $(MAKE) clean all
+	-cd /home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed-commons/Debug && $(MAKE) clean all
 
 # Tool invocations
-Mapa: $(OBJS) $(USER_OBJS) /home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug/libCompuMundoHiperMegaRed-commons.so
+Mapa: $(OBJS) $(USER_OBJS) /home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed-commons/Debug/libCompuMundoHiperMegaRed-commons.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug" -o "Mapa" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed-commons/Debug" -o "Mapa" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -43,6 +43,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed/CompuMundoHiperMegaRed-commons/Debug/libCompuMundoHiperMegaRed-commons.so:
+/home/utnso/Documentos/Projects/SO_2016/Github/CompuMundoHiperMegaRed-commons/Debug/libCompuMundoHiperMegaRed-commons.so:
 
 -include ../makefile.targets
