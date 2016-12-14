@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&listaDePokenestMutex, NULL);
 	pthread_mutex_init(&setRecibirMsj, NULL);
 	pthread_mutex_init(&metadataMutex, NULL);
+	pthread_mutex_init(&borradoEntrenadoresMutex, NULL);
 	sem_init(&processNextMessageSem, 0, SEM_INIT_VALUE); //pshared = 0, then the semaphore is shared between the threads of a process
 	sem_init(&borradoDePersonajesSem, 0, SEM_INIT_VALUE);
 
@@ -696,6 +697,7 @@ void crearEntrenadorYDibujar(char simbolo, int socket) {
 }
 
 void eliminarEntrenador(char simbolo) {
+	pthread_mutex_lock(&borradoEntrenadoresMutex);
 	log_info(logMapa, "The trainer '%c' is going to be eliminated", simbolo);
 
 	pthread_mutex_lock(&itemsMutex);
@@ -744,6 +746,8 @@ void eliminarEntrenador(char simbolo) {
 		pthread_mutex_unlock(&setEntrenadoresMutex);
 	}
 	else entrenador->simbolo = '.';
+
+	pthread_mutex_unlock(&borradoEntrenadoresMutex);
 }
 
 void devolverPokemones(t_list* pokemones) {
@@ -1399,7 +1403,7 @@ void detectarDeadlocks() {
 		log_info(logMapa, "tamanioColaBloqueados %d", tamanioColaBloqueados);
 
 		if (tamanioColaBloqueados > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
-
+			pthread_mutex_lock(&borradoEntrenadoresMutex);
 			t_list* listaDeadlock = list_create();
 			t_list* entrenadoresBloqueados = detectarInterbloqueo();
 
@@ -1595,6 +1599,7 @@ void detectarDeadlocks() {
 				log_info(logMapa,
 						"Se le notifica al entrenador '%c' que se va a morir",
 						entrenadorVictima->simbolo);
+				pthread_mutex_unlock(&borradoEntrenadoresMutex);
 				matar(entrenadorVictima);//se envia mensaje al entrenador y devuelve sus pokemones al mapa
 
 				list_destroy(listaDeadlock);

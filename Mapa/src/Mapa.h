@@ -49,6 +49,7 @@ pthread_mutex_t itemsMutex;
 pthread_mutex_t listaDePokenestMutex;
 pthread_mutex_t setRecibirMsj;
 pthread_mutex_t metadataMutex;
+pthread_mutex_t borradoEntrenadoresMutex;
 sem_t processNextMessageSem;
 sem_t borradoDePersonajesSem;
 int SEM_INIT_VALUE = 1;//This is for receiving the 1st trainer
