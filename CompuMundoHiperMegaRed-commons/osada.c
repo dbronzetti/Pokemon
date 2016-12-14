@@ -164,6 +164,7 @@ t_bitarray *obtenerBitmap(){
 
 	pthread_mutex_lock(&BITMAPmutex);
 	bitMap = bitarray_create(unBitMapSinFormato, TAMANIO_DEL_BITMAP );
+	bitMap->mode = MSB_FIRST;
 	BITMAP = bitMap;
 	pthread_mutex_unlock(&BITMAPmutex);
 	contarBloques();
@@ -486,41 +487,16 @@ void borrarBloquesDelBitmap(t_list *listado){
 
 }
 
-int ingresarElUTIMENS(char *nombre, uint16_t parent_directory, int tv_nsec){
+void ingresarElUTIMENS(uint16_t pos_archivo, uint32_t tv_sec){
 	log_info(logPokeDexServer, "******************************** ENTRO EN ingresarElUTIMENS  ******************************** ");
-	int pos=0;
-	osada_block_pointer posicion = 0;
-	char *file_name = strrchr (nombre, '/') + 1;
-	log_info(logPokeDexServer, "file_name: %s", file_name);
-	bool found = false;
-	for (pos=0; pos <= 2047; pos++){
-		char *nac;
-		char *n;
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		nac = string_duplicate(&TABLA_DE_ARCHIVOS[pos].fname);
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-		n = string_duplicate(file_name);
-		string_trim(&nac);
-		string_trim(&n);
-
-		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
-		if (TABLA_DE_ARCHIVOS[pos].parent_directory == parent_directory  && strcmp(nac, n) == 0){
-			log_info(logPokeDexServer, "******************************* LO ENCONTRO! ******************************* ");
-			TABLA_DE_ARCHIVOS[pos].lastmod = tv_nsec;
-			posicion = pos;
-			found = true;
-		}
-		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
-		if (found){
-			break;
-		}
-	}
 
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
+	memcpy(&TABLA_DE_ARCHIVOS[pos_archivo].lastmod,&tv_sec,sizeof(tv_sec));
+	log_info(logPokeDexServer, "TABLA_DE_ARCHIVOS[pos].lastmod = tv_sec %d",TABLA_DE_ARCHIVOS[pos_archivo].lastmod);
 	guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
+	log_info(logPokeDexServer, "TABLA_DE_ARCHIVOS[pos].lastmod = tv_sec %d",TABLA_DE_ARCHIVOS[pos_archivo].lastmod);
 	pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
 
-	return posicion;
 }
 
 int borrarUnArchivo(char *nombre, uint16_t parent_directory){
@@ -887,12 +863,9 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantBloquesDeseados
 	}
 
 	// Quitamos los nuevos bloques asignados.
-	// TODO : Poner Mutex
 	pthread_mutex_lock(&OSADAmutex);
-		log_info(logPokeDexServer, "ANTES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %d", BYTES_LIBRES, BYTES_OCUPADOS);
 		BYTES_LIBRES -=  bloquesObtenidos * OSADA_BLOCK_SIZE;
 		BYTES_OCUPADOS +=  bloquesObtenidos * OSADA_BLOCK_SIZE;
-		log_info(logPokeDexServer, "DESPUES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %d", BYTES_LIBRES, BYTES_OCUPADOS);
 	pthread_mutex_unlock(&OSADAmutex);
 
 
@@ -1001,8 +974,7 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 	int i;
 
 	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
-	log_info(logPokeDexServer,"UltimoPuntero: %d",ultimoPuntero);
-	log_info(logPokeDexServer,"cantidad de elementos en bloques disponibles: %d",cantidadDeElemento);
+//	log_info(logPokeDexServer,"cantidad de elementos en bloques disponibles: %d",cantidadDeElemento);
 	for(i = 0; i < cantidadDeElemento; i++){
 
 		if (i==0){
@@ -1027,7 +999,6 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 
 	}
 
-	log_info(logPokeDexServer,"UltimoPuntero: %d",bloqueSig);
 	// Al ultimo bloque utilizado le asigno el final de Archivo.
 	bloquePos =bloqueSig;
 	bloqueSig =-1;
