@@ -268,7 +268,6 @@ t_list *obtenerElListadoDeBloquesCorrespondientesAlArchivo(int bloqueInicial, in
 	int count=0;
 	int elProximo = 0;
 	t_list *listaDeBloques = list_create();
-
 	if ( bloqueInicial!=-999){
 
 		if(offsetBloque > 0){
@@ -298,7 +297,6 @@ t_list *obtenerElListadoDeBloquesCorrespondientesAlArchivo(int bloqueInicial, in
 			}
 		}
 	}
-
 	//list_iterate(listaDeBloques, (void*) _iterarBloques);
 	return listaDeBloques;
 }
@@ -471,10 +469,8 @@ void borrarBloqueDelBitmap(int bloque){
 	pthread_mutex_unlock(&BITMAPmutex);
 
 	pthread_mutex_lock(&OSADAmutex);
-		log_info(logPokeDexServer, "ANTES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %i", BYTES_LIBRES, BYTES_OCUPADOS);
 		BYTES_LIBRES -=  OSADA_BLOCK_SIZE;
 		BYTES_OCUPADOS +=  OSADA_BLOCK_SIZE;
-		log_info(logPokeDexServer, "DESPUES: BYTES_LIBRES %i |  BYTES_OCUPADOS: %i", BYTES_LIBRES, BYTES_OCUPADOS);
 	pthread_mutex_unlock(&OSADAmutex);
 
 }
@@ -1020,17 +1016,6 @@ int hayNuevosDatosParaAgregar(int tamanioViejo, int tamanioNuevo){
 	return diferenciaEntreTamanioViejoYNuevo(tamanioViejo, tamanioNuevo) > 0;
 }
 
-void guardarLaMismaCantidadDeBloques(int cantidadDeBloquesParaGrabar,
-		uint16_t parent_directory, int tamanioNuevo, int posDelaTablaDeArchivos,
-		t_list* conjuntoDeBloquesDelArchivo, char* contenido, char* fname) {
-	if (conjuntoDeBloquesDelArchivo->elements_count == cantidadDeBloquesParaGrabar) {
-		//SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO
-		log_info(logPokeDexServer, "*SI ES LA MISMA CANTIDAD DE BLOQUES, ENTONCES SOBREESCRIBO LOS BLOQUES CON EL NUEVO CONTENIDO");
-		guardarBloqueDeDatos(conjuntoDeBloquesDelArchivo, contenido,tamanioNuevo); //TODO: esto esta mal!!!
-		modificarEnLaTablaDeArchivos(tamanioNuevo,posDelaTablaDeArchivos, list_get(conjuntoDeBloquesDelArchivo, 0));
-	}
-}
-
 
 int agregarMasDatosAlArchivos(int firstBloque,int posDelaTablaDeArchivos, int tamanioNuevo){
 	int exitCode = 0;//por default retorna OK
@@ -1051,6 +1036,14 @@ int agregarMasDatosAlArchivos(int firstBloque,int posDelaTablaDeArchivos, int ta
 	if (list_size(listadoLosIndicesDeLosBloquesDisponibles)> 0){
 		modificarAgregandoBloquesEnLaTablaDeAsignacion(listadoLosIndicesDeLosBloquesDisponibles, ultimoPuntero);
 
+		char *bloqueVacio = string_repeat('\0',OSADA_BLOCK_SIZE);
+		int i;
+		for(i=0;i<list_size(listadoLosIndicesDeLosBloquesDisponibles);i++){
+			int bloque = list_get(listadoLosIndicesDeLosBloquesDisponibles,i);
+			guardarEnTablaDeDatos(bloque,bloqueVacio);
+		}
+		free(bloqueVacio);
+
 		pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 		tamanioNuevo +=  TABLA_DE_ARCHIVOS[posDelaTablaDeArchivos].file_size;
 		pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -1058,7 +1051,6 @@ int agregarMasDatosAlArchivos(int firstBloque,int posDelaTablaDeArchivos, int ta
 		modificarEnLaTablaDeArchivos(tamanioNuevo, posDelaTablaDeArchivos, list_get(listadoLosIndicesDeLosBloquesDisponibles, 0));
 	}else{
 		//verBitmap();
-		log_info(logPokeDexServer, "*********** agregarMasDatosAlArchivos - conjuntoDeBloquesDelArchivo size: %i", list_size(conjuntoDeBloquesDelArchivo));
 		exitCode = -1;//no hay mas bloques disponibles
 		log_info(logPokeDexServer, "*********** agregarMasDatosAlArchivos - no hay mas bloques disponibles");
 	}
@@ -1091,7 +1083,7 @@ unsigned char *creoContenidoBinario(int tamanio){
 }
 
 int hacerElTruncate(int offset, char* path,int* pos_archivo){
-	int parent_dir = obtener_bloque_padre_NUEVO (path,pos_archivo);
+	*pos_archivo= obtener_bloque_archivo(path);
 
 	//Achicar archivo
 	pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
@@ -1159,9 +1151,10 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 			int nuevaCantidadBloques = cant_bloques;
 
 			if(off_bloque > 0) {//Valido si estoy en la mitad del bloque, si es asi, paso al siguiente
-
+				log_info(logPokeDexServer, "Valido si estoy en la mitad del bloque, si es asi, paso al siguiente");
 				nuevaCantidadBloques++;
 				if(list_size(conjuntoDeBloquesDelArchivo)<nuevaCantidadBloques){
+					log_info(logPokeDexServer, "Retorno Error si la cantidad de bloques a eliminar es mayor al archivo actual.");
 					return -1; // Retorno Error si la cantidad de bloques a eliminar es mayor al archivo actual.
 				}
 			}
@@ -1169,7 +1162,7 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 			conjuntoDeBloquesDelArchivo = obtenerElListadoDeBloquesCorrespondientesAlArchivo(firstBloque, nuevaCantidadBloques);
 
 			int i;
-			for(i=0; nuevaCantidadBloques < list_size(conjuntoDeBloquesDelArchivo);i++){
+			for(i=0; i < list_size(conjuntoDeBloquesDelArchivo);i++){
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
 
@@ -1179,11 +1172,9 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 
 			int bloqueDesde = list_get(conjuntoDeBloquesDelArchivo, 0);
 			borrarListadoDeBloquesDesde(firstBloque, bloqueDesde); // -1 --> porque tiene que ir hasta el final de bloques del archivo
-
 			fileSize = nuevaCantidadBloques*OSADA_BLOCK_SIZE;
 
 			modificarEnLaTablaDeArchivos(fileSize,*pos_archivo, firstBloque);
-
 			return 0;
 		}
 	} //Hasta aca chequeado
