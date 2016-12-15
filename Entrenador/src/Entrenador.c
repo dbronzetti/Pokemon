@@ -282,6 +282,7 @@ void desconectarse() {
 
 void jugar() {
 	char* objetivoActual;
+	int gane = 1;
 
 	while ((queue_size(colaDeObjetivos) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
@@ -356,6 +357,7 @@ void jugar() {
 				restarVida();
 				metadataEntrenador.cantDead++;
 				if (metadataEntrenador.vidas > 0) {
+					printf(ANSI_COLOR_RED     "Ha perdido 1 vida ahora tiene %d cantidad de vidas"     ANSI_COLOR_RESET "\n",metadataEntrenador.vidas);
 					reconectarse();
 					colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola se rellena
 				} else {
@@ -373,6 +375,7 @@ void jugar() {
 						limpiarColasMetadaEtrenador();
 						desconectarse();
 						borrarArchivos(rutaDirDeBill);
+						printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
 						borrarArchivos(rutaMedallas);
 						pthread_cancel(hiloEscuchar);
 						crearArchivoMetadata(rutaMetadata);
@@ -382,6 +385,7 @@ void jugar() {
 						cerrarEntrenador(); //se muere el entrenador
 					}
 					free(respuesta);
+					gane = 0;
 				}
 				break;
 			}
@@ -393,7 +397,7 @@ void jugar() {
 		pthread_mutex_unlock(&turnoMutex);
 
 	}
-
+	if(gane)
 	yoYaGane();
 
 }
@@ -610,7 +614,9 @@ void borrarArchivos(char* rutaDeleted) { //se borran todos los archivos que se p
 
 void cerrarEntrenador() {
 	borrarArchivos(rutaDirDeBill);
+	printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
 	borrarArchivos(rutaMedallas);
+	printf(ANSI_COLOR_YELLOW   "Medallas borradas"   ANSI_COLOR_RESET "\n");
 	exit(0);
 }
 
@@ -631,6 +637,7 @@ void yoYaGane() {
 	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
 	printf(ANSI_COLOR_YELLOW   "Obtenida medalla de %s"   ANSI_COLOR_RESET "\n",mapaActual);
 	borrarArchivos(rutaDirDeBill);
+	printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
 	desconectarse();
 	pthread_cancel(hiloEscuchar);
 
@@ -638,6 +645,7 @@ void yoYaGane() {
 
 int reconectarse() {
 	borrarArchivos(rutaDirDeBill);
+	printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
 	desconectarse();
 	pthread_cancel(hiloEscuchar);
 	exitCode = connectTo(MAPA, &socketMapa);
