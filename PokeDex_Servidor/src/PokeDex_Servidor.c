@@ -218,7 +218,7 @@ void processMessageReceived(void *parameter){
 			switch (*FUSEOperation){
 				case FUSE_UTIMENS:{
 					log_info(logPokeDexServer, "-------Processing FUSE_UTIMENS message");
-					int parent_directory=0;
+					int pos_archivo=0;
 					int pathLength = 0;
 
 					//1) Receive path length
@@ -230,14 +230,16 @@ void processMessageReceived(void *parameter){
 					log_info(logPokeDexServer, "FUSE_UTIMENS - Message path received : %s\n",path);
 
 					//3) time
-					long int tiempo=0;
+					uint32_t tiempo=0;
 					receiveMessage(&serverData->socketClient, &tiempo, sizeof(tiempo));
 					log_info(logPokeDexServer, "FUSE_UTIMENS - Message tiempo received : %i\n",tiempo);
 
 					//get padre from path received
-					parent_directory = obtener_bloque_padre(path);
+					pos_archivo= obtener_bloque_archivo(path);
 
-					ingresarElUTIMENS(path, parent_directory, tiempo);
+					if (pos_archivo != -666){
+						ingresarElUTIMENS(pos_archivo, tiempo);
+					}
 
 					sendMessage(&serverData->socketClient, &tiempo , sizeof(tiempo));
 					break;
@@ -295,18 +297,18 @@ void processMessageReceived(void *parameter){
 					int bufferOffset = 0;
 					receiveMessage(&serverData->socketClient, &bufferOffset, sizeof(bufferOffset));
 
-					pthread_mutex_lock(&OSADAmutex);
-						bool entraFlag	= (BYTES_LIBRES>=contentSize);
-					pthread_mutex_unlock(&OSADAmutex);
-
-					if(entraFlag){
-						ultimoPuntero = escribirUnArchivo(content, contentSize, path,bufferOffset);
+//					pthread_mutex_lock(&OSADAmutex);
+//						bool entraFlag	= (BYTES_LIBRES>=contentSize);
+//					pthread_mutex_unlock(&OSADAmutex);
+//
+//					if(entraFlag){
+					ultimoPuntero = escribirUnArchivo(content, contentSize, path,bufferOffset);
 						//log_info(logPokeDexServer, "FUSE_WRITE - ultimoPuntero: %d\n", ultimoPuntero);
 
 						//printf("FUSE_WRITE - ultimoPunteroDeLosBloques: %d\n", ultimoPunteroDeLosBloques);
-					}else{
-						log_info(logPokeDexServer, "FUSE_WRITE - NO TE DEJO");
-					}
+//					}else{
+//						log_info(logPokeDexServer, "FUSE_WRITE - NO TE DEJO");
+//					}
 					sendMessage(&serverData->socketClient, &ultimoPuntero, sizeof(ultimoPuntero));
 
 					//log_info(logPokeDexServer,"********************************* TERMINO EL WRITE *********************\n");

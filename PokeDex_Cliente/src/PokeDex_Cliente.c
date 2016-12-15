@@ -142,8 +142,9 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 					stbuf->st_mode = S_IFREG | 0777;
 					stbuf->st_nlink = 1;
 					stbuf->st_size = nodo->file_size;
-					//stbuf->st_atim.tv_nsec = nodo->lastmod;
+					stbuf->st_atim.tv_sec = nodo->lastmod;
 
+					log_info(logPokeCliente, "TABLA_DE_ARCHIVOS[pos].lastmod = tv_sec %d",nodo->lastmod);
 					log_info(logPokeCliente, "FUSE_GETATTR - REGULAR - nodo->parent_directory: %i\n", nodo->parent_directory);
 
 				}
@@ -154,7 +155,7 @@ static int fuse_getattr(const char *path, struct stat *stbuf)
 					log_info(logPokeCliente, "FUSE_GETATTR - DIRECTORY - nodo->state: DIRECTORY\n");
 					stbuf->st_mode = S_IFDIR | 0777;
 					stbuf->st_nlink = 2;
-					//stbuf->st_atim.tv_nsec = nodo->lastmod;
+					stbuf->st_atim.tv_sec = nodo->lastmod;
 				}
 				free(nodo);
 			}else{
@@ -655,7 +656,7 @@ static int fuse_rename (const char *oldname, const char *newName){
 
 }
 static int fuse_utimens(const char *path, const struct timespec ts[2]){
-	printf("***************** fuse_utimens - ts[1].tv_nsec: %i***********************\n", ts[1].tv_nsec);
+	printf("***************** fuse_utimens - ts[1].tv_nsec: %i***********************\n", ts[1].tv_sec);
 	//			NOTA VEAMOS JUNTOS COMO IMPLEMENTARLO LO QUE HAY QUE OBTENER ES EL
 	//			uint32_t lastmod;
 
@@ -675,16 +676,21 @@ static int fuse_utimens(const char *path, const struct timespec ts[2]){
 	log_info(logPokeCliente, "fuse_utimens - path: %s\n", path);
 
 	//3) send time
-	exitCode = sendMessage(&socketPokeServer, &ts[1].tv_nsec , sizeof(long int));//del otro lado se esta recibiendo un long int
-	log_info(logPokeCliente, "fuse_utimens - time: %i\n", ts[1].tv_nsec);
+	exitCode = sendMessage(&socketPokeServer, &ts[1].tv_sec , sizeof(uint32_t));//del otro lado se esta recibiendo un long int
+	log_info(logPokeCliente, "fuse_utimens - time: %i\n", ts[1].tv_sec);
 
 	//Receive message size
-	int messageSize = -1;
-	int receivedBytes = receiveMessage(&socketPokeServer, &messageSize ,sizeof(messageSize));
-	log_info(logPokeCliente, "fuse_utimens - MessageSize: %i\n", messageSize);
+	int tiempo = -1;
+	int receivedBytes = receiveMessage(&socketPokeServer, &tiempo ,sizeof(tiempo));
+	log_info(logPokeCliente, "fuse_utimens - tiempo: %i\n", tiempo);
 	pthread_mutex_unlock(&mutex);
 
-	return 0;
+	if (tiempo > 0){
+		return 0;
+	}else{
+		return -ENOENT;
+	}
+
 }
 
 
