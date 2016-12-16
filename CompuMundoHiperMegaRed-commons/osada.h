@@ -119,6 +119,7 @@ pthread_mutex_t BITMAPmutex;
 pthread_mutex_t DATA_BLOCKSmutex;
 pthread_mutex_t ARRAY_TABLA_ASIGNACIONmutex;
 pthread_mutex_t TABLA_DE_ARCHIVOSmutex;
+pthread_mutex_t lista_bloq_archivosmutex;
 
 #endif __OSADA_H__
 

@@ -16,6 +16,7 @@ void initMutexOsada(){
     pthread_mutex_init(&DATA_BLOCKSmutex, NULL);
     pthread_mutex_init(&ARRAY_TABLA_ASIGNACIONmutex, NULL);
     pthread_mutex_init(&TABLA_DE_ARCHIVOSmutex, NULL);
+    pthread_mutex_init(&listaTablaDeArchivos, NULL);
 }
 
 void destroyMutexOsada(){
@@ -25,6 +26,7 @@ void destroyMutexOsada(){
 	pthread_mutex_destroy(&DATA_BLOCKSmutex);
 	pthread_mutex_destroy(&ARRAY_TABLA_ASIGNACIONmutex);
 	pthread_mutex_destroy(&TABLA_DE_ARCHIVOSmutex);
+	pthread_mutex_destroy(&listaTablaDeArchivos);
 }
 
 void guardarEnOsada(int desde, void *elemento, int tamaniaDelElemento){
@@ -32,8 +34,6 @@ void guardarEnOsada(int desde, void *elemento, int tamaniaDelElemento){
 	memcpy(&OSADA[desde], elemento, tamaniaDelElemento);
 	pthread_mutex_unlock(&OSADAmutex);
 }
-
-
 
 
 char *obtenerBloqueDeDatos(unsigned char *osada, osada_header *osadaHeaderFile){
@@ -339,6 +339,27 @@ void borrarListadoDeBloquesCorrespondientesAlArchivo(int bloqueDesde, int bloque
 }
 
 void borrarListadoDeBloquesDesde(int firstBloque, int bloqueDesde){
+
+
+			printf("----------------------------------------------------------------\n");
+			t_list* listaImprimible = obtenerElListadoDeBloquesCorrespondientesAlArchivo(firstBloque, 0);
+			int i;
+			for(i=0;i<list_size(listaImprimible);i++){
+				printf("%d,",list_get(listaImprimible,i));
+			}
+			printf("\n");
+			printf("\n");
+			int j;
+
+			log_info(logPokeDexServer, "firstBloque %i",firstBloque);
+			t_list* listaArch = list_get(listaTablaDeArchivos,firstBloque);
+			log_info(logPokeDexServer, "list_size(listaArch) %i",list_size(listaArch));
+
+			for(j=0;j<list_size(listaArch);j++){
+				printf("%d,",list_get(listaArch,j));
+			}
+			printf("\n");
+
 	int elProximo = 0;
 
 	if ( firstBloque!=-999){
@@ -465,9 +486,9 @@ int buscarElArchivoYDevolverPosicion(char *nombre, uint16_t parent_directory){
 void borrarBloqueDelBitmap(int bloque){
 
 	pthread_mutex_lock(&BITMAPmutex);
-	if(bitarray_test_bit(BITMAP, bloque)){
+//	if(bitarray_test_bit(BITMAP, bloque)){
 		bitarray_clean_bit(BITMAP, bloque);
-	}
+//	}
 	pthread_mutex_unlock(&BITMAPmutex);
 
 	pthread_mutex_lock(&OSADAmutex);
@@ -477,13 +498,6 @@ void borrarBloqueDelBitmap(int bloque){
 
 }
 
-void borrarBloquesDelBitmap(t_list *listado){
-	list_iterate(listado, (void*)borrarBloqueDelBitmap);
-	pthread_mutex_lock(&BITMAPmutex);
-	guardarEnOsada(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
-	pthread_mutex_unlock(&BITMAPmutex);
-
-}
 
 void ingresarElUTIMENS(uint16_t pos_archivo, uint32_t tv_sec){
 	log_info(logPokeDexServer, "******************************** ENTRO EN ingresarElUTIMENS  ******************************** ");
@@ -971,18 +985,21 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 	list_add_all(listaParalela,listadoLosIndicesDeLosBloquesDisponibles);
 
 	if(ultimoPuntero!=-999){
+		pthread_mutex_lock(&lista_bloq_archivosmutex);
 		bloquesAsociados = list_get(listaTablaDeArchivos,firstBloque);
+		pthread_mutex_unlock(&lista_bloq_archivosmutex);
 
 	}else{ //Es mi primer bloque de asigancion.
 		ultimoPuntero = list_remove(listaParalela,0);
+		pthread_mutex_lock(&lista_bloq_archivosmutex);
 		bloquesAsociados = list_get(listaTablaDeArchivos,ultimoPuntero);
+		pthread_mutex_unlock(&lista_bloq_archivosmutex);
 	}
-	log_info(logPokeDexServer,"bloquesAsociados: %d",list_size(bloquesAsociados));
 
+	pthread_mutex_lock(&lista_bloq_archivosmutex);
 	list_add_all(bloquesAsociados,listadoLosIndicesDeLosBloquesDisponibles);
+	pthread_mutex_unlock(&lista_bloq_archivosmutex);
 	//Linkeo en Tabla de Archivos
-	log_info(logPokeDexServer,"FIN bloquesAsociados: %d",list_size(bloquesAsociados));
-
 	bool flag = true;
 	int cantidadDeElemento = 0;
 	int bloquePos;
@@ -1043,15 +1060,19 @@ int agregarMasDatosAlArchivos(int firstBloque,int posDelaTablaDeArchivos, int ta
 
 	t_list *conjuntoDeBloquesDelArchivo;
 	if(firstBloque != -999){
+		pthread_mutex_lock(&lista_bloq_archivosmutex);
 		conjuntoDeBloquesDelArchivo = list_get(listaTablaDeArchivos, firstBloque);
+		pthread_mutex_unlock(&lista_bloq_archivosmutex);
 	}else{
 		conjuntoDeBloquesDelArchivo = list_create();
 	}
 
 	int ultimoPuntero = firstBloque;
+	pthread_mutex_lock(&lista_bloq_archivosmutex);
 	if(list_size(conjuntoDeBloquesDelArchivo)!=0){
 		ultimoPuntero = list_get(conjuntoDeBloquesDelArchivo, conjuntoDeBloquesDelArchivo->elements_count-1);
 	}
+	pthread_mutex_unlock(&lista_bloq_archivosmutex);
 
 	//(logPokeDexServer, "*********** agregarMasDatosAlArchivos - ultimoPuntero: %i", ultimoPuntero);
 
@@ -1132,6 +1153,9 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 			for(i=0; i < list_size(conjuntoDeBloquesDelArchivo);i++){ //I= 0 BORRO TODOS LOS BLOQUES OCUPADOS
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
+			//Actualizo la ListaDe
+			t_list* bloquesArchivos = list_get(listaTablaDeArchivos,firstBloque);
+			list_clean(bloquesArchivos);
 
 			pthread_mutex_lock(&BITMAPmutex);
 			guardarEnOsada(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
@@ -1157,6 +1181,11 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 			for(i=1; i < list_size(conjuntoDeBloquesDelArchivo);i++){// i=1 DEJA EL PRIMER BLOQUE OCUPADO
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
+
+			//Actualizo la ListaDe
+			t_list* bloquesArchivos = list_get(listaTablaDeArchivos,firstBloque);
+			list_clean(bloquesArchivos);
+			list_add(bloquesArchivos,firstBloque);
 
 			pthread_mutex_lock(&BITMAPmutex);
 			guardarEnOsada(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
@@ -1191,6 +1220,15 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 				borrarBloqueDelBitmap(list_get(conjuntoDeBloquesDelArchivo, i));
 			}
 
+			//Tomo los primeros elementos de la lista
+			t_list* bloqueRemanente=  list_create();
+			t_list* bloquesArchivos = list_get(listaTablaDeArchivos,firstBloque);
+			for(i=0;i<nuevaCantidadBloques;i++){
+				list_add(bloqueRemanente,list_get(bloquesArchivos,i));
+			}
+			list_clean(bloquesArchivos);
+			list_add_all(bloquesArchivos,bloqueRemanente);
+
 			pthread_mutex_lock(&BITMAPmutex);
 			guardarEnOsada(DESDE_PARA_BITMAP, BITMAP->bitarray, TAMANIO_DEL_BITMAP);
 			pthread_mutex_unlock(&BITMAPmutex);
@@ -1202,7 +1240,7 @@ int hacerElTruncate(int offset, char* path,int* pos_archivo){
 			modificarEnLaTablaDeArchivos(fileSize,*pos_archivo, firstBloque);
 			return 0;
 		}
-	} //Hasta aca chequeado
+	}//Hasta aca chequeado
 
 	//Agrandar archivo
 	if(fileSize < offset){
