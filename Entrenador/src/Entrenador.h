@@ -86,6 +86,7 @@ void restarVida();
 void desconectarse();
 void borrarArchivos(char* rutaDeleted);
 void cerrarEntrenador();
+void restarVidaConSignal();
 
 //Chau Blanco
 char* str_replace(const char *strbuf, const char *strold, const char *strnew)  ;

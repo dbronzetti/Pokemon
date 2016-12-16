@@ -256,7 +256,7 @@ void imprimirArray(char** array) {
 void recibirSignal() {
 	while (1) {
 		signal(SIGUSR1, sumarVida);
-		signal(SIGTERM, restarVida);
+		signal(SIGTERM, restarVidaConSignal);
 		signal(SIGINT, cerrarEntrenador);
 	}
 }
@@ -273,6 +273,15 @@ void restarVida() {
 	log_info(logEntrenador,
 			"Ha disminuido en 1 la vida del entrenador, ahora es de '%d'\n",
 			metadataEntrenador.vidas);
+}
+
+void restarVidaConSignal() {
+	if(metadataEntrenador.vidas == 1) {
+		pthread_mutex_lock(&turnoMutex);
+		turno = MATAR;
+		pthread_mutex_unlock(&turnoMutex);
+	}
+	else restarVida();
 }
 
 void desconectarse() {
@@ -377,6 +386,7 @@ void jugar() {
 						borrarArchivos(rutaDirDeBill);
 						printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
 						borrarArchivos(rutaMedallas);
+						printf(ANSI_COLOR_YELLOW   "Medallas borradas"   ANSI_COLOR_RESET "\n");
 						pthread_cancel(hiloEscuchar);
 						crearArchivoMetadata(rutaMetadata);
 					} else {
