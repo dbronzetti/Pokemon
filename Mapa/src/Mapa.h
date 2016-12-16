@@ -166,4 +166,5 @@ void loguearColaBloqueados();
 char* dameElNombre(char id);
 void eliminarDeColaListos(char simbolo);
 void eliminarDeColaBloequeados(char simbolo);
+t_list* detectarEsperaCircular(t_list* entrenadoresDeadlock);
 #endif /* MAPA_H_ */
