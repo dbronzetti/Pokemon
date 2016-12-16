@@ -44,17 +44,19 @@ make all
 sudo make install 
 
 #DOWNLOADING LIBFUSE
-#cd $DEPLOY_FOLDER/libraries
+cd $DEPLOY_FOLDER/libraries
 #git clone --branch fuse-3.0.0 https://github.com/libfuse/libfuse
+wget https://github.com/libfuse/libfuse/releases/download/fuse-2.9.7/fuse-2.9.7.tar.gz
+tar -xzvf fuse-2.9.7.tar.gz
 
 #INSTALLING LIBFUSE
-#cd $DEPLOY_FOLDER/libraries/libfuse/
+cd $DEPLOY_FOLDER/libraries/fuse-2.9.7
 #sudo apt-get install dh-autoreconf
 #sudo apt-get install build-essential libtool
 #sh makeconf.sh 
-#./configure
-#make -j8
-#sudo make install
+./configure
+make -j8
+sudo make install
 
 cd $DEPLOY_FOLDER/CompuMundoHiperMegaRed-commons/Debug
 make
@@ -71,7 +73,12 @@ make
 cd $DEPLOY_FOLDER/PokeDex_Servidor/Debug
 make
 
+sudo apt-get install openssl
+sudo apt-get install libssl-dev
+
 cd $DEPLOY_FOLDER
 pwd
+
+
 
 echo "Fin deploy - ejecutar: 'cd $DEPLOY_FOLDER'"
