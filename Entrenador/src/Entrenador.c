@@ -322,22 +322,20 @@ sem_post(&semTerminoDeProcesar);
 }
 
 void desconectarse() {
-	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
+//	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
 	close(socketMapa);
 }
 
 void jugar() {
 
-
-
 	while ((queue_size(colaDeObjetivos) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
-
+		gane = 1;
 		pthread_mutex_lock(&turnoMutex);
 		int turnoValor = turno;
 		pthread_mutex_unlock(&turnoMutex);
 		if (turnoValor != SIN_MENSAJE) {
-			sem_wait(&semTerminoDeProcesar);
+//			sem_wait(&semTerminoDeProcesar);
 			switch (turnoValor) {
 
 			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
@@ -442,11 +440,13 @@ void jugar() {
 
 			}
 
+//			sem_post(&semTerminoDeProcesar);
+
 			pthread_mutex_lock(&turnoMutex);
 			turno = SIN_MENSAJE;
 			pthread_mutex_unlock(&turnoMutex);
 
-			sem_post(&semTerminoDeProcesar);
+
 		}
 
 	}

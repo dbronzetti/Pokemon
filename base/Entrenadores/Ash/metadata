@@ -1,0 +1,5 @@
+nombre=Ash
+simbolo=&
+hojaDeViaje=[Home]
+obj[Home]=[G,P,B]
+vidas=1
