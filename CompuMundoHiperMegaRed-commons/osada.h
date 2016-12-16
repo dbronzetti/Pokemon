@@ -112,6 +112,7 @@ static int *ARRAY_TABLA_ASIGNACION;
 static osada_file *TABLA_DE_ARCHIVOS;
 
 t_log* logPokeDexServer;
+t_list* listaTablaDeArchivos;
 pthread_mutex_t OSADAmutex;
 pthread_mutex_t HEADERmutex;
 pthread_mutex_t BITMAPmutex;
