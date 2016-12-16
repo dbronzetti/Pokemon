@@ -834,11 +834,11 @@ t_list* obtenerLosIndicesDeLosBloquesDisponiblesYGuardar(int cantBloquesDeseados
 	int bloquesObtenidos = 0;
 	int i = 0;
 
-	//log_info(logPokeDexServer, "HEADER->fs_blocks:  %i",HEADER->fs_blocks);
+//	log_info(logPokeDexServer, "HEADER->fs_blocks:  %i",HEADER->fs_blocks);
 	pthread_mutex_lock(&HEADERmutex);
 	uint32_t fs_blocks = HEADER->fs_blocks;
 	pthread_mutex_unlock(&HEADERmutex);
-	for (i=START_DATA_BLOCKS; i < fs_blocks; i++){//SIEMPRE ARRANCO DESDE EL PRIMER BLOQUE DE DATOS
+	for (i=0; i < fs_blocks; i++){//SIEMPRE ARRANCO DESDE EL PRIMER BLOQUE DE DATOS
 
 		pthread_mutex_lock(&BITMAPmutex);
 		if(!bitarray_test_bit(BITMAP, i)){
@@ -987,7 +987,7 @@ void modificarAgregandoBloquesEnLaTablaDeAsignacion(t_list* listadoLosIndicesDeL
 	int i;
 
 	cantidadDeElemento = list_size(listadoLosIndicesDeLosBloquesDisponibles);
-	//log_info(logPokeDexServer,"cantidad de elementos en bloques disponibles: %d",cantidadDeElemento);
+	log_info(logPokeDexServer,"cantidad de elementos en bloques disponibles: %d",cantidadDeElemento);
 	for(i = 0; i < cantidadDeElemento; i++){
 
 		if (i==0){
