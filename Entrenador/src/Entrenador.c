@@ -8,6 +8,8 @@
 
 int socketMapa = 0;
 int reintentos = 0;
+char* objetivoActual;
+int gane = 1;
 
 int main(int argc, char **argv) {
 	char *logFile = NULL;
@@ -18,6 +20,7 @@ int main(int argc, char **argv) {
 	pthread_mutex_init(&msjMutex,NULL);
 	sem_init(&semEstadisticas, 0, 0);
 	sem_init(&semProcesarMsjs,0, 0);
+	sem_init(&semTerminoDeProcesar,0,1);
 
 	exitCode = EXIT_FAILURE; //por default EXIT_FAILURE
 
@@ -256,7 +259,7 @@ void imprimirArray(char** array) {
 void recibirSignal() {
 	while (1) {
 		signal(SIGUSR1, sumarVida);
-		signal(SIGTERM, restarVida);
+		signal(SIGTERM, restarVidaConSignal);
 		signal(SIGINT, cerrarEntrenador);
 	}
 }
@@ -266,6 +269,7 @@ void sumarVida() {
 	log_info(logEntrenador,
 			"Ha aumentado en 1 la vida del entrenador, ahora es de '%d'\n",
 			metadataEntrenador.vidas);
+	printf(ANSI_COLOR_GREEN     "Ha ganado 1 vida ahora tiene %d cantidad de vidas"     ANSI_COLOR_RESET "\n",metadataEntrenador.vidas);
 }
 
 void restarVida() {
@@ -273,23 +277,68 @@ void restarVida() {
 	log_info(logEntrenador,
 			"Ha disminuido en 1 la vida del entrenador, ahora es de '%d'\n",
 			metadataEntrenador.vidas);
+
+
+}
+
+void restarVidaConSignal() {
+	sem_wait(&semTerminoDeProcesar);
+	log_info(logEntrenador, "Killing trainer after Admin kick");
+	restarVida();
+	if (metadataEntrenador.vidas > 0) {
+		printf(ANSI_COLOR_RED     "Ha perdido 1 vida ahora tiene %d cantidad de vidas"     ANSI_COLOR_RESET "\n",metadataEntrenador.vidas);
+		reconectarse();
+		colaDeObjetivos = parsearObjetivos(objetivosActuales); // la cola se rellena
+	} else {
+		char* respuesta = malloc(3);
+		printf(ANSI_COLOR_RED     "No posee mas vidas desea reiniciar el juego? (YES/NO)\n tiene %d reintentos hasta el momento"     ANSI_COLOR_RESET "\n",reintentos);
+		scanf("%s", respuesta);
+		string_to_upper(respuesta);
+		queue_clean_and_destroy_elements(colaDeObjetivos,
+				(void*) free);
+		objetivoActual = NULL;
+		if (strcmp("YES", respuesta) == 0) {
+			log_info(logEntrenador,
+					"Ok, se reiniciara toda su hoja de viaje");
+			 reintentos++;
+			limpiarColasMetadaEtrenador();
+			desconectarse();
+			borrarArchivos(rutaDirDeBill);
+			printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
+			borrarArchivos(rutaMedallas);
+			printf(ANSI_COLOR_YELLOW   "Medallas borradas"   ANSI_COLOR_RESET "\n");
+			pthread_cancel(hiloEscuchar);
+			crearArchivoMetadata(rutaMetadata);
+		} else {
+			log_info(logEntrenador,
+					"El entrenador ha decidido no Reintentar");
+			cerrarEntrenador(); //se muere el entrenador
+		}
+		free(respuesta);
+		gane = 0;
+	}
+sem_post(&semTerminoDeProcesar);
+
 }
 
 void desconectarse() {
-//	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
+	send(socketMapa, 0, 0, 0); //mandamos 0 bytes para que nos desconecte :)
 	close(socketMapa);
 }
 
 void jugar() {
-	char* objetivoActual;
-	int gane = 1;
+
+
 
 	while ((queue_size(colaDeObjetivos) > 0) || (objetivoActual != NULL)) //mientras queden objetivos y no se haya capturado el ultimo pokemon se sigue jugando en el mapa
 	{
 
 		pthread_mutex_lock(&turnoMutex);
-		if (turno != SIN_MENSAJE) {
-			switch (turno) {
+		int turnoValor = turno;
+		pthread_mutex_unlock(&turnoMutex);
+		if (turnoValor != SIN_MENSAJE) {
+			sem_wait(&semTerminoDeProcesar);
+			switch (turnoValor) {
 
 			case LIBRE: { //si es un turno libre, le pedimos conocer la posicion de la pokenest
 				log_info(logEntrenador, "Trainer send the id of the pokenest");
@@ -373,10 +422,11 @@ void jugar() {
 								"Ok, se reiniciara toda su hoja de viaje");
 						 reintentos++;
 						limpiarColasMetadaEtrenador();
-						desconectarse();
+						close(socketMapa);
 						borrarArchivos(rutaDirDeBill);
 						printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
 						borrarArchivos(rutaMedallas);
+						printf(ANSI_COLOR_YELLOW   "Medallas borradas"   ANSI_COLOR_RESET "\n");
 						pthread_cancel(hiloEscuchar);
 						crearArchivoMetadata(rutaMetadata);
 					} else {
@@ -391,10 +441,13 @@ void jugar() {
 			}
 
 			}
-			turno = SIN_MENSAJE;
 
+			pthread_mutex_lock(&turnoMutex);
+			turno = SIN_MENSAJE;
+			pthread_mutex_unlock(&turnoMutex);
+
+			sem_post(&semTerminoDeProcesar);
 		}
-		pthread_mutex_unlock(&turnoMutex);
 
 	}
 	if(gane)
@@ -640,7 +693,6 @@ void yoYaGane() {
 	printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
 	desconectarse();
 	pthread_cancel(hiloEscuchar);
-
 }
 
 int reconectarse() {

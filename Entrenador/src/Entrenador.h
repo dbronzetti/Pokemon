@@ -58,6 +58,7 @@ pthread_mutex_t msjMutex;
 //Semaforos
 sem_t semEstadisticas;
 sem_t semProcesarMsjs;
+sem_t semTerminoDeProcesar;
 
 //Metadata
 t_metadataEntrenador metadataEntrenador;
@@ -86,6 +87,7 @@ void restarVida();
 void desconectarse();
 void borrarArchivos(char* rutaDeleted);
 void cerrarEntrenador();
+void restarVidaConSignal();
 
 //Chau Blanco
 char* str_replace(const char *strbuf, const char *strold, const char *strnew)  ;
