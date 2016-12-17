@@ -351,7 +351,7 @@ void processMessageReceived(void *parameter){
 
 					pthread_mutex_lock(&TABLA_DE_ARCHIVOSmutex);
 					memset(TABLA_DE_ARCHIVOS[posArchivo].fname, 0, OSADA_FILENAME_LENGTH);
-					TABLA_DE_ARCHIVOS[posArchivo].state = 0;
+					TABLA_DE_ARCHIVOS[posArchivo].state = DELETED;
 					TABLA_DE_ARCHIVOS[posArchivo].parent_directory = 65535;//reseteo a bloque padre
 					guardarEnOsada(DESDE_PARA_TABLA_DE_ARCHIVOS, TABLA_DE_ARCHIVOS, TAMANIO_TABLA_DE_ARCHIVOS);
 					pthread_mutex_unlock(&TABLA_DE_ARCHIVOSmutex);
@@ -483,7 +483,7 @@ void processMessageReceived(void *parameter){
 									log_info(logPokeDexServer, "list_size(conjuntoDeBloquesDelArchivo) < cantBloquesParaEnviar");
 									for (i = 0; i < list_size(conjuntoDeBloquesDelArchivo) ; i++) { //Para cuando la lista es mas chica que la cantidad de bloques a enviar
 										int offsetbloque = list_get(conjuntoDeBloquesDelArchivo, i);
-										log_info(logPokeDexServer, "bloque2: %i\n", offsetbloque);
+										//log_info(logPokeDexServer, "bloque2: %i\n", offsetbloque);
 										offsetbloque *= OSADA_BLOCK_SIZE;
 
 										offset = (i * OSADA_BLOCK_SIZE);
