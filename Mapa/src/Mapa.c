@@ -904,21 +904,21 @@ void ejecutarAccionEntrenador(t_entrenador* entrenador, int* quantum) {
 //	pthread_mutex_unlock(&setEntrenadoresMutex);
 
 	evaluarEstadoEntrenador(entrenador);
-	time_t tiempo1 = time(0);
+//	time_t tiempo1 = time(0);
 
 	while (estaEnAccion) { //una accion que puede llevar acabo el usuario dentro del turno
 
-		time_t tiempo2 = time(0);
-		double segsSinResponder = difftime(tiempo2, tiempo1);
-
-		if (segsSinResponder > 10) {
-			log_info(logMapa,
-					"Trainer '%c' doesn't respond, will be disconnected from %s",
-					entrenador->simbolo, mapa);
-			pthread_mutex_lock(&setEntrenadoresMutex);
-			entrenador->accion = DESCONECTAR;
-			pthread_mutex_unlock(&setEntrenadoresMutex);
-		}
+//		time_t tiempo2 = time(0);
+//		double segsSinResponder = difftime(tiempo2, tiempo1);
+//
+//		if (segsSinResponder > 10) {
+//			log_info(logMapa,
+//					"Trainer '%c' doesn't respond, will be disconnected from %s",
+//					entrenador->simbolo, mapa);
+//			pthread_mutex_lock(&setEntrenadoresMutex);
+//			entrenador->accion = DESCONECTAR;
+//			pthread_mutex_unlock(&setEntrenadoresMutex);
+//		}
 
 		pthread_mutex_lock(&setEntrenadoresMutex);
 		int siNoTieneMensaje = entrenador->accion != SIN_MENSAJE;
