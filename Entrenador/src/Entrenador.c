@@ -644,12 +644,12 @@ void yoYaGane() {
 	pthread_mutex_lock(&turnoMutex);
 	turno = SIN_MENSAJE;
 	pthread_mutex_unlock(&turnoMutex);
-	desconectarse();
-	pthread_cancel(hiloEscuchar);
 	copiarArchivos(rutaMedallaMapa, rutaMedallaEntrenador);
 	printf(ANSI_COLOR_YELLOW   "Obtenida medalla de %s"   ANSI_COLOR_RESET "\n",mapaActual);
 	borrarArchivos(rutaDirDeBill);
 	printf(ANSI_COLOR_YELLOW   "Dir de Bill borrado"   ANSI_COLOR_RESET "\n");
+	desconectarse();
+	pthread_cancel(hiloEscuchar);
 }
 
 int reconectarse() {
