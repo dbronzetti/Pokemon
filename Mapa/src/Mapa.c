@@ -1397,15 +1397,12 @@ void detectarDeadlocks() {
 		int tamanioColaBloqueados = queue_size(colaDeBloqueados);
 		pthread_mutex_unlock(&colaDeBloqueadosMutex);
 
-		log_info(logMapa, "tamanioColaBloqueados %d", tamanioColaBloqueados);
 
 		if (tamanioColaBloqueados > 1) { //si no hay mas de 1 bloqueado no hay deadlock.
 			pthread_mutex_lock(&borradoEntrenadoresMutex);
 			t_list* listaDeadlock = list_create();
 			t_list* entrenadoresBloqueados = detectarInterbloqueo();
 
-			log_info(logMapa, "tamanio de involucrados = %d",
-					list_size(entrenadoresBloqueados));
 			if (list_size(entrenadoresBloqueados) > 1) {
 				pthread_mutex_lock(&colaDeBloqueadosMutex);
 				int tamanioColaBloqueados = queue_size(colaDeBloqueados);
@@ -1620,7 +1617,17 @@ void detectarDeadlocks() {
 					pthread_mutex_unlock(&borradoEntrenadoresMutex);
 					matar(entrenadorVictima);//se envia mensaje al entrenador y devuelve sus pokemones al mapa
 
-				}						// if (modoBatalla == 1)
+				} else{// if (modoBatalla == 1)
+					int i;
+					for(i=0;i < list_size(listaDeadlock);i++){
+						t_entrenador* entrenadorABloquear = list_get(listaDeadlock,i);
+						pthread_mutex_lock(&colaDeBloqueadosMutex);
+						queue_push(colaDeBloqueados,entrenadorABloquear);
+						pthread_mutex_unlock(&colaDeBloqueadosMutex);
+					} //si esta desactivado el modo batalla los mando devuelta a bloqueados
+					log_info(logMapa,"No se resuelve deadlock ya que modo batalla esta desactivado");
+					pthread_mutex_unlock(&borradoEntrenadoresMutex);
+				}
 				list_clean(listaDeadlock);
 				list_destroy(listaDeadlock);
 				list_clean(entrenadoresBloqueados);
@@ -1680,10 +1687,6 @@ t_list* detectarInterbloqueo() {
 					pokemonesDisponibles, (void*) _funcBuscarPokemon);
 
 			if (pokemonDisponible != NULL) {
-				log_info(logMapa, "SOLICITO %d DE %c HAY DISPONIBLE %d DE %c ",
-						listElement->cantidad, listElement->pokemon_id,
-						pokemonDisponible->cantidad,
-						pokemonDisponible->pokemon_id);
 				return (listElement->cantidad <= pokemonDisponible->cantidad);
 			} else {
 				return false;
@@ -1691,12 +1694,8 @@ t_list* detectarInterbloqueo() {
 		}
 
 		int i;
-		int tanioSoli = list_size(solicitud);
-		int tamanioLista = list_size(entrenadoresDeadlock);
-		log_info(logMapa, "TAMANIO DE SOLI %d", tanioSoli);
 		for (i = 0; i < list_size(solicitud); i++) {
 			t_entrenador_Asignacion* entrenadorAux = list_get(solicitud, i);
-			log_info(logMapa, "Solicitud de %c", entrenadorAux->entrenador);
 			notFound = list_all_satisfy(entrenadorAux->pokemonesAsignados,
 					(void*) recursosMenores_aAsignados); //si no podes cumplir ninguno de tu solicitud (osea estas bloqueado)
 
@@ -1705,8 +1704,6 @@ t_list* detectarInterbloqueo() {
 				int j;
 				int tamanioAsignados = list_size(
 						entrenadorAux->pokemonesAsignados);
-				log_info(logMapa, "ENTRENADOR %c, TAMANIO DE ASIGNADOS =%d",
-						entrenadorAux->entrenador, tamanioAsignados);
 				for (j = 0; j < list_size(entrenadorAux->pokemonesAsignados);
 						j++) {
 					t_pokemones_Asignacion* pokemonAsignado = list_get(
